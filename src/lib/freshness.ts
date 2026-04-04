@@ -38,11 +38,11 @@ export function freshnessColor(status: FreshnessStatus) {
   switch (status) {
     case "fresh":
       return {
-        bg: "bg-emerald-50",
-        border: "border-emerald-200",
-        text: "text-emerald-700",
-        badge: "bg-emerald-100 text-emerald-800",
-        dot: "bg-emerald-500",
+        bg: "bg-sage-50",
+        border: "border-sage-200",
+        text: "text-sage-600",
+        badge: "bg-sage-100 text-sage-700",
+        dot: "bg-sage-500",
       };
     case "warning":
       return {
@@ -54,19 +54,19 @@ export function freshnessColor(status: FreshnessStatus) {
       };
     case "urgent":
       return {
-        bg: "bg-red-50",
-        border: "border-red-200",
-        text: "text-red-700",
-        badge: "bg-red-100 text-red-800",
-        dot: "bg-red-500",
+        bg: "bg-terracotta-50",
+        border: "border-terracotta-100",
+        text: "text-terracotta-600",
+        badge: "bg-terracotta-50 text-terracotta-600",
+        dot: "bg-terracotta-500",
       };
     case "expired":
       return {
-        bg: "bg-gray-50",
-        border: "border-gray-200",
-        text: "text-gray-500",
-        badge: "bg-gray-100 text-gray-600",
-        dot: "bg-gray-400",
+        bg: "bg-warm-50",
+        border: "border-warm-200",
+        text: "text-stone-500",
+        badge: "bg-warm-50 text-stone-500",
+        dot: "bg-stone-400",
       };
   }
 }

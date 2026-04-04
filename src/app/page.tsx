@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getDaysUntilExpiry, getExpiryLabel, freshnessColor, getFreshnessStatus } from "@/lib/freshness";
-import { formatCurrency } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { ItemActions } from "@/components/pantry/item-actions";
-import { Package, ChefHat, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { getDaysUntilExpiry } from "@/lib/freshness";
+import { WeeklyHero } from "@/components/dashboard/weekly-hero";
+import { StreakBadge } from "@/components/dashboard/streak-badge";
+import { MetricCards } from "@/components/dashboard/metric-cards";
+import { NeedsAttention } from "@/components/dashboard/needs-attention";
+import { ChefHat, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 interface Item {
@@ -28,18 +30,30 @@ interface Stats {
   };
 }
 
+interface RecipeSuggestion {
+  id: number;
+  name: string;
+  description: string;
+  prepTime: number;
+  cookTime: number;
+  matchingIngredients: string[];
+}
+
 export default function DashboardPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [recipe, setRecipe] = useState<RecipeSuggestion | null>(null);
   const [loading, setLoading] = useState(true);
 
   function loadData() {
     Promise.all([
       fetch("/api/items").then((r) => r.json()),
       fetch("/api/stats").then((r) => r.json()),
-    ]).then(([itemsData, statsData]) => {
+      fetch("/api/recipes/suggestions").then((r) => r.json()),
+    ]).then(([itemsData, statsData, recipesData]) => {
       setItems(itemsData);
       setStats(statsData);
+      setRecipe(recipesData?.[0] ?? null);
       setLoading(false);
     });
   }
@@ -49,145 +63,92 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-200 border-t-emerald-600" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-sage-200 border-t-sage-600" />
       </div>
     );
   }
 
-  // Only items expiring today or tomorrow
   const expiringSoon = items.filter((i) => {
     const days = getDaysUntilExpiry(i.expirationDate);
-    return days >= 0 && days <= 1;
-  });
+    return days >= 0 && days <= 2;
+  }).sort((a, b) => getDaysUntilExpiry(a.expirationDate) - getDaysUntilExpiry(b.expirationDate));
+
+  const expiringCount = items.filter((i) => {
+    const days = getDaysUntilExpiry(i.expirationDate);
+    return days >= 0 && days <= 5;
+  }).length;
 
   return (
-    <div className="animate-fade-in space-y-10">
-      {/* Hero summary */}
-      <div className="pt-4">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          Good {getGreeting()}
-        </h1>
-        <p className="mt-2 text-gray-500">
-          {items.length === 0
-            ? "Your pantry is empty. Add some items to start tracking."
-            : `You're tracking ${items.length} item${items.length !== 1 ? "s" : ""}. `}
-          {expiringSoon.length > 0 && (
-            <span className="text-amber-700 font-medium">
-              {expiringSoon.length} item{expiringSoon.length !== 1 ? "s" : ""} expiring today or tomorrow.
-            </span>
-          )}
-          {expiringSoon.length === 0 && items.length > 0 && (
-            <span className="text-emerald-700 font-medium">Nothing expires today or tomorrow.</span>
-          )}
-        </p>
-      </div>
-
-      {/* Key metrics — 3 compact numbers */}
-      {stats && (
-        <div className="flex gap-8 border-b pb-6">
-          <Metric label="Active items" value={items.length} />
-          <Metric
-            label="Waste rate"
-            value={`${stats.totals.wasteRate}%`}
-            muted={stats.totals.wasteRate <= 30}
-            warn={stats.totals.wasteRate > 30}
-          />
-          <Metric
-            label="Food saved"
-            value={formatCurrency(stats.totals.moneySaved)}
-          />
-        </div>
-      )}
-
-      {/* Expiring today or tomorrow */}
-      {expiringSoon.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
-              Expiring Soon
-            </h2>
-            <Link
-              href="/pantry"
-              className="text-sm text-gray-400 hover:text-gray-600 flex items-center gap-1"
-            >
-              View all <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-          <div className="space-y-2">
-            {expiringSoon.map((item) => {
-              const status = getFreshnessStatus(item.expirationDate);
-              const colors = freshnessColor(status);
-              return (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between rounded-lg border px-4 py-3 bg-white"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`h-2 w-2 rounded-full shrink-0 ${colors.dot}`} />
-                    <span className="font-medium text-gray-900 truncate">{item.name}</span>
-                    <span className="text-sm text-gray-400 shrink-0">
-                      {item.quantity} {item.unit}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0 ml-4">
-                    <Badge className={`${colors.badge} text-xs`}>
-                      {getExpiryLabel(item.expirationDate)}
-                    </Badge>
-                    <ItemActions itemId={item.id} itemName={item.name} onAction={loadData} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* Quick links */}
-      <section className="flex gap-3">
-        <Link href="/pantry" className="flex-1">
-          <div className="rounded-lg border border-gray-200 bg-white p-5 transition-colors hover:border-emerald-200 hover:bg-emerald-50/30">
-            <Package className="h-5 w-5 text-gray-400 mb-2" />
-            <p className="font-medium text-gray-900 text-sm">Pantry</p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Manage all {items.length} items
-            </p>
-          </div>
-        </Link>
-        <Link href="/recipes" className="flex-1">
-          <div className="rounded-lg border border-gray-200 bg-white p-5 transition-colors hover:border-emerald-200 hover:bg-emerald-50/30">
-            <ChefHat className="h-5 w-5 text-gray-400 mb-2" />
-            <p className="font-medium text-gray-900 text-sm">Recipes</p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Use up expiring items
-            </p>
-          </div>
-        </Link>
-      </section>
-    </div>
-  );
-}
-
-function Metric({
-  label,
-  value,
-  muted,
-  warn,
-}: {
-  label: string;
-  value: string | number;
-  muted?: boolean;
-  warn?: boolean;
-}) {
-  return (
-    <div>
-      <p className="text-xs text-gray-400 uppercase tracking-wider">{label}</p>
-      <p
-        className={`text-2xl font-semibold mt-0.5 ${
-          warn ? "text-red-600" : muted ? "text-gray-400" : "text-gray-900"
-        }`}
+    <div className="space-y-6">
+      {/* Greeting + Streak */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="flex items-start justify-between pt-2"
       >
-        {value}
-      </p>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-stone-900">
+            Good {getGreeting()}, Chef!
+          </h1>
+          <p className="mt-1 text-sm text-stone-500">
+            {items.length === 0
+              ? "Your pantry is empty. Add some items!"
+              : `Tracking ${items.length} item${items.length !== 1 ? "s" : ""} in your pantry`}
+          </p>
+        </div>
+        <StreakBadge days={stats?.totals.consumed ?? 0} />
+      </motion.div>
+
+      {/* Weekly Summary Hero */}
+      {stats && (
+        <WeeklyHero
+          used={stats.totals.consumed}
+          wasted={stats.totals.wasted}
+          saved={Math.round(stats.totals.moneySaved)}
+        />
+      )}
+
+      {/* Metric Cards */}
+      <MetricCards
+        activeItems={items.length}
+        useRate={stats ? 100 - stats.totals.wasteRate : 0}
+        expiringSoon={expiringCount}
+      />
+
+      {/* Needs Attention */}
+      <NeedsAttention items={expiringSoon} onAction={loadData} />
+
+      {/* Recipe Suggestion */}
+      {recipe && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30, delay: 0.4 }}
+        >
+          <Link href="/recipes" className="block group cursor-pointer">
+            <div className="rounded-xl bg-warm-white p-5 shadow-warm transition-all duration-200 group-hover:shadow-warm-lg group-hover:translate-y-[-1px]">
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-sage-50 p-2 shrink-0">
+                  <ChefHat className="h-5 w-5 text-sage-600" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-sage-600 mb-1">
+                    Try Tonight
+                  </p>
+                  <p className="font-semibold text-stone-900">{recipe.name}</p>
+                  <p className="text-sm text-stone-500 mt-0.5 line-clamp-1">
+                    {recipe.matchingIngredients.length > 0
+                      ? `Uses your ${recipe.matchingIngredients.slice(0, 2).join(" and ")}`
+                      : recipe.description}
+                  </p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-stone-400 group-hover:text-sage-600 transition-colors shrink-0 mt-1" />
+              </div>
+            </div>
+          </Link>
+        </motion.div>
+      )}
     </div>
   );
 }
