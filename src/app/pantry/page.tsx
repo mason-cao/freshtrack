@@ -90,8 +90,8 @@ export default function PantryPage() {
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">My Pantry</h1>
-          <p className="text-sm text-stone-500 mt-0.5">
+          <h1 className="text-2xl xl:text-3xl font-bold text-stone-900">My Pantry</h1>
+          <p className="text-sm xl:text-base text-stone-500 mt-0.5">
             {items.length} item{items.length !== 1 ? "s" : ""} tracked
           </p>
         </div>

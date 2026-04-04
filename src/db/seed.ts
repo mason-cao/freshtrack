@@ -41,6 +41,9 @@ async function seed() {
   db.delete(schema.items).run();
   db.delete(schema.categories).run();
 
+  // Reset autoincrement counters so IDs start from 1
+  sqlite.exec("DELETE FROM sqlite_sequence");
+
   // Categories
   const categoryData = [
     { name: "Produce", icon: "🥬", defaultShelfLifeDays: 7 },
@@ -51,6 +54,8 @@ async function seed() {
     { name: "Canned", icon: "🥫", defaultShelfLifeDays: 365 },
     { name: "Beverages", icon: "🥤", defaultShelfLifeDays: 30 },
     { name: "Snacks", icon: "🍿", defaultShelfLifeDays: 60 },
+    { name: "Condiments", icon: "🫙", defaultShelfLifeDays: 180 },
+    { name: "Grains & Pasta", icon: "🌾", defaultShelfLifeDays: 365 },
   ];
 
   for (const cat of categoryData) {
@@ -84,6 +89,24 @@ async function seed() {
     { name: "Almond Milk", categoryId: 7, quantity: 1, unit: "carton", purchaseDate: daysAgo(1), expirationDate: daysFromNow(28), costEstimate: 3.99 },
     { name: "Trail Mix", categoryId: 8, quantity: 1, unit: "bag", purchaseDate: daysAgo(7), expirationDate: daysFromNow(53), costEstimate: 5.99 },
     { name: "Rice Crackers", categoryId: 8, quantity: 1, unit: "box", purchaseDate: daysAgo(10), expirationDate: daysFromNow(50), costEstimate: 3.49 },
+
+    // More fresh items
+    { name: "Hummus", categoryId: 8, quantity: 1, unit: "container", purchaseDate: daysAgo(3), expirationDate: daysFromNow(18), costEstimate: 3.99 },
+    { name: "Mushrooms", categoryId: 1, quantity: 1, unit: "pack", purchaseDate: daysAgo(1), expirationDate: daysFromNow(5), costEstimate: 2.49 },
+    { name: "Lemon", categoryId: 1, quantity: 3, unit: "count", purchaseDate: daysAgo(2), expirationDate: daysFromNow(14), costEstimate: 1.50 },
+    { name: "Garlic", categoryId: 1, quantity: 1, unit: "bulb", purchaseDate: daysAgo(5), expirationDate: daysFromNow(25), costEstimate: 0.75 },
+    { name: "Onions", categoryId: 1, quantity: 3, unit: "count", purchaseDate: daysAgo(4), expirationDate: daysFromNow(20), costEstimate: 1.29 },
+    { name: "Bacon", categoryId: 3, quantity: 1, unit: "pack", purchaseDate: daysAgo(2), expirationDate: daysFromNow(8), costEstimate: 6.49 },
+    { name: "Shrimp", categoryId: 5, quantity: 1, unit: "bag", purchaseDate: daysAgo(7), expirationDate: daysFromNow(83), costEstimate: 9.99 },
+    { name: "Peanut Butter", categoryId: 9, quantity: 1, unit: "jar", purchaseDate: daysAgo(14), expirationDate: daysFromNow(150), costEstimate: 4.29 },
+    { name: "Olive Oil", categoryId: 9, quantity: 1, unit: "bottle", purchaseDate: daysAgo(30), expirationDate: daysFromNow(335), costEstimate: 7.99 },
+    { name: "Honey", categoryId: 9, quantity: 1, unit: "bottle", purchaseDate: daysAgo(20), expirationDate: daysFromNow(345), costEstimate: 6.49 },
+    { name: "Rice", categoryId: 10, quantity: 2, unit: "lbs", purchaseDate: daysAgo(10), expirationDate: daysFromNow(355), costEstimate: 3.49 },
+    { name: "Spaghetti", categoryId: 10, quantity: 1, unit: "box", purchaseDate: daysAgo(15), expirationDate: daysFromNow(350), costEstimate: 1.79 },
+    { name: "Cucumber", categoryId: 1, quantity: 2, unit: "count", purchaseDate: daysAgo(2), expirationDate: daysFromNow(5), costEstimate: 1.29 },
+    { name: "Apples", categoryId: 1, quantity: 4, unit: "count", purchaseDate: daysAgo(3), expirationDate: daysFromNow(11), costEstimate: 3.20 },
+    { name: "Bananas", categoryId: 1, quantity: 5, unit: "count", purchaseDate: daysAgo(2), expirationDate: daysFromNow(3), costEstimate: 1.49 },
+    { name: "Strawberries", categoryId: 1, quantity: 1, unit: "pint", purchaseDate: daysAgo(1), expirationDate: daysFromNow(4), costEstimate: 3.99 },
 
     // Expired (gray)
     { name: "Avocados", categoryId: 1, quantity: 2, unit: "count", purchaseDate: daysAgo(8), expirationDate: daysAgo(2), costEstimate: 2.50 },
@@ -236,6 +259,138 @@ async function seed() {
         { ingredientName: "sour cream", quantity: 1, unit: "tbsp" },
       ],
     },
+    {
+      name: "Garlic Shrimp Pasta",
+      description: "Quick garlic butter shrimp over spaghetti",
+      instructions: "1. Cook spaghetti according to package directions\n2. Mince garlic and sauté in olive oil\n3. Add shrimp and cook 2-3 minutes per side\n4. Squeeze lemon juice over shrimp\n5. Toss with pasta and season with salt and pepper\n6. Garnish with fresh basil",
+      prepTimeMinutes: 10,
+      cookTimeMinutes: 15,
+      servings: 3,
+      ingredients: [
+        { ingredientName: "shrimp", quantity: 1, unit: "lbs" },
+        { ingredientName: "spaghetti", quantity: 0.5, unit: "box" },
+        { ingredientName: "garlic", quantity: 4, unit: "cloves" },
+        { ingredientName: "olive oil", quantity: 2, unit: "tbsp" },
+        { ingredientName: "lemon", quantity: 1, unit: "count" },
+      ],
+    },
+    {
+      name: "Bacon & Egg Fried Rice",
+      description: "Savory fried rice with crispy bacon and scrambled eggs",
+      instructions: "1. Cook rice and let it cool (or use day-old rice)\n2. Dice bacon and fry until crispy\n3. Scramble eggs in the same pan, set aside\n4. Stir-fry rice with garlic and onion\n5. Add back bacon and eggs\n6. Season with soy sauce and serve",
+      prepTimeMinutes: 10,
+      cookTimeMinutes: 15,
+      servings: 3,
+      ingredients: [
+        { ingredientName: "rice", quantity: 2, unit: "cups" },
+        { ingredientName: "bacon", quantity: 4, unit: "slices" },
+        { ingredientName: "eggs", quantity: 3, unit: "count" },
+        { ingredientName: "garlic", quantity: 2, unit: "cloves" },
+        { ingredientName: "onions", quantity: 0.5, unit: "count" },
+      ],
+    },
+    {
+      name: "Mushroom & Spinach Omelette",
+      description: "Fluffy omelette loaded with sautéed mushrooms and spinach",
+      instructions: "1. Slice mushrooms and sauté until golden\n2. Add spinach and cook until wilted, set aside\n3. Whisk eggs with a pinch of salt\n4. Pour eggs into a buttered non-stick pan\n5. Add mushroom-spinach filling and cheese\n6. Fold and cook until set",
+      prepTimeMinutes: 5,
+      cookTimeMinutes: 8,
+      servings: 1,
+      ingredients: [
+        { ingredientName: "eggs", quantity: 3, unit: "count" },
+        { ingredientName: "mushrooms", quantity: 0.5, unit: "cup" },
+        { ingredientName: "spinach", quantity: 1, unit: "cup" },
+        { ingredientName: "cheddar cheese", quantity: 0.25, unit: "cup" },
+      ],
+    },
+    {
+      name: "Honey Lemon Salmon",
+      description: "Baked salmon glazed with honey and fresh lemon",
+      instructions: "1. Preheat oven to 375°F\n2. Mix honey, lemon juice, and minced garlic\n3. Place salmon on parchment-lined baking sheet\n4. Brush generously with honey-lemon glaze\n5. Bake for 15-18 minutes until flaky\n6. Serve with rice and steamed vegetables",
+      prepTimeMinutes: 10,
+      cookTimeMinutes: 18,
+      servings: 2,
+      ingredients: [
+        { ingredientName: "salmon", quantity: 0.75, unit: "lbs" },
+        { ingredientName: "honey", quantity: 2, unit: "tbsp" },
+        { ingredientName: "lemon", quantity: 1, unit: "count" },
+        { ingredientName: "garlic", quantity: 2, unit: "cloves" },
+        { ingredientName: "rice", quantity: 1, unit: "cup" },
+      ],
+    },
+    {
+      name: "Greek Cucumber Salad",
+      description: "Cool and refreshing cucumber salad with lemon dressing",
+      instructions: "1. Slice cucumbers into thin rounds\n2. Dice bell peppers and onion\n3. Combine in a bowl\n4. Whisk olive oil, lemon juice, and garlic\n5. Pour dressing over salad and toss\n6. Season with salt and pepper",
+      prepTimeMinutes: 10,
+      cookTimeMinutes: 0,
+      servings: 4,
+      ingredients: [
+        { ingredientName: "cucumber", quantity: 2, unit: "count" },
+        { ingredientName: "bell peppers", quantity: 1, unit: "count" },
+        { ingredientName: "onions", quantity: 0.25, unit: "count" },
+        { ingredientName: "olive oil", quantity: 2, unit: "tbsp" },
+        { ingredientName: "lemon", quantity: 1, unit: "count" },
+      ],
+    },
+    {
+      name: "PB & Banana Smoothie",
+      description: "Creamy peanut butter banana smoothie with honey",
+      instructions: "1. Peel and slice banana\n2. Add banana, peanut butter, and milk to blender\n3. Add honey for sweetness\n4. Blend until smooth and creamy\n5. Pour into glass and enjoy",
+      prepTimeMinutes: 5,
+      cookTimeMinutes: 0,
+      servings: 1,
+      ingredients: [
+        { ingredientName: "bananas", quantity: 1, unit: "count" },
+        { ingredientName: "peanut butter", quantity: 2, unit: "tbsp" },
+        { ingredientName: "milk", quantity: 1, unit: "cup" },
+        { ingredientName: "honey", quantity: 1, unit: "tbsp" },
+      ],
+    },
+    {
+      name: "Apple Cinnamon Yogurt Bowl",
+      description: "Greek yogurt topped with diced apples, honey, and trail mix",
+      instructions: "1. Dice apple into small cubes\n2. Spoon yogurt into a bowl\n3. Top with diced apples\n4. Drizzle with honey\n5. Sprinkle trail mix for crunch\n6. Add a dash of cinnamon",
+      prepTimeMinutes: 5,
+      cookTimeMinutes: 0,
+      servings: 1,
+      ingredients: [
+        { ingredientName: "greek yogurt", quantity: 1, unit: "cup" },
+        { ingredientName: "apples", quantity: 1, unit: "count" },
+        { ingredientName: "honey", quantity: 1, unit: "tbsp" },
+        { ingredientName: "trail mix", quantity: 0.25, unit: "cup" },
+      ],
+    },
+    {
+      name: "Chicken Bacon Ranch Wrap",
+      description: "Hearty wrap with chicken, crispy bacon, and ranch",
+      instructions: "1. Slice chicken breast and season with salt and pepper\n2. Cook chicken in a pan until golden\n3. Cook bacon until crispy and chop\n4. Warm tortilla\n5. Layer chicken, bacon, cheese, and spinach\n6. Drizzle with sour cream and roll up tightly",
+      prepTimeMinutes: 10,
+      cookTimeMinutes: 15,
+      servings: 2,
+      ingredients: [
+        { ingredientName: "chicken breast", quantity: 0.5, unit: "lbs" },
+        { ingredientName: "bacon", quantity: 3, unit: "slices" },
+        { ingredientName: "tortillas", quantity: 2, unit: "count" },
+        { ingredientName: "cheddar cheese", quantity: 0.5, unit: "cup" },
+        { ingredientName: "spinach", quantity: 1, unit: "cup" },
+        { ingredientName: "sour cream", quantity: 2, unit: "tbsp" },
+      ],
+    },
+    {
+      name: "Strawberry Banana Smoothie",
+      description: "Classic fruity smoothie with yogurt",
+      instructions: "1. Hull strawberries\n2. Slice banana\n3. Add strawberries, banana, yogurt, and milk to blender\n4. Blend until smooth\n5. Pour and serve immediately",
+      prepTimeMinutes: 5,
+      cookTimeMinutes: 0,
+      servings: 2,
+      ingredients: [
+        { ingredientName: "strawberries", quantity: 1, unit: "cup" },
+        { ingredientName: "bananas", quantity: 1, unit: "count" },
+        { ingredientName: "greek yogurt", quantity: 0.5, unit: "cup" },
+        { ingredientName: "milk", quantity: 0.5, unit: "cup" },
+      ],
+    },
   ];
 
   for (const recipe of recipesData) {
@@ -290,6 +445,14 @@ async function seed() {
     { itemName: "Milk", action: "consumed" as const, quantity: 1, unit: "gallon", costEstimate: 4.29, loggedAt: daysAgo(12) },
     { itemName: "Lettuce", action: "wasted" as const, quantity: 1, unit: "head", costEstimate: 2.49, loggedAt: daysAgo(8) },
     { itemName: "Onions", action: "consumed" as const, quantity: 2, unit: "count", costEstimate: 1.50, loggedAt: daysAgo(5) },
+    { itemName: "Bacon", action: "consumed" as const, quantity: 1, unit: "pack", costEstimate: 6.49, loggedAt: daysAgo(10) },
+    { itemName: "Shrimp", action: "consumed" as const, quantity: 1, unit: "bag", costEstimate: 9.99, loggedAt: daysAgo(7) },
+    { itemName: "Apples", action: "consumed" as const, quantity: 3, unit: "count", costEstimate: 2.40, loggedAt: daysAgo(4) },
+    { itemName: "Cucumber", action: "wasted" as const, quantity: 1, unit: "count", costEstimate: 0.65, loggedAt: daysAgo(3) },
+    { itemName: "Bananas", action: "consumed" as const, quantity: 4, unit: "count", costEstimate: 1.20, loggedAt: daysAgo(2) },
+    { itemName: "Honey", action: "consumed" as const, quantity: 0.5, unit: "bottle", costEstimate: 3.25, loggedAt: daysAgo(6) },
+    { itemName: "Rice", action: "consumed" as const, quantity: 1, unit: "cup", costEstimate: 0.60, loggedAt: daysAgo(9) },
+    { itemName: "Mushrooms", action: "wasted" as const, quantity: 0.5, unit: "pack", costEstimate: 1.25, loggedAt: daysAgo(1) },
   ];
 
   for (const entry of wasteLogData) {

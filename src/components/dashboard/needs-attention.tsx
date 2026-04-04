@@ -64,7 +64,7 @@ export function NeedsAttention({ items, onAction }: NeedsAttentionProps) {
         animate="show"
         className="space-y-2"
       >
-        {items.slice(0, 5).map((item) => {
+        {items.slice(0, 6).map((item) => {
           const status = getFreshnessStatus(item.expirationDate);
           const colors = freshnessColor(status);
           const imageUrl = getFoodImage(item.name, item.categoryName);

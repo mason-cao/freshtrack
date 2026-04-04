@@ -136,7 +136,7 @@ export default function DashboardPage() {
           <Link href="/recipes" className="block group cursor-pointer h-full">
             <div className="rounded-2xl bg-warm-white shadow-warm transition-all duration-200 group-hover:shadow-warm-lg group-hover:translate-y-[-1px] h-full overflow-hidden">
               {/* Image banner — desktop */}
-              <div className="hidden xl:block relative h-40 overflow-hidden bg-warm-50">
+              <div className="hidden xl:block relative h-48 2xl:h-56 overflow-hidden bg-warm-50">
                 <Image
                   src={getRecipeImage(recipe.name)}
                   alt={recipe.name}

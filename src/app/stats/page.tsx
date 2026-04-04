@@ -113,8 +113,8 @@ export default function StatsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        <h1 className="text-2xl font-bold text-stone-900">Statistics</h1>
-        <p className="text-sm text-stone-500 mt-0.5">
+        <h1 className="text-2xl xl:text-3xl font-bold text-stone-900">Statistics</h1>
+        <p className="text-sm xl:text-base text-stone-500 mt-0.5">
           Track your food waste trends and savings
         </p>
       </motion.div>

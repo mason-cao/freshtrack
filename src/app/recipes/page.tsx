@@ -98,7 +98,7 @@ export default function RecipesPage() {
             variants={container}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-5"
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 xl:gap-5"
           >
             {suggestions.map((recipe) => (
               <motion.div key={recipe.id} variants={item}>
@@ -121,7 +121,7 @@ export default function RecipesPage() {
           variants={container}
           initial="hidden"
           animate="show"
-          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-5"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 xl:gap-5"
         >
           {allRecipes.map((recipe) => (
             <motion.div key={recipe.id} variants={item}>
