@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
@@ -11,6 +11,7 @@ import {
   Leaf,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Fab } from "./fab";
 
 const navItems = [
   { href: "/", label: "Home", icon: LayoutDashboard },
@@ -21,12 +22,13 @@ const navItems = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-cream">
       {/* Desktop Side Rail */}
-      <aside className="fixed left-0 top-0 z-40 hidden h-full w-[72px] flex-col items-center border-r border-warm-100 bg-warm-white py-6 md:flex">
-        <Link href="/" className="mb-8 group">
+      <aside className="fixed left-0 top-0 z-40 hidden h-full w-[72px] xl:w-[220px] flex-col items-center xl:items-stretch border-r border-warm-100 bg-warm-white py-6 md:flex transition-[width] duration-300 ease-out">
+        <Link href="/" className="mb-8 group flex items-center justify-center xl:justify-start xl:px-5 xl:gap-3">
           <motion.div
             whileHover={{ scale: 1.1, rotate: 12 }}
             whileTap={{ scale: 0.95 }}
@@ -34,9 +36,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             <Leaf className="h-7 w-7 text-sage-500" />
           </motion.div>
+          <span className="hidden xl:inline text-lg font-bold text-stone-900 tracking-tight">
+            FreshTrack
+          </span>
         </Link>
 
-        <nav className="flex flex-1 flex-col items-center gap-2">
+        <nav className="flex flex-1 flex-col items-center xl:items-stretch gap-2 xl:gap-1 xl:px-3">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -48,7 +53,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className="relative flex flex-col items-center gap-1 py-2 px-1"
+                className="relative flex flex-col xl:flex-row items-center gap-1 xl:gap-3 py-2 px-1 xl:px-3 xl:py-2.5"
               >
                 {isActive && (
                   <motion.div
@@ -76,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </motion.div>
                 <span
                   className={cn(
-                    "relative z-10 text-[10px] font-medium transition-colors duration-200",
+                    "relative z-10 text-[10px] xl:text-sm font-medium transition-colors duration-200",
                     isActive ? "text-sage-700" : "text-stone-400"
                   )}
                 >
@@ -140,9 +145,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
 
+      {/* FAB */}
+      <Fab onItemAdded={() => router.refresh()} />
+
       {/* Main Content */}
-      <main className="md:ml-[72px]">
-        <div className="mx-auto max-w-5xl px-4 py-6 pb-24 sm:px-6 md:pb-6">
+      <main className="md:ml-[72px] xl:ml-[220px] transition-[margin-left] duration-300 ease-out">
+        <div className="mx-auto max-w-5xl xl:max-w-none px-4 py-6 pb-24 sm:px-6 md:px-8 xl:px-12 2xl:px-20 md:pb-8">
           {children}
         </div>
       </main>

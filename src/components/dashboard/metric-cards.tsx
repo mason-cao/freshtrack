@@ -34,21 +34,21 @@ export function MetricCards({ activeItems, useRate, expiringSoon }: MetricCardsP
       animate="show"
       className="grid grid-cols-3 gap-3"
     >
-      <motion.div variants={item} className="rounded-xl bg-warm-white p-4 shadow-warm">
-        <Package className="h-5 w-5 text-sage-500 mb-2" />
-        <p className="text-2xl font-bold text-stone-900">{activeItems}</p>
+      <motion.div variants={item} className="rounded-xl bg-warm-white p-4 xl:p-5 shadow-warm">
+        <Package className="h-5 w-5 xl:h-6 xl:w-6 text-sage-500 mb-2" />
+        <p className="text-2xl xl:text-3xl font-bold text-stone-900">{activeItems}</p>
         <p className="text-xs text-stone-500 mt-0.5">Active Items</p>
       </motion.div>
 
-      <motion.div variants={item} className="rounded-xl bg-warm-white p-4 shadow-warm">
-        <TrendingUp className="h-5 w-5 text-sage-500 mb-2" />
-        <p className="text-2xl font-bold text-stone-900">{useRate}%</p>
+      <motion.div variants={item} className="rounded-xl bg-warm-white p-4 xl:p-5 shadow-warm">
+        <TrendingUp className="h-5 w-5 xl:h-6 xl:w-6 text-sage-500 mb-2" />
+        <p className="text-2xl xl:text-3xl font-bold text-stone-900">{useRate}%</p>
         <p className="text-xs text-stone-500 mt-0.5">Use Rate</p>
       </motion.div>
 
-      <motion.div variants={item} className="rounded-xl bg-warm-white p-4 shadow-warm">
-        <Clock className={`h-5 w-5 mb-2 ${expiringSoon > 0 ? "text-amber-500" : "text-sage-500"}`} />
-        <p className={`text-2xl font-bold ${expiringSoon > 0 ? "text-amber-600" : "text-stone-900"}`}>
+      <motion.div variants={item} className="rounded-xl bg-warm-white p-4 xl:p-5 shadow-warm">
+        <Clock className={`h-5 w-5 xl:h-6 xl:w-6 mb-2 ${expiringSoon > 0 ? "text-amber-500" : "text-sage-500"}`} />
+        <p className={`text-2xl xl:text-3xl font-bold ${expiringSoon > 0 ? "text-amber-600" : "text-stone-900"}`}>
           {expiringSoon}
         </p>
         <p className="text-xs text-stone-500 mt-0.5">Expiring Soon</p>

@@ -7,6 +7,7 @@ import { SearchFilterBar } from "@/components/pantry/search-filter-bar";
 import { ItemCard } from "@/components/pantry/item-card";
 import { ItemTable } from "@/components/pantry/item-table";
 import { AddItemDialog } from "@/components/pantry/add-item-dialog";
+import { PantrySkeleton } from "@/components/pantry/pantry-skeleton";
 
 interface Item {
   id: number;
@@ -76,11 +77,7 @@ export default function PantryPage() {
   }, [items, search, filter, sort]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-sage-200 border-t-sage-600" />
-      </div>
-    );
+    return <PantrySkeleton />;
   }
 
   return (

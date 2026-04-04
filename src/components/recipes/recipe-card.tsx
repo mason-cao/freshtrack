@@ -1,8 +1,9 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users } from "lucide-react";
+import { getRecipeImage } from "@/lib/food-images";
 
 interface RecipeIngredient {
   id: number;
@@ -32,52 +33,66 @@ interface RecipeCardProps {
 
 export function RecipeCard({ recipe, onSelect, isUseItUp }: RecipeCardProps) {
   const totalTime = (recipe.prepTimeMinutes || 0) + (recipe.cookTimeMinutes || 0);
+  const imageUrl = getRecipeImage(recipe.name);
 
   return (
-    <Card
-      className={`cursor-pointer transition-shadow hover:shadow-md ${
-        isUseItUp ? "border-amber-200 bg-amber-50/50" : ""
+    <div
+      className={`cursor-pointer rounded-xl bg-warm-white shadow-warm overflow-hidden transition-all duration-200 hover:shadow-warm-lg hover:translate-y-[-1px] ${
+        isUseItUp ? "ring-1 ring-amber-200" : ""
       }`}
       onClick={() => onSelect(recipe)}
     >
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-base">{recipe.name}</CardTitle>
-          {isUseItUp && recipe.matchCount && (
-            <Badge variant="warning" className="shrink-0 ml-2">
+      {/* Image header */}
+      <div className="relative h-36 xl:h-40 overflow-hidden bg-warm-50">
+        <Image
+          src={imageUrl}
+          alt={recipe.name}
+          fill
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+        {isUseItUp && recipe.matchCount && (
+          <div className="absolute top-2.5 right-2.5">
+            <Badge variant="warning" className="text-[10px] shadow-sm">
               Uses {recipe.matchCount} expiring
             </Badge>
-          )}
-        </div>
-        {recipe.description && (
-          <p className="text-sm text-gray-500">{recipe.description}</p>
+          </div>
         )}
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="flex items-center gap-4 text-xs text-gray-500">
+        <div className="absolute bottom-2.5 left-2.5 flex items-center gap-2">
           {totalTime > 0 && (
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {totalTime} min
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-stone-700">
+              <Clock className="h-2.5 w-2.5" />
+              {totalTime}m
             </span>
           )}
           {recipe.servings && (
-            <span className="flex items-center gap-1">
-              <Users className="h-3 w-3" />
-              {recipe.servings} servings
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-stone-700">
+              <Users className="h-2.5 w-2.5" />
+              {recipe.servings}
             </span>
           )}
         </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-4">
+        <h3 className="font-semibold text-stone-900 text-sm xl:text-base line-clamp-1">
+          {recipe.name}
+        </h3>
+        {recipe.description && (
+          <p className="text-xs text-stone-500 mt-1 line-clamp-2">{recipe.description}</p>
+        )}
         {isUseItUp && recipe.matchingIngredients && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {recipe.matchingIngredients.map((ing) => (
-              <Badge key={ing} variant="warning" className="text-xs">
+          <div className="mt-2.5 flex flex-wrap gap-1">
+            {recipe.matchingIngredients.slice(0, 3).map((ing) => (
+              <span key={ing} className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
                 {ing}
-              </Badge>
+              </span>
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

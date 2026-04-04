@@ -2,7 +2,7 @@
 
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect } from "react";
-import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Leaf } from "lucide-react";
 
 function AnimatedNumber({ value, prefix = "" }: { value: number; prefix?: string }) {
   const count = useMotionValue(0);
@@ -31,45 +31,53 @@ export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30, delay: 0.1 }}
-      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sage-500 via-sage-600 to-sage-700 p-6 text-white shadow-warm-lg"
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sage-500 via-sage-600 to-sage-700 p-6 xl:p-8 text-white shadow-warm-lg"
     >
-      {/* Subtle decorative circles */}
+      {/* Decorative elements */}
       <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/5" />
       <div className="absolute -left-4 -bottom-4 h-24 w-24 rounded-full bg-white/5" />
+      <div className="absolute right-12 bottom-4 h-16 w-16 rounded-full bg-white/5 hidden xl:block" />
 
-      <p className="text-sm font-medium text-sage-100 mb-4 relative z-10">
-        Weekly Impact
+      {/* Tagline row */}
+      <div className="relative z-10 flex items-center gap-2 mb-2">
+        <Leaf className="h-4 w-4 text-sage-200" />
+        <p className="text-sm font-medium text-sage-100">
+          Weekly Impact
+        </p>
+      </div>
+      <p className="relative z-10 text-lg xl:text-xl font-semibold text-white/90 mb-5">
+        You&apos;re saving more than just food.
       </p>
 
-      <div className="relative z-10 grid grid-cols-3 gap-4">
+      <div className="relative z-10 grid grid-cols-3 gap-4 xl:gap-8">
         <div>
           <div className="flex items-center gap-1.5 mb-1">
-            <TrendingUp className="h-4 w-4 text-sage-200" />
-            <span className="text-3xl font-bold">
+            <TrendingUp className="h-4 w-4 xl:h-5 xl:w-5 text-sage-200" />
+            <span className="text-3xl xl:text-4xl font-bold">
               <AnimatedNumber value={used} />
             </span>
           </div>
-          <p className="text-xs text-sage-200">Used</p>
+          <p className="text-xs xl:text-sm text-sage-200">Items Used</p>
         </div>
 
         <div>
           <div className="flex items-center gap-1.5 mb-1">
-            <TrendingDown className="h-4 w-4 text-terracotta-50" />
-            <span className="text-3xl font-bold text-white/90">
+            <TrendingDown className="h-4 w-4 xl:h-5 xl:w-5 text-terracotta-50" />
+            <span className="text-3xl xl:text-4xl font-bold text-white/90">
               <AnimatedNumber value={wasted} />
             </span>
           </div>
-          <p className="text-xs text-sage-200">Wasted</p>
+          <p className="text-xs xl:text-sm text-sage-200">Items Wasted</p>
         </div>
 
         <div>
           <div className="flex items-center gap-1.5 mb-1">
-            <DollarSign className="h-4 w-4 text-amber-300" />
-            <span className="text-3xl font-bold text-amber-200">
+            <DollarSign className="h-4 w-4 xl:h-5 xl:w-5 text-amber-300" />
+            <span className="text-3xl xl:text-4xl font-bold text-amber-200">
               <AnimatedNumber value={saved} prefix="$" />
             </span>
           </div>
-          <p className="text-xs text-sage-200">Saved</p>
+          <p className="text-xs xl:text-sm text-sage-200">Money Saved</p>
         </div>
       </div>
     </motion.div>

@@ -3,13 +3,16 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { getFreshnessStatus, freshnessColor, getExpiryLabel } from "@/lib/freshness";
+import { getFoodImage } from "@/lib/food-images";
 import { Badge } from "@/components/ui/badge";
 import { ItemActions } from "@/components/pantry/item-actions";
 
 interface Item {
   id: number;
   name: string;
+  categoryIcon: string | null;
   categoryName: string | null;
   quantity: number;
   unit: string;
@@ -61,9 +64,10 @@ export function NeedsAttention({ items, onAction }: NeedsAttentionProps) {
         animate="show"
         className="space-y-2"
       >
-        {items.slice(0, 3).map((item) => {
+        {items.slice(0, 5).map((item) => {
           const status = getFreshnessStatus(item.expirationDate);
           const colors = freshnessColor(status);
+          const imageUrl = getFoodImage(item.name, item.categoryName);
 
           return (
             <motion.div
@@ -72,7 +76,15 @@ export function NeedsAttention({ items, onAction }: NeedsAttentionProps) {
               className="flex items-center justify-between rounded-xl bg-warm-white px-4 py-3 shadow-warm-sm"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className={`h-8 w-1 rounded-full shrink-0 ${colors.dot}`} />
+                <div className="h-10 w-10 rounded-full shrink-0 overflow-hidden bg-warm-50">
+                  <Image
+                    src={imageUrl}
+                    alt={item.name}
+                    width={40}
+                    height={40}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
                 <div className="min-w-0">
                   <span className="font-medium text-stone-900 truncate block">
                     {item.name}

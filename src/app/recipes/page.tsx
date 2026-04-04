@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PageHeader } from "@/components/layout/page-header";
+import { motion } from "framer-motion";
 import { RecipeCard } from "@/components/recipes/recipe-card";
 import { RecipeDetail } from "@/components/recipes/recipe-detail";
 import { Sparkles } from "lucide-react";
@@ -26,6 +26,23 @@ interface Recipe {
   matchCount?: number;
 }
 
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+  },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 12 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring" as const, stiffness: 300, damping: 30 },
+  },
+};
+
 export default function RecipesPage() {
   const [suggestions, setSuggestions] = useState<Recipe[]>([]);
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
@@ -46,56 +63,76 @@ export default function RecipesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-200 border-t-emerald-600" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-sage-200 border-t-sage-600" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <PageHeader
-        title="Recipes"
-        description="Find recipes to use up expiring ingredients"
-      />
+    <div className="space-y-8">
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
+        <h1 className="text-2xl xl:text-3xl font-bold text-stone-900">Recipes</h1>
+        <p className="text-sm xl:text-base text-stone-500 mt-0.5">
+          Find recipes to use up expiring ingredients
+        </p>
+      </motion.div>
 
       {suggestions.length > 0 && (
-        <div>
+        <section>
           <div className="mb-3 flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-amber-500" />
-            <h2 className="text-lg font-semibold text-gray-900">
+            <div className="rounded-lg bg-amber-50 p-1.5">
+              <Sparkles className="h-4 w-4 text-amber-500" />
+            </div>
+            <h2 className="text-base font-semibold text-stone-900">
               Use It Up
             </h2>
-            <span className="text-sm text-gray-500">
-              — Recipes using your expiring ingredients
+            <span className="text-sm text-stone-400">
+              Recipes using your expiring items
             </span>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-5"
+          >
             {suggestions.map((recipe) => (
-              <RecipeCard
-                key={recipe.id}
-                recipe={recipe}
-                onSelect={setSelectedRecipe}
-                isUseItUp
-              />
+              <motion.div key={recipe.id} variants={item}>
+                <RecipeCard
+                  recipe={recipe}
+                  onSelect={setSelectedRecipe}
+                  isUseItUp
+                />
+              </motion.div>
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </section>
       )}
 
-      <div>
-        <h2 className="mb-3 text-lg font-semibold text-gray-900">
+      <section>
+        <h2 className="mb-3 text-base font-semibold text-stone-900">
           All Recipes
         </h2>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <motion.div
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-5"
+        >
           {allRecipes.map((recipe) => (
-            <RecipeCard
-              key={recipe.id}
-              recipe={recipe}
-              onSelect={setSelectedRecipe}
-            />
+            <motion.div key={recipe.id} variants={item}>
+              <RecipeCard
+                recipe={recipe}
+                onSelect={setSelectedRecipe}
+              />
+            </motion.div>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </section>
 
       <RecipeDetail
         recipe={selectedRecipe}

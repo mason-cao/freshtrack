@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { ItemActions } from "./item-actions";
 import {
@@ -7,6 +8,7 @@ import {
   getExpiryLabel,
   freshnessColor,
 } from "@/lib/freshness";
+import { getFoodImage } from "@/lib/food-images";
 import { formatDate } from "@/lib/utils";
 
 interface Item {
@@ -51,12 +53,12 @@ export function ItemTable({ items, onAction, filter }: ItemTableProps) {
       <table className="w-full">
         <thead>
           <tr className="border-b border-warm-100 text-left text-xs font-medium uppercase tracking-wider text-stone-400">
-            <th className="px-4 py-3">Item</th>
-            <th className="px-4 py-3">Category</th>
-            <th className="px-4 py-3">Qty</th>
-            <th className="px-4 py-3">Purchased</th>
-            <th className="px-4 py-3">Expiration</th>
-            <th className="px-4 py-3 text-right">Actions</th>
+            <th className="px-4 xl:px-5 py-3">Item</th>
+            <th className="px-4 xl:px-5 py-3">Category</th>
+            <th className="px-4 xl:px-5 py-3">Qty</th>
+            <th className="px-4 xl:px-5 py-3">Purchased</th>
+            <th className="px-4 xl:px-5 py-3">Expiration</th>
+            <th className="px-4 xl:px-5 py-3 text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-warm-50">
@@ -66,15 +68,23 @@ export function ItemTable({ items, onAction, filter }: ItemTableProps) {
 
             return (
               <tr key={item.id} className="hover:bg-warm-50/50 transition-colors duration-150">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className={`h-2.5 w-2.5 rounded-full ${colors.dot}`} />
+                <td className="px-4 xl:px-5 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full shrink-0 overflow-hidden bg-warm-50">
+                      <Image
+                        src={getFoodImage(item.name, item.categoryName)}
+                        alt={item.name}
+                        width={32}
+                        height={32}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
                     <span className="font-medium text-stone-900">
                       {item.name}
                     </span>
                   </div>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 xl:px-5 py-3">
                   {item.categoryName ? (
                     <Badge variant="secondary" className="text-[10px]">
                       {item.categoryName}
@@ -83,18 +93,18 @@ export function ItemTable({ items, onAction, filter }: ItemTableProps) {
                     <span className="text-sm text-stone-400">—</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-sm text-stone-600">
+                <td className="px-4 xl:px-5 py-3 text-sm text-stone-600">
                   {item.quantity} {item.unit}
                 </td>
-                <td className="px-4 py-3 text-sm text-stone-400">
+                <td className="px-4 xl:px-5 py-3 text-sm text-stone-400">
                   {item.purchaseDate ? formatDate(item.purchaseDate) : "—"}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 xl:px-5 py-3">
                   <Badge className={`${colors.badge} text-[10px]`}>
                     {getExpiryLabel(item.expirationDate)}
                   </Badge>
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 xl:px-5 py-3 text-right">
                   <ItemActions
                     itemId={item.id}
                     itemName={item.name}

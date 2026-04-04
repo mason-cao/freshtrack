@@ -29,10 +29,14 @@ interface Category {
 
 interface AddItemDialogProps {
   onItemAdded: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function AddItemDialog({ onItemAdded }: AddItemDialogProps) {
-  const [open, setOpen] = useState(false);
+export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange }: AddItemDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [categories, setCategories] = useState<Category[]>([]);
   const [saving, setSaving] = useState(false);
 

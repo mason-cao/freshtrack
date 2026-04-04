@@ -26,32 +26,35 @@ interface WasteChartProps {
 
 export function WasteChart({ data }: WasteChartProps) {
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-        <XAxis dataKey="monthLabel" fontSize={12} tickLine={false} />
-        <YAxis fontSize={12} tickLine={false} />
-        <Tooltip
-          contentStyle={{
-            borderRadius: "8px",
-            border: "1px solid #e5e7eb",
-            boxShadow: "0 4px 6px -1px rgba(0,0,0,.1)",
-          }}
-        />
-        <Legend />
-        <Bar
-          dataKey="consumed"
-          name="Consumed"
-          fill="#10b981"
-          radius={[4, 4, 0, 0]}
-        />
-        <Bar
-          dataKey="wasted"
-          name="Wasted"
-          fill="#ef4444"
-          radius={[4, 4, 0, 0]}
-        />
-      </BarChart>
-    </ResponsiveContainer>
+    <div className="h-[300px] xl:h-[420px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#ebe5d8" />
+          <XAxis dataKey="monthLabel" fontSize={12} tickLine={false} stroke="#78716c" />
+          <YAxis fontSize={12} tickLine={false} stroke="#78716c" />
+          <Tooltip
+            contentStyle={{
+              borderRadius: "12px",
+              border: "none",
+              boxShadow: "0 8px 32px rgba(180, 160, 120, 0.12)",
+              background: "#faf8f5",
+            }}
+          />
+          <Legend />
+          <Bar
+            dataKey="consumed"
+            name="Consumed"
+            fill="#527a52"
+            radius={[6, 6, 0, 0]}
+          />
+          <Bar
+            dataKey="wasted"
+            name="Wasted"
+            fill="#c2410c"
+            radius={[6, 6, 0, 0]}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }

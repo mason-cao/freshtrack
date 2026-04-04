@@ -4,7 +4,9 @@ import { useState } from "react";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
 import { CheckCircle, Trash2 } from "lucide-react";
 import { getFreshnessStatus, freshnessColor, getExpiryLabel } from "@/lib/freshness";
+import { getFoodImage } from "@/lib/food-images";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 import confetti from "canvas-confetti";
 
 interface ItemCardProps {
@@ -12,6 +14,7 @@ interface ItemCardProps {
     id: number;
     name: string;
     categoryName: string | null;
+    categoryIcon?: string | null;
     quantity: number;
     unit: string;
     expirationDate: string;
@@ -29,6 +32,7 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
 
   const status = getFreshnessStatus(item.expirationDate);
   const colors = freshnessColor(status);
+  const imageUrl = getFoodImage(item.name, item.categoryName);
 
   async function handleSwipeEnd(_: unknown, info: { offset: { x: number } }) {
     const threshold = 100;
@@ -88,7 +92,9 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
             onDragEnd={handleSwipeEnd}
             className="relative flex items-center gap-3 rounded-xl bg-warm-white px-4 py-3 shadow-warm-sm cursor-grab active:cursor-grabbing"
           >
-            <div className={`h-10 w-1 rounded-full shrink-0 ${colors.dot}`} />
+            <div className="h-10 w-10 rounded-full shrink-0 overflow-hidden bg-warm-50">
+              <Image src={imageUrl} alt={item.name} width={40} height={40} className="h-full w-full object-cover" />
+            </div>
 
             <div className="flex-1 min-w-0">
               <p className="font-medium text-stone-900 truncate">{item.name}</p>
