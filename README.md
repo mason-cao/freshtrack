@@ -2,7 +2,7 @@
 
 **Reduce food waste. Save money. Track what matters.**
 
-FreshTrack is a pantry management dashboard that helps you track food freshness, get alerts before items expire, discover recipes to use expiring ingredients, and visualize your waste patterns over time. Currently under development (UI/UX Revamp and Deployment).
+FreshTrack is a pantry management dashboard that helps you track food freshness, get alerts before items expire, discover recipes to use expiring ingredients, and visualize your waste patterns over time.
 
 ## The Problem
 
