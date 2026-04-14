@@ -34,3 +34,9 @@ next-env.d.ts
 
 # database
 /data/
+
+# tooling
+.claude/skills/uiuxpromax
+.stitch/designs
+.superpowers/brainstorm
+docs/session_summary.md
