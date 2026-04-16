@@ -8,6 +8,7 @@ import { getFoodImage } from "@/lib/food-images";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import confetti from "canvas-confetti";
+import { fetchJson } from "@/lib/api-client";
 
 interface ItemCardProps {
   item: {
@@ -29,6 +30,7 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
   const wastedOpacity = useTransform(x, [-80, 0], [1, 0]);
   const usedScale = useTransform(x, [0, 80], [0.5, 1]);
   const wastedScale = useTransform(x, [-80, 0], [1, 0.5]);
+  const [error, setError] = useState<string | null>(null);
 
   const status = getFreshnessStatus(item.expirationDate);
   const colors = freshnessColor(status);
@@ -38,20 +40,30 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
     const threshold = 100;
     if (info.offset.x > threshold) {
       // Swipe right = Used
-      setDismissed(true);
-      confetti({
-        particleCount: 30,
-        spread: 50,
-        origin: { x: 0.7, y: 0.6 },
-        colors: ["#527a52", "#b8cdb8", "#d97706"],
-      });
-      await fetch(`/api/items/${item.id}/consume`, { method: "POST" });
-      onAction();
+      setError(null);
+      try {
+        await fetchJson(`/api/items/${item.id}/consume`, { method: "POST" });
+        setDismissed(true);
+        confetti({
+          particleCount: 30,
+          spread: 50,
+          origin: { x: 0.7, y: 0.6 },
+          colors: ["#527a52", "#b8cdb8", "#d97706"],
+        });
+        onAction();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unable to update item.");
+      }
     } else if (info.offset.x < -threshold) {
       // Swipe left = Wasted
-      setDismissed(true);
-      await fetch(`/api/items/${item.id}/waste`, { method: "POST" });
-      onAction();
+      setError(null);
+      try {
+        await fetchJson(`/api/items/${item.id}/waste`, { method: "POST" });
+        setDismissed(true);
+        onAction();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unable to update item.");
+      }
     }
   }
 
@@ -114,6 +126,9 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
               {getExpiryLabel(item.expirationDate)}
             </Badge>
           </motion.div>
+          {error && (
+            <p className="mt-1 px-2 text-xs text-terracotta-600">{error}</p>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

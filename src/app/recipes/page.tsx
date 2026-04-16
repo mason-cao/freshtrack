@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { RecipeCard } from "@/components/recipes/recipe-card";
 import { RecipeDetail } from "@/components/recipes/recipe-detail";
 import { Sparkles } from "lucide-react";
+import { fetchJson } from "@/lib/api-client";
+import { subscribeToPantryUpdates } from "@/lib/pantry-events";
 
 interface RecipeIngredient {
   id: number;
@@ -48,22 +50,40 @@ export default function RecipesPage() {
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadRecipes = useCallback(() => {
+    setError(null);
     Promise.all([
-      fetch("/api/recipes/suggestions").then((r) => r.json()),
-      fetch("/api/recipes").then((r) => r.json()),
+      fetchJson<Recipe[]>("/api/recipes/suggestions"),
+      fetchJson<Recipe[]>("/api/recipes"),
     ]).then(([suggestionsData, recipesData]) => {
       setSuggestions(suggestionsData);
       setAllRecipes(recipesData);
       setLoading(false);
+    }).catch((err) => {
+      setError(err instanceof Error ? err.message : "Unable to load recipes.");
+      setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    loadRecipes();
+    return subscribeToPantryUpdates(loadRecipes);
+  }, [loadRecipes]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-sage-200 border-t-sage-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl bg-terracotta-50 p-4 text-sm text-terracotta-600">
+        {error}
       </div>
     );
   }

@@ -2,10 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { items, categories } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
+import {
+  categoryExists,
+  isItemStatus,
+  validateCreateItemPayload,
+} from "./_lib";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const status = searchParams.get("status") || "active";
+
+  if (!isItemStatus(status)) {
+    return NextResponse.json(
+      { error: "Status must be active, consumed, or wasted." },
+      { status: 400 }
+    );
+  }
 
   const result = db
     .select({
@@ -25,7 +37,7 @@ export async function GET(request: NextRequest) {
     })
     .from(items)
     .leftJoin(categories, eq(items.categoryId, categories.id))
-    .where(eq(items.status, status as "active" | "consumed" | "wasted"))
+    .where(eq(items.status, status))
     .orderBy(asc(items.expirationDate))
     .all();
 
@@ -33,19 +45,29 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+  }
+
+  const validation = validateCreateItemPayload(body);
+  if (!validation.ok) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+
+  if (
+    validation.data.categoryId !== null &&
+    !categoryExists(validation.data.categoryId)
+  ) {
+    return NextResponse.json({ error: "Category not found." }, { status: 400 });
+  }
 
   const newItem = db
     .insert(items)
     .values({
-      name: body.name,
-      categoryId: body.categoryId,
-      quantity: body.quantity || 1,
-      unit: body.unit || "count",
-      purchaseDate: body.purchaseDate || new Date().toISOString().split("T")[0],
-      expirationDate: body.expirationDate,
-      costEstimate: body.costEstimate || null,
-      notes: body.notes || null,
+      ...validation.data,
       status: "active",
     })
     .returning()

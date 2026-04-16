@@ -8,6 +8,8 @@ import { ItemCard } from "@/components/pantry/item-card";
 import { ItemTable } from "@/components/pantry/item-table";
 import { AddItemDialog } from "@/components/pantry/add-item-dialog";
 import { PantrySkeleton } from "@/components/pantry/pantry-skeleton";
+import { fetchJson } from "@/lib/api-client";
+import { subscribeToPantryUpdates } from "@/lib/pantry-events";
 
 interface Item {
   id: number;
@@ -17,6 +19,7 @@ interface Item {
   quantity: number;
   unit: string;
   purchaseDate: string;
+  createdAt: string;
   expirationDate: string;
   estimatedCost: number | null;
 }
@@ -27,17 +30,25 @@ export default function PantryPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("expiry");
+  const [error, setError] = useState<string | null>(null);
 
   const loadItems = useCallback(() => {
-    fetch("/api/items")
-      .then((r) => r.json())
+    setError(null);
+    fetchJson<Item[]>("/api/items")
       .then((data) => {
         setItems(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Unable to load pantry.");
         setLoading(false);
       });
   }, []);
 
-  useEffect(() => { loadItems(); }, [loadItems]);
+  useEffect(() => {
+    loadItems();
+    return subscribeToPantryUpdates(loadItems);
+  }, [loadItems]);
 
   const filteredItems = useMemo(() => {
     let result = items;
@@ -65,7 +76,7 @@ export default function PantryPage() {
         case "name":
           return a.name.localeCompare(b.name);
         case "added":
-          return new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime();
+          return b.createdAt.localeCompare(a.createdAt);
         case "category":
           return (a.categoryName ?? "").localeCompare(b.categoryName ?? "");
         default:
@@ -78,6 +89,14 @@ export default function PantryPage() {
 
   if (loading) {
     return <PantrySkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl bg-terracotta-50 p-4 text-sm text-terracotta-600">
+        {error}
+      </div>
+    );
   }
 
   return (

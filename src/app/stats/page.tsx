@@ -9,10 +9,10 @@ import {
   TrendingUp,
   TrendingDown,
   DollarSign,
-  Percent,
   Leaf,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { fetchJson } from "@/lib/api-client";
 
 interface MonthlyData {
   month: string;
@@ -86,22 +86,38 @@ function WasteRateRing({ rate }: { rate: number }) {
 export default function StatsPage() {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/stats")
-      .then((r) => r.json())
+    fetchJson<StatsData>("/api/stats")
       .then((data) => {
         setStats(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Unable to load statistics.");
         setLoading(false);
       });
   }, []);
 
-  if (loading || !stats) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-sage-200 border-t-sage-600" />
       </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl bg-terracotta-50 p-4 text-sm text-terracotta-600">
+        {error}
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return null;
   }
 
   const useRate = 100 - stats.totals.wasteRate;

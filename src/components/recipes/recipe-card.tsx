@@ -37,7 +37,7 @@ export function RecipeCard({ recipe, onSelect, isUseItUp }: RecipeCardProps) {
 
   return (
     <div
-      className={`cursor-pointer rounded-xl bg-warm-white shadow-warm overflow-hidden transition-all duration-200 hover:shadow-warm-lg hover:translate-y-[-1px] ${
+      className={`group cursor-pointer rounded-xl bg-warm-white shadow-warm overflow-hidden transition-all duration-200 hover:shadow-warm-lg hover:translate-y-[-1px] ${
         isUseItUp ? "ring-1 ring-amber-200" : ""
       }`}
       onClick={() => onSelect(recipe)}

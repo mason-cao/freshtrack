@@ -21,8 +21,9 @@ FreshTrack is a pantry management dashboard that helps you track food freshness,
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Language | TypeScript |
+| Runtime | React 19 |
 | Database | SQLite via better-sqlite3 |
 | ORM | Drizzle ORM |
 | Styling | Tailwind CSS v4 |
@@ -33,7 +34,7 @@ FreshTrack is a pantry management dashboard that helps you track food freshness,
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 20.9+ and npm
 
 ### Installation
 
@@ -64,6 +65,8 @@ The app will be available at **http://localhost:3000**.
 | `npm run dev` | Start dev server with Turbopack |
 | `npm run build` | Production build |
 | `npm run start` | Start production server |
+| `npm run lint` | Type-check the project |
+| `npm run typecheck` | Type-check the project |
 | `npm run db:seed` | Seed database with sample data |
 | `npm run db:generate` | Generate new migrations from schema |
 | `npm run db:migrate` | Run pending migrations |

@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getDaysUntilExpiry } from "@/lib/freshness";
+import { fetchJson } from "@/lib/api-client";
+import { subscribeToPantryUpdates } from "@/lib/pantry-events";
 import { WeeklyHero } from "@/components/dashboard/weekly-hero";
 import { StreakBadge } from "@/components/dashboard/streak-badge";
 import { MetricCards } from "@/components/dashboard/metric-cards";
@@ -47,26 +49,40 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [recipe, setRecipe] = useState<RecipeSuggestion | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  function loadData() {
+  const loadData = useCallback(() => {
+    setError(null);
     Promise.all([
-      fetch("/api/items").then((r) => r.json()),
-      fetch("/api/stats").then((r) => r.json()),
-      fetch("/api/recipes/suggestions").then((r) => r.json()),
+      fetchJson<Item[]>("/api/items"),
+      fetchJson<Stats>("/api/stats"),
+      fetchJson<RecipeSuggestion[]>("/api/recipes/suggestions"),
     ]).then(([itemsData, statsData, recipesData]) => {
       setItems(itemsData);
       setStats(statsData);
       setRecipe(recipesData?.[0] ?? null);
       setLoading(false);
-    }).catch(() => {
+    }).catch((err) => {
+      setError(err instanceof Error ? err.message : "Unable to load dashboard.");
       setLoading(false);
     });
-  }
+  }, []);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+    return subscribeToPantryUpdates(loadData);
+  }, [loadData]);
 
   if (loading) {
     return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl bg-terracotta-50 p-4 text-sm text-terracotta-600">
+        {error}
+      </div>
+    );
   }
 
   const expiringSoon = items.filter((i) => {

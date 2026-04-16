@@ -1,14 +1,11 @@
+import { differenceInCalendarDays } from "@/lib/dates";
+
 export type FreshnessStatus = "fresh" | "warning" | "urgent" | "expired";
 
 export function getFreshnessStatus(expirationDate: string): FreshnessStatus {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const expiry = new Date(expirationDate + "T00:00:00");
-  expiry.setHours(0, 0, 0, 0);
+  const diffDays = getDaysUntilExpiry(expirationDate);
 
-  const diffMs = expiry.getTime() - today.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
+  if (Number.isNaN(diffDays)) return "expired";
   if (diffDays < 0) return "expired";
   if (diffDays <= 2) return "urgent";
   if (diffDays <= 5) return "warning";
@@ -16,17 +13,12 @@ export function getFreshnessStatus(expirationDate: string): FreshnessStatus {
 }
 
 export function getDaysUntilExpiry(expirationDate: string): number {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const expiry = new Date(expirationDate + "T00:00:00");
-  expiry.setHours(0, 0, 0, 0);
-
-  const diffMs = expiry.getTime() - today.getTime();
-  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  return differenceInCalendarDays(expirationDate);
 }
 
 export function getExpiryLabel(expirationDate: string): string {
   const days = getDaysUntilExpiry(expirationDate);
+  if (Number.isNaN(days)) return "Invalid date";
   if (days < -1) return `Expired ${Math.abs(days)} days ago`;
   if (days === -1) return "Expired yesterday";
   if (days === 0) return "Expires today";

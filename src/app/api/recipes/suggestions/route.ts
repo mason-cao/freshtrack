@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { items, recipes, recipeIngredients } from "@/db/schema";
-import { eq, and, lte, gte } from "drizzle-orm";
+import { and, eq, lte, gte } from "drizzle-orm";
+import { addDaysToDateInput, toDateInputValue } from "@/lib/dates";
 
 export async function GET() {
-  const today = new Date();
-  const fiveDaysFromNow = new Date();
-  fiveDaysFromNow.setDate(today.getDate() + 5);
-
-  const todayStr = today.toISOString().split("T")[0];
-  const futureStr = fiveDaysFromNow.toISOString().split("T")[0];
+  const todayStr = toDateInputValue();
+  const futureStr = addDaysToDateInput(5);
 
   // Get items expiring within 5 days
   const expiringItems = db
@@ -28,16 +25,19 @@ export async function GET() {
     item.name.toLowerCase()
   );
 
-  // Get all recipes with ingredients
   const allRecipes = db.select().from(recipes).all();
+  const allIngredients = db.select().from(recipeIngredients).all();
+  const ingredientsByRecipe = new Map<number, typeof allIngredients>();
+
+  for (const ingredient of allIngredients) {
+    const current = ingredientsByRecipe.get(ingredient.recipeId) ?? [];
+    current.push(ingredient);
+    ingredientsByRecipe.set(ingredient.recipeId, current);
+  }
 
   const suggestions = allRecipes
     .map((recipe) => {
-      const ingredients = db
-        .select()
-        .from(recipeIngredients)
-        .where(eq(recipeIngredients.recipeId, recipe.id))
-        .all();
+      const ingredients = ingredientsByRecipe.get(recipe.id) ?? [];
 
       const matchingIngredients = ingredients.filter((ing) =>
         expiringNames.some(

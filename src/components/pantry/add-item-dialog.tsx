@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
+import { addDaysToDateInput, toDateInputValue } from "@/lib/dates";
 
 interface Category {
   id: number;
@@ -39,14 +40,13 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
   const setOpen = onOpenChange ?? setInternalOpen;
   const [categories, setCategories] = useState<Category[]>([]);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [unit, setUnit] = useState("count");
-  const [purchaseDate, setPurchaseDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [purchaseDate, setPurchaseDate] = useState(toDateInputValue());
   const [expirationDate, setExpirationDate] = useState("");
   const [costEstimate, setCostEstimate] = useState("");
 
@@ -58,11 +58,9 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
 
   function handleCategoryChange(value: string) {
     setCategoryId(value);
-    const cat = categories.find((c) => c.id === parseInt(value));
+    const cat = categories.find((c) => c.id === Number.parseInt(value, 10));
     if (cat && !expirationDate) {
-      const expiry = new Date();
-      expiry.setDate(expiry.getDate() + cat.defaultShelfLifeDays);
-      setExpirationDate(expiry.toISOString().split("T")[0]);
+      setExpirationDate(addDaysToDateInput(cat.defaultShelfLifeDays));
     }
   }
 
@@ -71,31 +69,43 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
     if (!name || !expirationDate) return;
 
     setSaving(true);
-    await fetch("/api/items", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        categoryId: categoryId ? parseInt(categoryId) : null,
-        quantity: parseFloat(quantity) || 1,
-        unit,
-        purchaseDate,
-        expirationDate,
-        costEstimate: costEstimate ? parseFloat(costEstimate) : null,
-      }),
-    });
+    setError(null);
 
-    // Reset form
-    setName("");
-    setCategoryId("");
-    setQuantity("1");
-    setUnit("count");
-    setPurchaseDate(new Date().toISOString().split("T")[0]);
-    setExpirationDate("");
-    setCostEstimate("");
-    setSaving(false);
-    setOpen(false);
-    onItemAdded();
+    try {
+      const response = await fetch("/api/items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          categoryId: categoryId ? Number.parseInt(categoryId, 10) : null,
+          quantity: quantity ? parseFloat(quantity) : 1,
+          unit,
+          purchaseDate,
+          expirationDate,
+          costEstimate: costEstimate ? parseFloat(costEstimate) : null,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error ?? "Unable to add item.");
+      }
+
+      // Reset form
+      setName("");
+      setCategoryId("");
+      setQuantity("1");
+      setUnit("count");
+      setPurchaseDate(toDateInputValue());
+      setExpirationDate("");
+      setCostEstimate("");
+      setOpen(false);
+      onItemAdded();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to add item.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -165,7 +175,7 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
                 id="quantity"
                 type="number"
                 step="0.1"
-                min="0"
+                min="0.1"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
               />
@@ -205,6 +215,12 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
               />
             </div>
           </div>
+
+          {error && (
+            <p className="rounded-lg bg-terracotta-50 px-3 py-2 text-sm text-terracotta-600">
+              {error}
+            </p>
+          )}
 
           <Button type="submit" className="w-full" disabled={saving}>
             {saving ? "Adding..." : "Add to Pantry"}

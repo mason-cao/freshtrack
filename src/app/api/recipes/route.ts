@@ -1,20 +1,22 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { recipes, recipeIngredients } from "@/db/schema";
-import { eq } from "drizzle-orm";
 
 export async function GET() {
   const allRecipes = db.select().from(recipes).all();
+  const allIngredients = db.select().from(recipeIngredients).all();
+  const ingredientsByRecipe = new Map<number, typeof allIngredients>();
 
-  const result = allRecipes.map((recipe) => {
-    const ingredients = db
-      .select()
-      .from(recipeIngredients)
-      .where(eq(recipeIngredients.recipeId, recipe.id))
-      .all();
+  for (const ingredient of allIngredients) {
+    const current = ingredientsByRecipe.get(ingredient.recipeId) ?? [];
+    current.push(ingredient);
+    ingredientsByRecipe.set(ingredient.recipeId, current);
+  }
 
-    return { ...recipe, ingredients };
-  });
+  const result = allRecipes.map((recipe) => ({
+    ...recipe,
+    ingredients: ingredientsByRecipe.get(recipe.id) ?? [],
+  }));
 
   return NextResponse.json(result);
 }

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Fab } from "./fab";
+import { notifyPantryUpdated } from "@/lib/pantry-events";
 
 const navItems = [
   { href: "/", label: "Home", icon: LayoutDashboard },
@@ -146,7 +147,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </nav>
 
       {/* FAB */}
-      <Fab onItemAdded={() => router.refresh()} />
+      <Fab
+        onItemAdded={() => {
+          notifyPantryUpdated();
+          router.refresh();
+        }}
+      />
 
       {/* Main Content */}
       <main className="md:ml-[72px] xl:ml-[220px] transition-[margin-left] duration-300 ease-out">

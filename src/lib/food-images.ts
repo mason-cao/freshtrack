@@ -61,7 +61,7 @@ const foodImageMap: Record<string, string> = {
   bacon: "https://images.unsplash.com/photo-1606851094291-6efae152bb87?w=400&h=400&fit=crop&auto=format&q=80",
   apple: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=400&fit=crop&auto=format&q=80",
   banana: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop&auto=format&q=80",
-  potato: "https://images.unsplash.com/photo-1518977676601-b53f82ber40a?w=400&h=400&fit=crop&auto=format&q=80",
+  potato: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=400&fit=crop&auto=format&q=80",
 
   // Recipes
   "stir fry": "https://images.unsplash.com/photo-1512058564366-18510be2db87?w=600&h=400&fit=crop&auto=format&q=80",

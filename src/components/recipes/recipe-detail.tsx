@@ -106,7 +106,9 @@ export function RecipeDetail({ recipe, open, onClose }: RecipeDetailProps) {
                       }`}
                     />
                     <span>
-                      {ing.quantity} {ing.unit} {ing.ingredientName}
+                      {[ing.quantity, ing.unit, ing.ingredientName]
+                        .filter((part) => part !== null && part !== "")
+                        .join(" ")}
                     </span>
                     {isMatching && (
                       <Badge variant="warning" className="text-[10px] px-1.5 py-0">

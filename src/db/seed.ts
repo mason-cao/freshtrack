@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema";
 import path from "path";
 import fs from "fs";
+import { addDaysToDateInput, toDateInputValue } from "../lib/dates";
 
 const dbDir = path.join(process.cwd(), "data");
 if (!fs.existsSync(dbDir)) {
@@ -15,9 +16,7 @@ sqlite.pragma("foreign_keys = ON");
 const db = drizzle(sqlite, { schema });
 
 function daysFromNow(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toISOString().split("T")[0];
+  return addDaysToDateInput(days);
 }
 
 function daysAgo(days: number): string {
@@ -28,7 +27,7 @@ function monthsAgo(months: number, dayOffset = 0): string {
   const d = new Date();
   d.setMonth(d.getMonth() - months);
   d.setDate(d.getDate() + dayOffset);
-  return d.toISOString().split("T")[0];
+  return toDateInputValue(d);
 }
 
 async function seed() {

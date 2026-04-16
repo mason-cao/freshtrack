@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { wasteLog } from "@/db/schema";
+import { formatMonthLabel, monthKeyFromDateValue } from "@/lib/dates";
 
 interface MonthlyData {
   consumed: number;
@@ -16,8 +17,8 @@ export async function GET() {
   const monthlyMap = new Map<string, MonthlyData>();
 
   for (const log of allLogs) {
-    const date = new Date(log.loggedAt);
-    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    const monthKey = monthKeyFromDateValue(log.loggedAt);
+    if (!monthKey) continue;
 
     if (!monthlyMap.has(monthKey)) {
       monthlyMap.set(monthKey, {
@@ -43,10 +44,7 @@ export async function GET() {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([month, data]) => ({
       month,
-      monthLabel: new Date(month + "-01").toLocaleDateString("en-US", {
-        month: "short",
-        year: "numeric",
-      }),
+      monthLabel: formatMonthLabel(month),
       ...data,
     }));
 
