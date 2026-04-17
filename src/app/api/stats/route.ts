@@ -11,7 +11,7 @@ interface MonthlyData {
 }
 
 export async function GET() {
-  const allLogs = db.select().from(wasteLog).all();
+  const allLogs = await db.select().from(wasteLog).all();
 
   // Aggregate by month
   const monthlyMap = new Map<string, MonthlyData>();

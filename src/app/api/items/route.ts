@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const result = db
+  const result = await db
     .select({
       id: items.id,
       name: items.name,
@@ -59,12 +59,12 @@ export async function POST(request: NextRequest) {
 
   if (
     validation.data.categoryId !== null &&
-    !categoryExists(validation.data.categoryId)
+    !(await categoryExists(validation.data.categoryId))
   ) {
     return NextResponse.json({ error: "Category not found." }, { status: 400 });
   }
 
-  const newItem = db
+  const newItem = await db
     .insert(items)
     .values({
       ...validation.data,

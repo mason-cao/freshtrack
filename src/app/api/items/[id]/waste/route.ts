@@ -11,6 +11,6 @@ export async function POST(
     return NextResponse.json({ error: "Invalid item id." }, { status: 400 });
   }
 
-  const result = completeItem(itemId, "wasted");
+  const result = await completeItem(itemId, "wasted");
   return NextResponse.json(result.body, { status: result.status });
 }

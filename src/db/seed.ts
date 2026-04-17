@@ -1,19 +1,14 @@
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { createClient } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
+import { sql } from "drizzle-orm";
 import * as schema from "./schema";
-import path from "path";
-import fs from "fs";
 import { addDaysToDateInput, toDateInputValue } from "../lib/dates";
 
-const dbDir = path.join(process.cwd(), "data");
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-}
+const url = process.env.TURSO_DATABASE_URL ?? "file:./data/freshtrack.db";
+const authToken = process.env.TURSO_AUTH_TOKEN;
 
-const dbPath = path.join(dbDir, "freshtrack.db");
-const sqlite = new Database(dbPath);
-sqlite.pragma("foreign_keys = ON");
-const db = drizzle(sqlite, { schema });
+const client = createClient({ url, authToken });
+const db = drizzle(client, { schema });
 
 function daysFromNow(days: number): string {
   return addDaysToDateInput(days);
@@ -30,18 +25,18 @@ function monthsAgo(months: number, dayOffset = 0): string {
   return toDateInputValue(d);
 }
 
-async function seed() {
+async function main() {
   console.log("Seeding database...");
 
   // Clear existing data
-  db.delete(schema.wasteLog).run();
-  db.delete(schema.recipeIngredients).run();
-  db.delete(schema.recipes).run();
-  db.delete(schema.items).run();
-  db.delete(schema.categories).run();
+  await db.delete(schema.wasteLog).run();
+  await db.delete(schema.recipeIngredients).run();
+  await db.delete(schema.recipes).run();
+  await db.delete(schema.items).run();
+  await db.delete(schema.categories).run();
 
   // Reset autoincrement counters so IDs start from 1
-  sqlite.exec("DELETE FROM sqlite_sequence");
+  await db.run(sql`DELETE FROM sqlite_sequence`);
 
   // Categories
   const categoryData = [
@@ -58,7 +53,7 @@ async function seed() {
   ];
 
   for (const cat of categoryData) {
-    db.insert(schema.categories).values(cat).run();
+    await db.insert(schema.categories).values(cat).run();
   }
 
   console.log("  ✓ Categories seeded");
@@ -114,7 +109,7 @@ async function seed() {
   ];
 
   for (const item of itemsData) {
-    db.insert(schema.items).values({
+    await db.insert(schema.items).values({
       ...item,
       status: "active",
     }).run();
@@ -394,9 +389,9 @@ async function seed() {
 
   for (const recipe of recipesData) {
     const { ingredients, ...recipeRow } = recipe;
-    const result = db.insert(schema.recipes).values(recipeRow).returning().get();
+    const result = await db.insert(schema.recipes).values(recipeRow).returning().get();
     for (const ing of ingredients) {
-      db.insert(schema.recipeIngredients)
+      await db.insert(schema.recipeIngredients)
         .values({ ...ing, recipeId: result.id })
         .run();
     }
@@ -455,15 +450,14 @@ async function seed() {
   ];
 
   for (const entry of wasteLogData) {
-    db.insert(schema.wasteLog).values(entry).run();
+    await db.insert(schema.wasteLog).values(entry).run();
   }
 
   console.log("  ✓ Waste log seeded");
   console.log("Done! Database seeded successfully.");
-  process.exit(0);
 }
 
-seed().catch((err) => {
-  console.error("Seed failed:", err);
+main().catch((err) => {
+  console.error(err);
   process.exit(1);
 });

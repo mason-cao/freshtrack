@@ -66,14 +66,13 @@ export function isItemStatus(value: string): value is ItemStatus {
   return itemStatuses.includes(value as ItemStatus);
 }
 
-export function categoryExists(categoryId: number): boolean {
-  return Boolean(
-    db
-      .select({ id: categories.id })
-      .from(categories)
-      .where(eq(categories.id, categoryId))
-      .get()
-  );
+export async function categoryExists(categoryId: number): Promise<boolean> {
+  const row = await db
+    .select({ id: categories.id })
+    .from(categories)
+    .where(eq(categories.id, categoryId))
+    .get();
+  return Boolean(row);
 }
 
 export function validateCreateItemPayload(
@@ -238,9 +237,13 @@ export function validatePatchItemPayload(
   return { ok: true, data };
 }
 
-export function completeItem(itemId: number, action: ItemAction) {
-  return db.transaction((tx) => {
-    const item = tx.select().from(items).where(eq(items.id, itemId)).get();
+export async function completeItem(itemId: number, action: ItemAction) {
+  return db.transaction(async (tx) => {
+    const item = await tx
+      .select()
+      .from(items)
+      .where(eq(items.id, itemId))
+      .get();
 
     if (!item) {
       return { status: 404, body: { error: "Item not found." } };
@@ -253,12 +256,14 @@ export function completeItem(itemId: number, action: ItemAction) {
       };
     }
 
-    tx.update(items)
+    await tx
+      .update(items)
       .set({ status: action, updatedAt: new Date().toISOString() })
       .where(eq(items.id, itemId))
       .run();
 
-    tx.insert(wasteLog)
+    await tx
+      .insert(wasteLog)
       .values({
         itemId: item.id,
         itemName: item.name,

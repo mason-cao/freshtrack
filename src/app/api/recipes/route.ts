@@ -3,8 +3,8 @@ import { db } from "@/db";
 import { recipes, recipeIngredients } from "@/db/schema";
 
 export async function GET() {
-  const allRecipes = db.select().from(recipes).all();
-  const allIngredients = db.select().from(recipeIngredients).all();
+  const allRecipes = await db.select().from(recipes).all();
+  const allIngredients = await db.select().from(recipeIngredients).all();
   const ingredientsByRecipe = new Map<number, typeof allIngredients>();
 
   for (const ingredient of allIngredients) {

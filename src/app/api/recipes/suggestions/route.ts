@@ -9,7 +9,7 @@ export async function GET() {
   const futureStr = addDaysToDateInput(5);
 
   // Get items expiring within 5 days
-  const expiringItems = db
+  const expiringItems = await db
     .select()
     .from(items)
     .where(
@@ -25,8 +25,8 @@ export async function GET() {
     item.name.toLowerCase()
   );
 
-  const allRecipes = db.select().from(recipes).all();
-  const allIngredients = db.select().from(recipeIngredients).all();
+  const allRecipes = await db.select().from(recipes).all();
+  const allIngredients = await db.select().from(recipeIngredients).all();
   const ingredientsByRecipe = new Map<number, typeof allIngredients>();
 
   for (const ingredient of allIngredients) {
