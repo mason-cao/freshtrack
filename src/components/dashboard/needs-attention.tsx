@@ -8,6 +8,7 @@ import { getFreshnessStatus, freshnessColor, getExpiryLabel } from "@/lib/freshn
 import { getFoodImage } from "@/lib/food-images";
 import { Badge } from "@/components/ui/badge";
 import { ItemActions } from "@/components/pantry/item-actions";
+import { FreshnessMeter } from "@/components/pantry/freshness-meter";
 
 interface Item {
   id: number;
@@ -47,9 +48,12 @@ export function NeedsAttention({ items, onAction }: NeedsAttentionProps) {
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-stone-400">
-          Needs Attention
-        </h2>
+        <div>
+          <h2 className="text-sm font-semibold text-stone-900">Needs attention</h2>
+          <p className="text-xs text-stone-400">
+            {items.length} item{items.length !== 1 ? "s" : ""} expiring soon
+          </p>
+        </div>
         <Link
           href="/pantry"
           className="text-sm text-sage-600 hover:text-sage-700 flex items-center gap-1 font-medium"
@@ -73,33 +77,41 @@ export function NeedsAttention({ items, onAction }: NeedsAttentionProps) {
             <motion.div
               key={item.id}
               variants={itemVariant}
-              className="flex items-center justify-between rounded-xl bg-warm-white px-4 py-3 shadow-warm-sm"
+              className="relative overflow-hidden rounded-xl border border-warm-100 bg-warm-white px-4 py-3 shadow-warm-sm transition-shadow duration-200 hover:shadow-warm"
             >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="h-10 w-10 rounded-full shrink-0 overflow-hidden bg-warm-50">
-                  <Image
-                    src={imageUrl}
-                    alt={item.name}
-                    width={40}
-                    height={40}
-                    className="h-full w-full object-cover"
-                  />
+              <div className={`absolute inset-y-0 left-0 w-1 ${colors.dot}`} />
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <div className="h-11 w-11 rounded-lg shrink-0 overflow-hidden bg-warm-50">
+                    <Image
+                      src={imageUrl}
+                      alt={item.name}
+                      width={44}
+                      height={44}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium text-stone-900 truncate block">
+                      {item.name}
+                    </span>
+                    <span className="text-xs text-stone-400">
+                      {item.quantity} {item.unit}
+                      {item.categoryName && ` · ${item.categoryName}`}
+                    </span>
+                    <FreshnessMeter
+                      expirationDate={item.expirationDate}
+                      compact
+                      className="mt-2 max-w-[180px]"
+                    />
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <span className="font-medium text-stone-900 truncate block">
-                    {item.name}
-                  </span>
-                  <span className="text-xs text-stone-400">
-                    {item.quantity} {item.unit}
-                    {item.categoryName && ` · ${item.categoryName}`}
-                  </span>
+                <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
+                  <Badge className={`${colors.badge} max-w-[118px] text-center text-[10px] leading-tight`}>
+                    {getExpiryLabel(item.expirationDate)}
+                  </Badge>
+                  <ItemActions itemId={item.id} itemName={item.name} onAction={onAction} />
                 </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0 ml-3">
-                <Badge className={`${colors.badge} text-[10px]`}>
-                  {getExpiryLabel(item.expirationDate)}
-                </Badge>
-                <ItemActions itemId={item.id} itemName={item.name} onAction={onAction} />
               </div>
             </motion.div>
           );

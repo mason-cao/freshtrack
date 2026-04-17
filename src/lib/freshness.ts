@@ -16,6 +16,16 @@ export function getDaysUntilExpiry(expirationDate: string): number {
   return differenceInCalendarDays(expirationDate);
 }
 
+export function getFreshnessScore(expirationDate: string): number {
+  const days = getDaysUntilExpiry(expirationDate);
+
+  if (Number.isNaN(days) || days < 0) return 0;
+  if (days === 0) return 8;
+  if (days >= 14) return 100;
+
+  return Math.max(14, Math.round((days / 14) * 100));
+}
+
 export function getExpiryLabel(expirationDate: string): string {
   const days = getDaysUntilExpiry(expirationDate);
   if (Number.isNaN(days)) return "Invalid date";

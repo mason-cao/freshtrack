@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Package, TrendingUp, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MetricCardsProps {
   activeItems: number;
@@ -27,6 +28,36 @@ const item = {
 };
 
 export function MetricCards({ activeItems, useRate, expiringSoon }: MetricCardsProps) {
+  const metrics = [
+    {
+      label: "Active items",
+      value: activeItems,
+      helper: "In rotation",
+      icon: Package,
+      accent: "bg-sage-500",
+      iconColor: "text-sage-600",
+      softBg: "bg-sage-50",
+    },
+    {
+      label: "Use rate",
+      value: `${useRate}%`,
+      helper: "Tracked history",
+      icon: TrendingUp,
+      accent: "bg-amber-500",
+      iconColor: "text-amber-700",
+      softBg: "bg-amber-50",
+    },
+    {
+      label: "Expiring soon",
+      value: expiringSoon,
+      helper: expiringSoon > 0 ? "Needs action" : "Clear",
+      icon: Clock,
+      accent: expiringSoon > 0 ? "bg-terracotta-500" : "bg-sage-500",
+      iconColor: expiringSoon > 0 ? "text-terracotta-600" : "text-sage-600",
+      softBg: expiringSoon > 0 ? "bg-terracotta-50" : "bg-sage-50",
+    },
+  ];
+
   return (
     <motion.div
       variants={container}
@@ -34,25 +65,29 @@ export function MetricCards({ activeItems, useRate, expiringSoon }: MetricCardsP
       animate="show"
       className="grid grid-cols-3 gap-3"
     >
-      <motion.div variants={item} className="rounded-xl bg-warm-white p-4 xl:p-5 shadow-warm">
-        <Package className="h-5 w-5 xl:h-6 xl:w-6 text-sage-500 mb-2" />
-        <p className="text-2xl xl:text-3xl font-bold text-stone-900">{activeItems}</p>
-        <p className="text-xs text-stone-500 mt-0.5">Active Items</p>
-      </motion.div>
+      {metrics.map((metric) => {
+        const Icon = metric.icon;
 
-      <motion.div variants={item} className="rounded-xl bg-warm-white p-4 xl:p-5 shadow-warm">
-        <TrendingUp className="h-5 w-5 xl:h-6 xl:w-6 text-sage-500 mb-2" />
-        <p className="text-2xl xl:text-3xl font-bold text-stone-900">{useRate}%</p>
-        <p className="text-xs text-stone-500 mt-0.5">Use Rate</p>
-      </motion.div>
-
-      <motion.div variants={item} className="rounded-xl bg-warm-white p-4 xl:p-5 shadow-warm">
-        <Clock className={`h-5 w-5 xl:h-6 xl:w-6 mb-2 ${expiringSoon > 0 ? "text-amber-500" : "text-sage-500"}`} />
-        <p className={`text-2xl xl:text-3xl font-bold ${expiringSoon > 0 ? "text-amber-600" : "text-stone-900"}`}>
-          {expiringSoon}
-        </p>
-        <p className="text-xs text-stone-500 mt-0.5">Expiring Soon</p>
-      </motion.div>
+        return (
+          <motion.div
+            key={metric.label}
+            variants={item}
+            className="relative overflow-hidden rounded-xl border border-warm-100 bg-warm-white p-3 shadow-warm-sm transition-shadow duration-200 hover:shadow-warm xl:p-5"
+          >
+            <div className={cn("absolute inset-x-0 top-0 h-1", metric.accent)} />
+            <div className={cn("mb-3 inline-flex rounded-lg p-2", metric.softBg)}>
+              <Icon className={cn("h-4 w-4 xl:h-5 xl:w-5", metric.iconColor)} />
+            </div>
+            <p className="text-2xl font-bold leading-none text-stone-900 xl:text-3xl">
+              {metric.value}
+            </p>
+            <p className="mt-2 text-xs font-medium text-stone-600">{metric.label}</p>
+            <p className="mt-0.5 hidden text-[11px] text-stone-400 sm:block">
+              {metric.helper}
+            </p>
+          </motion.div>
+        );
+      })}
     </motion.div>
   );
 }

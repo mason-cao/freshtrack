@@ -10,6 +10,7 @@ import {
 } from "@/lib/freshness";
 import { getFoodImage } from "@/lib/food-images";
 import { formatDate } from "@/lib/utils";
+import { FreshnessMeter } from "./freshness-meter";
 
 interface Item {
   id: number;
@@ -49,9 +50,9 @@ export function ItemTable({ items, onAction, filter }: ItemTableProps) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl bg-warm-white shadow-warm">
+    <div className="overflow-x-auto rounded-xl border border-warm-100 bg-warm-white shadow-warm">
       <table className="w-full">
-        <thead>
+        <thead className="sticky top-0 z-10 bg-warm-white">
           <tr className="border-b border-warm-100 text-left text-xs font-medium uppercase tracking-wider text-stone-400">
             <th className="px-4 xl:px-5 py-3">Item</th>
             <th className="px-4 xl:px-5 py-3">Category</th>
@@ -67,15 +68,16 @@ export function ItemTable({ items, onAction, filter }: ItemTableProps) {
             const colors = freshnessColor(status);
 
             return (
-              <tr key={item.id} className="hover:bg-warm-50/50 transition-colors duration-150">
+              <tr key={item.id} className="hover:bg-warm-50/60 transition-colors duration-150">
                 <td className="px-4 xl:px-5 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full shrink-0 overflow-hidden bg-warm-50">
+                    <div className={`h-8 w-1 rounded-full ${colors.dot}`} />
+                    <div className="h-9 w-9 rounded-lg shrink-0 overflow-hidden bg-warm-50">
                       <Image
                         src={getFoodImage(item.name, item.categoryName)}
                         alt={item.name}
-                        width={32}
-                        height={32}
+                        width={36}
+                        height={36}
                         className="h-full w-full object-cover"
                       />
                     </div>
@@ -100,9 +102,16 @@ export function ItemTable({ items, onAction, filter }: ItemTableProps) {
                   {item.purchaseDate ? formatDate(item.purchaseDate) : "—"}
                 </td>
                 <td className="px-4 xl:px-5 py-3">
-                  <Badge className={`${colors.badge} text-[10px]`}>
-                    {getExpiryLabel(item.expirationDate)}
-                  </Badge>
+                  <div className="min-w-[150px]">
+                    <Badge className={`${colors.badge} text-[10px]`}>
+                      {getExpiryLabel(item.expirationDate)}
+                    </Badge>
+                    <FreshnessMeter
+                      expirationDate={item.expirationDate}
+                      compact
+                      className="mt-2"
+                    />
+                  </div>
                 </td>
                 <td className="px-4 xl:px-5 py-3 text-right">
                   <ItemActions

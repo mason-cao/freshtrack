@@ -87,6 +87,16 @@ export default function PantryPage() {
     return result;
   }, [items, search, filter, sort]);
 
+  const statusCounts = useMemo(() => {
+    return items.reduce(
+      (counts, item) => {
+        counts[getFreshnessStatus(item.expirationDate)] += 1;
+        return counts;
+      },
+      { fresh: 0, warning: 0, urgent: 0, expired: 0 }
+    );
+  }, [items]);
+
   if (loading) {
     return <PantrySkeleton />;
   }
@@ -118,6 +128,25 @@ export default function PantryPage() {
           <AddItemDialog onItemAdded={loadItems} />
         </div>
       </motion.div>
+
+      <div className="grid grid-cols-4 gap-2 rounded-xl border border-warm-100 bg-warm-white p-2 shadow-warm-sm">
+        {[
+          { label: "Urgent", value: statusCounts.urgent, dot: "bg-terracotta-500", text: "text-terracotta-600" },
+          { label: "Expiring", value: statusCounts.warning, dot: "bg-amber-500", text: "text-amber-700" },
+          { label: "Fresh", value: statusCounts.fresh, dot: "bg-sage-500", text: "text-sage-700" },
+          { label: "Expired", value: statusCounts.expired, dot: "bg-stone-400", text: "text-stone-500" },
+        ].map((status) => (
+          <div key={status.label} className="rounded-lg px-2 py-2 text-center">
+            <div className="flex items-center justify-center gap-1.5">
+              <span className={`h-2 w-2 rounded-full ${status.dot}`} />
+              <span className={`text-lg font-bold leading-none ${status.text}`}>
+                {status.value}
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] font-medium text-stone-400">{status.label}</p>
+          </div>
+        ))}
+      </div>
 
       {/* Search + Filter */}
       <SearchFilterBar

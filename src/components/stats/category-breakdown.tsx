@@ -23,18 +23,31 @@ interface CategoryBreakdownProps {
 
 export function CategoryBreakdown({ data }: CategoryBreakdownProps) {
   return (
-    <div className="h-[300px] xl:h-[420px] 2xl:h-[500px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#ebe5d8" />
-          <XAxis dataKey="monthLabel" fontSize={12} tickLine={false} stroke="#78716c" />
+    <div className="h-[300px] min-w-0 xl:h-[420px] 2xl:h-[500px]">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+        <BarChart
+          data={data}
+          margin={{ top: 8, right: 8, left: -12, bottom: 0 }}
+          barGap={8}
+          barCategoryGap="24%"
+        >
+          <CartesianGrid vertical={false} stroke="#ebe5d8" />
+          <XAxis
+            dataKey="monthLabel"
+            axisLine={false}
+            fontSize={12}
+            tickLine={false}
+            stroke="#78716c"
+          />
           <YAxis
+            axisLine={false}
             fontSize={12}
             tickLine={false}
             tickFormatter={(v) => `$${v}`}
             stroke="#78716c"
           />
           <Tooltip
+            cursor={{ fill: "#f5f0e8" }}
             formatter={(value) => formatCurrency(Number(value))}
             contentStyle={{
               borderRadius: "12px",
@@ -47,13 +60,13 @@ export function CategoryBreakdown({ data }: CategoryBreakdownProps) {
             dataKey="consumedCost"
             name="Consumed Value"
             fill="#527a52"
-            radius={[6, 6, 0, 0]}
+            radius={[8, 8, 2, 2]}
           />
           <Bar
             dataKey="wastedCost"
             name="Wasted Value"
             fill="#c2410c"
-            radius={[6, 6, 0, 0]}
+            radius={[8, 8, 2, 2]}
           />
         </BarChart>
       </ResponsiveContainer>

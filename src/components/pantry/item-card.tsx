@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import confetti from "canvas-confetti";
 import { fetchJson } from "@/lib/api-client";
+import { FreshnessMeter } from "./freshness-meter";
 
 interface ItemCardProps {
   item: {
@@ -102,13 +103,14 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
             dragElastic={0.5}
             style={{ x }}
             onDragEnd={handleSwipeEnd}
-            className="relative flex items-center gap-3 rounded-xl bg-warm-white px-4 py-3 shadow-warm-sm cursor-grab active:cursor-grabbing"
+            className="relative flex items-center gap-3 overflow-hidden rounded-xl border border-warm-100 bg-warm-white px-4 py-3 shadow-warm-sm cursor-grab active:cursor-grabbing"
           >
-            <div className="h-10 w-10 rounded-full shrink-0 overflow-hidden bg-warm-50">
-              <Image src={imageUrl} alt={item.name} width={40} height={40} className="h-full w-full object-cover" />
+            <div className={`absolute inset-y-0 left-0 w-1 ${colors.dot}`} />
+            <div className="h-11 w-11 rounded-lg shrink-0 overflow-hidden bg-warm-50">
+              <Image src={imageUrl} alt={item.name} width={44} height={44} className="h-full w-full object-cover" />
             </div>
 
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 pr-1">
               <p className="font-medium text-stone-900 truncate">{item.name}</p>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-xs text-stone-400">
@@ -120,9 +122,10 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
                   </Badge>
                 )}
               </div>
+              <FreshnessMeter expirationDate={item.expirationDate} compact className="mt-2 max-w-[160px]" />
             </div>
 
-            <Badge className={`${colors.badge} text-[10px] shrink-0`}>
+            <Badge className={`${colors.badge} max-w-[112px] shrink-0 text-center text-[10px] leading-tight`}>
               {getExpiryLabel(item.expirationDate)}
             </Badge>
           </motion.div>
