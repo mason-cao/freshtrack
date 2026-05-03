@@ -77,12 +77,11 @@ export function NeedsAttention({ items, onAction }: NeedsAttentionProps) {
             <motion.div
               key={item.id}
               variants={itemVariant}
-              className="relative overflow-hidden rounded-xl border border-warm-100 bg-warm-white px-4 py-3 shadow-warm-sm transition-shadow duration-200 hover:shadow-warm"
+              className={`relative overflow-hidden rounded-xl border bg-warm-white px-4 py-3 shadow-warm-sm transition-shadow duration-200 hover:shadow-warm ${colors.border}`}
             >
-              <div className={`absolute inset-y-0 left-0 w-1 ${colors.dot}`} />
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex min-w-0 flex-1 items-center gap-3">
-                  <div className="h-11 w-11 rounded-lg shrink-0 overflow-hidden bg-warm-50">
+                  <div className={`h-11 w-11 rounded-lg shrink-0 overflow-hidden border-2 bg-warm-50 ${colors.border}`}>
                     <Image
                       src={imageUrl}
                       alt={item.name}

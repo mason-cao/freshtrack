@@ -36,8 +36,9 @@ export function RecipeCard({ recipe, onSelect, isUseItUp }: RecipeCardProps) {
   const imageUrl = getRecipeImage(recipe.name);
 
   return (
-    <div
-      className={`group cursor-pointer rounded-xl bg-warm-white shadow-warm overflow-hidden transition-all duration-200 hover:shadow-warm-lg hover:translate-y-[-1px] ${
+    <button
+      type="button"
+      className={`group w-full cursor-pointer rounded-xl bg-warm-white text-left shadow-warm overflow-hidden transition-all duration-200 hover:shadow-warm-lg hover:translate-y-[-1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-cream ${
         isUseItUp ? "ring-1 ring-amber-200" : ""
       }`}
       onClick={() => onSelect(recipe)}
@@ -93,6 +94,6 @@ export function RecipeCard({ recipe, onSelect, isUseItUp }: RecipeCardProps) {
           </div>
         )}
       </div>
-    </div>
+    </button>
   );
 }

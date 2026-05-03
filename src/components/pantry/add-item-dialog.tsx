@@ -142,7 +142,7 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
                 <SelectContent>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.icon} {cat.name}
+                      {cat.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

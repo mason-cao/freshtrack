@@ -27,8 +27,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-cream">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-warm-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-sage-700 focus:shadow-warm-lg"
+      >
+        Skip to main content
+      </a>
       {/* Desktop Side Rail */}
-      <aside className="fixed left-0 top-0 z-40 hidden h-full w-[72px] xl:w-[220px] flex-col items-center xl:items-stretch border-r border-warm-100 bg-warm-white py-6 md:flex transition-[width] duration-300 ease-out">
+      <aside
+        className="fixed left-0 top-0 z-40 hidden h-full w-[72px] xl:w-[220px] flex-col items-center xl:items-stretch border-r border-warm-100 bg-warm-white py-6 md:flex transition-[width] duration-300 ease-out"
+        aria-label="Primary"
+      >
         <Link href="/" className="mb-8 group flex items-center justify-center xl:justify-start xl:px-5 xl:gap-3">
           <motion.div
             whileHover={{ scale: 1.1, rotate: 12 }}
@@ -95,7 +104,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Mobile Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-warm-100 bg-warm-white/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-warm-100 bg-warm-white/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] md:hidden"
+        aria-label="Primary"
+      >
         <div className="flex items-center justify-around h-14">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -155,7 +167,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
 
       {/* Main Content */}
-      <main className="md:ml-[72px] xl:ml-[220px] transition-[margin-left] duration-300 ease-out">
+      <main
+        id="main-content"
+        className="md:ml-[72px] xl:ml-[220px] transition-[margin-left] duration-300 ease-out"
+      >
         <div className="mx-auto max-w-5xl xl:max-w-none px-4 py-6 pb-24 sm:px-6 md:px-8 xl:px-12 2xl:px-20 md:pb-8">
           {children}
         </div>
