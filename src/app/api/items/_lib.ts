@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { categories, items, wasteLog } from "@/db/schema";
 import { isDateInputValue, toDateInputValue } from "@/lib/dates";
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 export const itemStatuses = ["active", "consumed", "wasted"] as const;
 
@@ -275,5 +275,42 @@ export async function completeItem(itemId: number, action: ItemAction) {
       .run();
 
     return { status: 200, body: { success: true } };
+  });
+}
+
+export async function restoreItem(itemId: number) {
+  return db.transaction(async (tx) => {
+    const item = await tx
+      .select()
+      .from(items)
+      .where(eq(items.id, itemId))
+      .get();
+
+    if (!item) {
+      return { status: 404, body: { error: "Item not found." } };
+    }
+
+    if (item.status === "active") {
+      return { status: 200, body: { success: true, restored: false } };
+    }
+
+    await tx
+      .update(items)
+      .set({ status: "active", updatedAt: new Date().toISOString() })
+      .where(eq(items.id, itemId))
+      .run();
+
+    const latestLog = await tx
+      .select({ id: wasteLog.id })
+      .from(wasteLog)
+      .where(and(eq(wasteLog.itemId, itemId), eq(wasteLog.action, item.status)))
+      .orderBy(desc(wasteLog.loggedAt), desc(wasteLog.id))
+      .get();
+
+    if (latestLog) {
+      await tx.delete(wasteLog).where(eq(wasteLog.id, latestLog.id)).run();
+    }
+
+    return { status: 200, body: { success: true, restored: true } };
   });
 }

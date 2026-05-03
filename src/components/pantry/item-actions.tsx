@@ -4,11 +4,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Trash2, X } from "lucide-react";
 import { fetchJson } from "@/lib/api-client";
+import {
+  notifyPantryActionCompleted,
+  type PantryActionOutcome,
+  type PantryCompletionAction,
+} from "@/lib/pantry-events";
 
 interface ItemActionsProps {
   itemId: number;
   itemName: string;
-  onAction: () => void;
+  onAction: (outcome?: PantryActionOutcome) => void;
 }
 
 export function ItemActions({ itemId, itemName, onAction }: ItemActionsProps) {
@@ -16,14 +21,16 @@ export function ItemActions({ itemId, itemName, onAction }: ItemActionsProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleAction(action: "consume" | "waste") {
+  async function handleAction(action: PantryCompletionAction) {
     setLoading(true);
     setError(null);
 
     try {
       await fetchJson(`/api/items/${itemId}/${action}`, { method: "POST" });
+      const outcome = { itemId, itemName, action };
+      notifyPantryActionCompleted(outcome);
       setConfirming(null);
-      onAction();
+      onAction(outcome);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to update item.");
     } finally {

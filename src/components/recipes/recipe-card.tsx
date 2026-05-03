@@ -62,13 +62,13 @@ export function RecipeCard({ recipe, onSelect, isUseItUp }: RecipeCardProps) {
         )}
         <div className="absolute bottom-2.5 left-2.5 flex items-center gap-2">
           {totalTime > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-stone-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-warm-white/95 px-2 py-0.5 text-[10px] font-medium text-stone-700 shadow-sm">
               <Clock className="h-2.5 w-2.5" />
               {totalTime}m
             </span>
           )}
           {recipe.servings && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-stone-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-warm-white/95 px-2 py-0.5 text-[10px] font-medium text-stone-700 shadow-sm">
               <Users className="h-2.5 w-2.5" />
               {recipe.servings}
             </span>

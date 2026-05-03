@@ -17,29 +17,29 @@ export function MiniStats({ consumed, wasted, wasteRate, moneySaved }: MiniStats
       label: "Items Consumed",
       value: consumed,
       icon: TrendingUp,
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50",
+      color: "text-sage-600",
+      bgColor: "bg-sage-50",
     },
     {
       label: "Items Wasted",
       value: wasted,
       icon: TrendingDown,
-      color: "text-red-600",
-      bgColor: "bg-red-50",
+      color: "text-terracotta-500",
+      bgColor: "bg-terracotta-50",
     },
     {
       label: "Waste Rate",
       value: `${wasteRate}%`,
       icon: Percent,
-      color: wasteRate > 30 ? "text-red-600" : "text-amber-600",
-      bgColor: wasteRate > 30 ? "bg-red-50" : "bg-amber-50",
+      color: wasteRate > 30 ? "text-terracotta-500" : "text-amber-600",
+      bgColor: wasteRate > 30 ? "bg-terracotta-50" : "bg-amber-50",
     },
     {
       label: "Food Saved Value",
       value: formatCurrency(moneySaved),
       icon: DollarSign,
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50",
+      color: "text-sage-600",
+      bgColor: "bg-sage-50",
     },
   ];
 
@@ -55,8 +55,8 @@ export function MiniStats({ consumed, wasted, wasteRate, moneySaved }: MiniStats
                   <Icon className={`h-4 w-4 ${stat.color}`} />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">{stat.label}</p>
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-xs text-stone-500">{stat.label}</p>
+                  <p className="text-lg font-semibold text-stone-900">
                     {stat.value}
                   </p>
                 </div>

@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-03T00:00:00-04:00",
+  "title": "Design System: FreshTrack",
+  "extensions": {
+    "colorMeta": {
+      "sage-500": {
+        "role": "primary",
+        "displayName": "Pantry Sage",
+        "canonical": "#527a52",
+        "tonalRamp": ["#101910", "#1f301f", "#2e472e", "#3d5e3d", "#527a52", "#6b936b", "#8fb08f", "#dce6dc"]
+      },
+      "amber-action": {
+        "role": "secondary",
+        "displayName": "Use-Soon Amber",
+        "canonical": "#d97706",
+        "tonalRamp": ["#451a03", "#78350f", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fcd34d", "#fef3c7"]
+      },
+      "terracotta-danger": {
+        "role": "tertiary",
+        "displayName": "Waste Terracotta",
+        "canonical": "#c2410c",
+        "tonalRamp": ["#431407", "#7c2d12", "#9a3412", "#c2410c", "#ea580c", "#fdba74", "#ffdecc", "#fff5f0"]
+      },
+      "cream-background": {
+        "role": "neutral",
+        "displayName": "Cream Background",
+        "canonical": "#fefcf3",
+        "tonalRamp": ["#292524", "#44403c", "#78716c", "#a8a29e", "#d6cdc0", "#ebe5d8", "#f5f0e8", "#fefcf3"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Large impact metrics and rare hero statements."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles and major dashboard statements."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Readable copy, field text, and descriptions."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Badges, chips, table headers, and compact metadata."
+      }
+    },
+    "shadows": [
+      {
+        "name": "warm-sm",
+        "value": "0 1px 4px rgba(180, 160, 120, 0.06)",
+        "purpose": "Small controls and low-emphasis surfaces."
+      },
+      {
+        "name": "warm",
+        "value": "0 2px 12px rgba(180, 160, 120, 0.08)",
+        "purpose": "Cards, recipe tiles, tables, and panels."
+      },
+      {
+        "name": "warm-lg",
+        "value": "0 8px 32px rgba(180, 160, 120, 0.12)",
+        "purpose": "Dialogs, floating actions, and major hero panels."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-quick",
+        "value": "150ms to 250ms ease-out",
+        "purpose": "Hover, focus, active, and selection state changes."
+      },
+      {
+        "name": "state-reveal",
+        "value": "300ms to 400ms spring, stiffness 300, damping 30",
+        "purpose": "Small page and card reveals where Framer Motion is already used."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" },
+      { "name": "2xl", "value": "1536px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary action button for adding items, confirming forms, and high-confidence actions.",
+      "html": "<button class=\"ds-btn-primary\">Add Item</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 10px 16px; border: 0; border-radius: 8px; background: var(--color-sage-500, #527a52); color: var(--color-warm-white, #faf8f5); font-family: 'DM Sans', system-ui, sans-serif; font-size: 14px; font-weight: 600; line-height: 1; box-shadow: 0 1px 4px rgba(180, 160, 120, 0.06); cursor: pointer; transition: background-color 200ms ease-out, box-shadow 200ms ease-out; } .ds-btn-primary:hover { background: var(--color-sage-600, #3d5e3d); box-shadow: 0 2px 12px rgba(180, 160, 120, 0.08); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-sage-500, #527a52); outline-offset: 2px; }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Warm search input used for pantry filtering.",
+      "html": "<label class=\"ds-search\"><svg class=\"ds-search-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"11\" cy=\"11\" r=\"8\"></circle><path d=\"m21 21-4.3-4.3\"></path></svg><input placeholder=\"Search items...\" /></label>",
+      "css": ".ds-search { position: relative; display: block; width: 280px; font-family: 'DM Sans', system-ui, sans-serif; color: var(--color-stone-muted, #a8a29e); } .ds-search input { width: 100%; height: 40px; border: 0; border-radius: 12px; background: var(--color-warm-white, #faf8f5); color: var(--color-text-primary, #292524); padding: 10px 16px 10px 40px; font-size: 14px; box-shadow: 0 1px 4px rgba(180, 160, 120, 0.06); } .ds-search input::placeholder { color: var(--color-text-muted, #a8a29e); } .ds-search input:focus-visible { outline: 2px solid rgba(82, 122, 82, 0.4); outline-offset: 2px; } .ds-search-icon { position: absolute; left: 12px; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); color: var(--color-text-muted, #a8a29e); pointer-events: none; }"
+    },
+    {
+      "name": "Selected Filter Chip",
+      "kind": "chip",
+      "refersTo": "filter-chip-selected",
+      "description": "Selected pantry status filter with an optional count.",
+      "html": "<button class=\"ds-chip-selected\">Urgent <span>3</span></button>",
+      "css": ".ds-chip-selected { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 9999px; background: var(--color-sage-500, #527a52); color: var(--color-warm-white, #faf8f5); padding: 6px 14px; font-family: 'DM Sans', system-ui, sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: background-color 200ms ease-out; } .ds-chip-selected span { border-radius: 9999px; background: rgba(255, 255, 255, 0.2); padding: 2px 6px; font-size: 10px; line-height: 1; } .ds-chip-selected:hover { background: var(--color-sage-600, #3d5e3d); } .ds-chip-selected:focus-visible { outline: 2px solid var(--color-sage-500, #527a52); outline-offset: 2px; }"
+    },
+    {
+      "name": "Inventory Card",
+      "kind": "card",
+      "refersTo": "card-default",
+      "description": "Mobile pantry item card with image, freshness badge, and explicit actions.",
+      "html": "<article class=\"ds-inventory-card\"><div class=\"ds-food-thumb\"></div><div class=\"ds-item-copy\"><h3>Greek Yogurt</h3><p>1 container</p><div class=\"ds-meter\"><span></span></div></div><span class=\"ds-badge-warning\">Expires tomorrow</span></article>",
+      "css": ".ds-inventory-card { display: flex; align-items: center; gap: 12px; width: 360px; border: 1px solid var(--color-amber-warning, #fcd34d); border-radius: 12px; background: var(--color-warm-white, #faf8f5); padding: 12px 16px; box-shadow: 0 1px 4px rgba(180, 160, 120, 0.06); font-family: 'DM Sans', system-ui, sans-serif; color: var(--color-text-primary, #292524); } .ds-food-thumb { width: 44px; height: 44px; flex: 0 0 auto; border: 2px solid var(--color-amber-warning, #fcd34d); border-radius: 8px; background: linear-gradient(135deg, #fff5f0, #fcd34d); } .ds-item-copy { min-width: 0; flex: 1; } .ds-item-copy h3 { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 600; } .ds-item-copy p { margin: 2px 0 8px; color: var(--color-text-secondary, #78716c); font-size: 12px; } .ds-meter { height: 6px; overflow: hidden; border-radius: 9999px; background: var(--color-warm-100, #ebe5d8); } .ds-meter span { display: block; width: 32%; height: 100%; border-radius: 9999px; background: var(--color-amber-action, #d97706); } .ds-badge-warning { max-width: 112px; border-radius: 9999px; background: #fef3c7; color: #92400e; padding: 4px 8px; text-align: center; font-size: 10px; font-weight: 700; line-height: 1.2; }"
+    },
+    {
+      "name": "Bottom Navigation Item",
+      "kind": "nav",
+      "refersTo": "navigation-active",
+      "description": "Mobile tab item with active sage state.",
+      "html": "<a class=\"ds-nav-item ds-nav-item-active\" href=\"#\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z\"></path></svg><span>Home</span></a>",
+      "css": ".ds-nav-item { position: relative; display: inline-flex; min-width: 64px; flex-direction: column; align-items: center; gap: 2px; padding: 6px 12px; color: var(--color-text-muted, #a8a29e); font-family: 'DM Sans', system-ui, sans-serif; font-size: 10px; font-weight: 600; text-decoration: none; transition: color 200ms ease-out; } .ds-nav-item svg { width: 20px; height: 20px; } .ds-nav-item-active { color: var(--color-sage-700, #2e472e); } .ds-nav-item-active::before { content: ''; position: absolute; top: -4px; left: 50%; width: 32px; height: 3px; border-radius: 9999px; background: var(--color-sage-500, #527a52); transform: translateX(-50%); } .ds-nav-item:hover { color: var(--color-sage-600, #3d5e3d); } .ds-nav-item:focus-visible { outline: 2px solid var(--color-sage-500, #527a52); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Kitchen Ledger",
+    "overview": "FreshTrack should feel like a warm, practical pantry notebook upgraded with just enough intelligence to prevent waste. The surface is light because the product is used in kitchens, grocery routines, and everyday planning moments where legibility matters more than atmosphere. Food imagery and freshness status do the emotional work; decoration stays restrained.",
+    "keyCharacteristics": [
+      "Warm neutral canvas with sage as the primary operational accent.",
+      "Real food imagery for recognition and appetite, not stock-photo decoration.",
+      "Dense but calm task surfaces, especially on pantry and stats screens.",
+      "Clear semantic freshness states backed by labels, badges, and color.",
+      "Motion that confirms state changes and completed actions."
+    ],
+    "rules": [
+      {
+        "name": "The Freshness Carries Color Rule",
+        "body": "Color is earned by freshness state, selected navigation, primary action, or data visualization. Do not use accent color as background decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Shame Red Rule",
+        "body": "Terracotta signals urgency or waste, but it must not make the interface feel accusatory. Pair it with specific next actions.",
+        "section": "colors"
+      },
+      {
+        "name": "The Utility Type Rule",
+        "body": "Typography should support scanning. Do not introduce display fonts, script styles, gradient text, or exaggerated tracking.",
+        "section": "typography"
+      },
+      {
+        "name": "The Lift Only When Useful Rule",
+        "body": "Shadows establish hierarchy or interaction. Do not add ambient glow, glass blur, or decorative floating layers.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use real food imagery when it improves item or recipe recognition.",
+      "Do pair every freshness color with a readable label.",
+      "Do keep primary actions reachable by keyboard and touch, without requiring swipe gestures.",
+      "Do use sage, amber, and terracotta only for semantic state, action, and charts.",
+      "Do respect reduced motion and keep most transitions between 150ms and 250ms.",
+      "Do maintain the warm neutral canvas and avoid sudden cold gray sections."
+    ],
+    "donts": [
+      "Don't use guilt-heavy sustainability language or make waste feel like personal failure.",
+      "Don't use clinical enterprise dashboard styling, generic blue-gray palettes, or cold data-tool surfaces.",
+      "Don't use dark neon dashboards, purple gradient SaaS heroes, gradient text, or glassmorphism as decoration.",
+      "Don't use border-left or border-right greater than 1px as colored side stripes on cards, list items, callouts, or alerts.",
+      "Don't use emoji as UI icons. Use Lucide icons or real food images.",
+      "Don't build repeated identical card grids when a table, list, segmented control, or chart communicates the task better."
+    ]
+  }
+}

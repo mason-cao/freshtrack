@@ -11,6 +11,7 @@ import {
 import { getFoodImage } from "@/lib/food-images";
 import { formatDate } from "@/lib/utils";
 import { FreshnessMeter } from "./freshness-meter";
+import type { PantryActionOutcome } from "@/lib/pantry-events";
 
 interface Item {
   id: number;
@@ -29,7 +30,7 @@ interface Item {
 
 interface ItemTableProps {
   items: Item[];
-  onAction: () => void;
+  onAction: (outcome?: PantryActionOutcome) => void;
   filter: string;
 }
 

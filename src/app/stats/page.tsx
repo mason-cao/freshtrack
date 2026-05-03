@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import {
   Card,
   CardContent,
@@ -25,7 +24,6 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { fetchJson } from "@/lib/api-client";
-import { getFoodImage } from "@/lib/food-images";
 
 interface MonthlyData {
   month: string;
@@ -65,7 +63,7 @@ const item = {
   },
 };
 
-function WasteRateRing({ rate, dark = false }: { rate: number; dark?: boolean }) {
+function WasteRateRing({ rate }: { rate: number }) {
   const circumference = 2 * Math.PI * 40;
   const fillPercent = Math.min(rate, 100);
   const offset = circumference - (fillPercent / 100) * circumference;
@@ -79,7 +77,7 @@ function WasteRateRing({ rate, dark = false }: { rate: number; dark?: boolean })
           cy="50"
           r="40"
           fill="none"
-          stroke={dark ? "rgba(255,255,255,0.18)" : "#f5f0e8"}
+          stroke="#f5f0e8"
           strokeWidth="8"
         />
         <motion.circle
@@ -94,10 +92,10 @@ function WasteRateRing({ rate, dark = false }: { rate: number; dark?: boolean })
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={`text-3xl font-bold xl:text-4xl ${dark ? "text-white" : isHigh ? "text-terracotta-500" : "text-sage-600"}`}>
+        <span className={`text-3xl font-bold xl:text-4xl ${isHigh ? "text-terracotta-500" : "text-sage-600"}`}>
           {rate}%
         </span>
-        <span className={dark ? "text-[10px] font-medium text-sage-100/80" : "text-[10px] text-stone-400"}>
+        <span className="text-[10px] font-medium text-stone-400">
           waste rate
         </span>
       </div>
@@ -201,77 +199,65 @@ export default function StatsPage() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="relative overflow-hidden rounded-2xl bg-sage-800 px-5 py-6 text-white shadow-warm-lg sm:px-6 xl:p-8"
+        className="rounded-2xl border border-warm-100 bg-warm-white p-5 shadow-warm sm:p-6 xl:p-7"
       >
-        <div className="absolute inset-0">
-          <Image
-            src={getFoodImage("seasonal produce", "Produce")}
-            alt=""
-            fill
-            priority
-            className="object-cover opacity-25"
-            sizes="(min-width: 1280px) 70vw, 100vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-sage-900 via-sage-800/95 to-sage-700/75" />
-        </div>
-
-        <div className="relative z-10 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-sm font-medium text-sage-50 backdrop-blur-sm">
-              <BarChart3 className="h-4 w-4 text-sage-200" />
+            <div className="inline-flex items-center gap-2 rounded-full bg-sage-50 px-3 py-1 text-sm font-semibold text-sage-700">
+              <BarChart3 className="h-4 w-4" />
               Waste intelligence
             </div>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight xl:text-5xl">
+            <h1 className="mt-4 text-3xl font-bold tracking-tight text-stone-900 xl:text-4xl">
               Statistics
             </h1>
-            <p className="mt-2 max-w-2xl text-sm text-sage-100/85 xl:text-base">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600 xl:text-base">
               Track how much food gets used, what it saves, and where waste is
               still costing you.
             </p>
 
-            <div className="mt-5 grid gap-2 sm:grid-cols-3">
-              <div className="rounded-xl border border-white/10 bg-white/10 p-3 backdrop-blur-sm">
-                <div className="flex items-center gap-2 text-xs font-medium text-sage-100">
+            <dl className="mt-5 grid overflow-hidden rounded-xl border border-warm-100 sm:grid-cols-3">
+              <div className="p-3 sm:border-r sm:border-warm-100">
+                <dt className="flex items-center gap-2 text-xs font-medium text-stone-500">
                   <CalendarDays className="h-3.5 w-3.5" />
                   Latest month
-                </div>
-                <p className="mt-2 text-lg font-bold text-white">
+                </dt>
+                <dd className="mt-2 text-lg font-bold text-stone-900">
                   {latestMonth?.monthLabel ?? "No data"}
-                </p>
+                </dd>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/10 p-3 backdrop-blur-sm">
-                <div className="flex items-center gap-2 text-xs font-medium text-sage-100">
+              <div className="border-t border-warm-100 p-3 sm:border-t-0 sm:border-r">
+                <dt className="flex items-center gap-2 text-xs font-medium text-stone-500">
                   <Target className="h-3.5 w-3.5" />
                   Use rate trend
-                </div>
-                <p className="mt-2 flex items-center gap-1 text-lg font-bold text-white">
+                </dt>
+                <dd className="mt-2 flex items-center gap-1 text-lg font-bold text-stone-900">
                   {useRateDelta >= 0 ? (
-                    <ArrowUpRight className="h-4 w-4 text-amber-300" />
+                    <ArrowUpRight className="h-4 w-4 text-sage-600" />
                   ) : (
-                    <ArrowDownRight className="h-4 w-4 text-terracotta-100" />
+                    <ArrowDownRight className="h-4 w-4 text-terracotta-500" />
                   )}
                   {Math.abs(useRateDelta)} pts
-                </p>
+                </dd>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/10 p-3 backdrop-blur-sm">
-                <div className="flex items-center gap-2 text-xs font-medium text-sage-100">
+              <div className="border-t border-warm-100 p-3 sm:border-t-0">
+                <dt className="flex items-center gap-2 text-xs font-medium text-stone-500">
                   <DollarSign className="h-3.5 w-3.5" />
                   Waste cost shift
-                </div>
-                <p className="mt-2 flex items-center gap-1 text-lg font-bold text-white">
+                </dt>
+                <dd className="mt-2 flex items-center gap-1 text-lg font-bold text-stone-900">
                   {wasteCostDelta <= 0 ? (
-                    <ArrowDownRight className="h-4 w-4 text-amber-300" />
+                    <ArrowDownRight className="h-4 w-4 text-sage-600" />
                   ) : (
-                    <ArrowUpRight className="h-4 w-4 text-terracotta-100" />
+                    <ArrowUpRight className="h-4 w-4 text-terracotta-500" />
                   )}
                   {formatCurrency(Math.abs(wasteCostDelta))}
-                </p>
+                </dd>
               </div>
-            </div>
+            </dl>
           </div>
 
           <div className="flex justify-center lg:justify-end">
-            <WasteRateRing rate={stats.totals.wasteRate} dark />
+            <WasteRateRing rate={stats.totals.wasteRate} />
           </div>
         </div>
       </motion.div>
@@ -334,19 +320,19 @@ export default function StatsPage() {
         variants={item}
         initial="hidden"
         animate="show"
-        className="grid gap-3 rounded-2xl border border-warm-100 bg-warm-white p-4 shadow-warm sm:grid-cols-3 xl:p-5"
+        className="grid gap-3 sm:grid-cols-3"
       >
-        <div className="rounded-xl bg-sage-50 p-4">
+        <div className="rounded-xl border border-sage-100 bg-sage-50 p-4 shadow-warm-sm">
           <p className="text-xs font-medium text-sage-700">Latest activity</p>
           <p className="mt-2 text-2xl font-bold text-stone-900">{latestActions}</p>
           <p className="text-xs text-stone-500">items logged this month</p>
         </div>
-        <div className="rounded-xl bg-amber-50 p-4">
+        <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-warm-sm">
           <p className="text-xs font-medium text-amber-700">Current use rate</p>
           <p className="mt-2 text-2xl font-bold text-stone-900">{latestUseRate}%</p>
           <p className="text-xs text-stone-500">for {latestMonth?.monthLabel ?? "latest month"}</p>
         </div>
-        <div className="rounded-xl bg-terracotta-50 p-4">
+        <div className="rounded-xl border border-terracotta-100 bg-terracotta-50 p-4 shadow-warm-sm">
           <p className="text-xs font-medium text-terracotta-600">Wasted value</p>
           <p className="mt-2 text-2xl font-bold text-stone-900">
             {formatCurrency(latestWasteCost)}

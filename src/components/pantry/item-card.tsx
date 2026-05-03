@@ -9,6 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import confetti from "canvas-confetti";
 import { fetchJson } from "@/lib/api-client";
+import {
+  notifyPantryActionCompleted,
+  type PantryActionOutcome,
+  type PantryCompletionAction,
+} from "@/lib/pantry-events";
 import { FreshnessMeter } from "./freshness-meter";
 
 interface ItemCardProps {
@@ -21,7 +26,7 @@ interface ItemCardProps {
     unit: string;
     expirationDate: string;
   };
-  onAction: () => void;
+  onAction: (outcome?: PantryActionOutcome) => void;
 }
 
 export function ItemCard({ item, onAction }: ItemCardProps) {
@@ -38,7 +43,7 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
   const colors = freshnessColor(status);
   const imageUrl = getFoodImage(item.name, item.categoryName);
 
-  async function handleOutcome(action: "consume" | "waste") {
+  async function handleOutcome(action: PantryCompletionAction) {
     if (saving) return;
 
     setSaving(action);
@@ -46,6 +51,7 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
     try {
       await fetchJson(`/api/items/${item.id}/${action}`, { method: "POST" });
       setDismissed(true);
+      const outcome = { itemId: item.id, itemName: item.name, action };
       if (action === "consume") {
         confetti({
           particleCount: 30,
@@ -54,7 +60,8 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
           colors: ["#527a52", "#b8cdb8", "#d97706"],
         });
       }
-      onAction();
+      notifyPantryActionCompleted(outcome);
+      onAction(outcome);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to update item.");
     } finally {

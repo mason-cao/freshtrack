@@ -1,12 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Package } from "lucide-react";
 import {
   getFreshnessStatus,
   getExpiryLabel,
   freshnessColor,
 } from "@/lib/freshness";
+import { getFoodImage } from "@/lib/food-images";
 
 interface Item {
   id: number;
@@ -25,9 +28,10 @@ interface FreshnessGridProps {
 export function FreshnessGrid({ items }: FreshnessGridProps) {
   if (items.length === 0) {
     return (
-      <div className="rounded-lg border-2 border-dashed border-gray-200 p-12 text-center">
-        <p className="text-gray-500">No items in your pantry yet.</p>
-        <p className="mt-1 text-sm text-gray-400">
+      <div className="rounded-xl border-2 border-dashed border-warm-200 bg-warm-white/70 p-12 text-center">
+        <Package className="mx-auto h-8 w-8 text-sage-500" />
+        <p className="mt-3 font-medium text-stone-700">No items in your pantry yet.</p>
+        <p className="mt-1 text-sm text-stone-500">
           Add items from the Pantry page to start tracking.
         </p>
       </div>
@@ -48,19 +52,28 @@ export function FreshnessGrid({ items }: FreshnessGridProps) {
         const status = getFreshnessStatus(item.expirationDate);
         const colors = freshnessColor(status);
         const label = getExpiryLabel(item.expirationDate);
+        const imageUrl = getFoodImage(item.name, item.categoryName);
 
         return (
           <Card
             key={item.id}
-            className={`${colors.bg} ${colors.border} border transition-shadow hover:shadow-md`}
+            className={`border bg-warm-white shadow-warm-sm transition-shadow duration-200 hover:shadow-warm ${colors.border}`}
           >
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">{item.categoryIcon || "📦"}</span>
+                  <div className={`h-10 w-10 shrink-0 overflow-hidden rounded-lg border-2 bg-warm-50 ${colors.border}`}>
+                    <Image
+                      src={imageUrl}
+                      alt={item.name}
+                      width={40}
+                      height={40}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
                   <div>
-                    <p className="font-medium text-gray-900">{item.name}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="font-medium text-stone-900">{item.name}</p>
+                    <p className="text-xs text-stone-500">
                       {item.quantity} {item.unit}
                     </p>
                   </div>

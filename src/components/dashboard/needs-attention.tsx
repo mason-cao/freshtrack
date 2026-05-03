@@ -9,6 +9,7 @@ import { getFoodImage } from "@/lib/food-images";
 import { Badge } from "@/components/ui/badge";
 import { ItemActions } from "@/components/pantry/item-actions";
 import { FreshnessMeter } from "@/components/pantry/freshness-meter";
+import type { PantryActionOutcome } from "@/lib/pantry-events";
 
 interface Item {
   id: number;
@@ -22,7 +23,7 @@ interface Item {
 
 interface NeedsAttentionProps {
   items: Item[];
-  onAction: () => void;
+  onAction: (outcome?: PantryActionOutcome) => void;
 }
 
 const container = {

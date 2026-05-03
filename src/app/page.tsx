@@ -162,7 +162,7 @@ export default function DashboardPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
                 <div className="absolute top-3 left-3">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-sage-700 shadow-sm">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-warm-white/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-sage-700 shadow-sm">
                     <ChefHat className="h-3 w-3" /> Try Tonight
                   </span>
                 </div>
