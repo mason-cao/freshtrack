@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   LayoutDashboard,
@@ -10,6 +11,7 @@ import {
   ChefHat,
   BarChart3,
   Leaf,
+  LogOut,
   RotateCcw,
   X,
 } from "lucide-react";
@@ -35,6 +37,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const isPublicPage = pathname === "/login" || pathname === "/privacy" || pathname === "/terms";
+  const [signingOut, setSigningOut] = useState(false);
+
+  function handleSignOut() {
+    setSigningOut(true);
+    void signOut({ callbackUrl: "/login" });
+  }
 
   if (isPublicPage) {
     return (
@@ -121,6 +129,18 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
+
+        <button
+          type="button"
+          onClick={handleSignOut}
+          disabled={signingOut}
+          className="mx-2 mt-4 flex items-center justify-center gap-1 rounded-xl px-2 py-2 text-stone-400 transition-colors duration-200 hover:bg-warm-50 hover:text-stone-700 disabled:cursor-not-allowed disabled:opacity-60 xl:mx-3 xl:justify-start xl:gap-3 xl:px-3 xl:py-2.5 cursor-pointer"
+        >
+          <LogOut className="h-5 w-5" />
+          <span className="hidden text-sm font-medium xl:inline">
+            {signingOut ? "Signing out" : "Sign out"}
+          </span>
+        </button>
       </aside>
 
       {/* Mobile Bottom Tab Bar */}
@@ -175,6 +195,17 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className="relative flex min-w-[64px] flex-col items-center gap-0.5 px-3 py-1 text-stone-400 transition-colors duration-200 hover:text-stone-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+          >
+            <LogOut className="h-5 w-5" />
+            <span className="text-[10px] font-medium">
+              {signingOut ? "Leaving" : "Sign out"}
+            </span>
+          </button>
         </div>
       </nav>
 
