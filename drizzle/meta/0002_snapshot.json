@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "fcebad76-1f8f-49fa-8c3a-b6be8354d4ef",
-  "prevId": "aca0ba0c-6498-4c87-8440-fcb4eeb04895",
+  "id": "e188b478-b80d-4c77-83dc-608fe9d173a7",
+  "prevId": "fcebad76-1f8f-49fa-8c3a-b6be8354d4ef",
   "tables": {
     "accounts": {
       "name": "accounts",
@@ -256,6 +256,22 @@
           "name": "items_user_id_idx",
           "columns": [
             "user_id"
+          ],
+          "isUnique": false
+        },
+        "items_user_status_idx": {
+          "name": "items_user_status_idx",
+          "columns": [
+            "user_id",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "items_user_expiration_idx": {
+          "name": "items_user_expiration_idx",
+          "columns": [
+            "user_id",
+            "expiration_date"
           ],
           "isUnique": false
         }
@@ -657,6 +673,14 @@
           "name": "waste_log_user_id_idx",
           "columns": [
             "user_id"
+          ],
+          "isUnique": false
+        },
+        "waste_log_user_logged_at_idx": {
+          "name": "waste_log_user_logged_at_idx",
+          "columns": [
+            "user_id",
+            "logged_at"
           ],
           "isUnique": false
         }

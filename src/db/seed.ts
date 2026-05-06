@@ -10,6 +10,9 @@ const authToken = process.env.TURSO_AUTH_TOKEN;
 const client = createClient({ url, authToken });
 const db = drizzle(client, { schema });
 
+const DEV_USER_ID = "dev-user-local";
+const DEV_USER_EMAIL = "dev@freshtrack.local";
+
 function daysFromNow(days: number): string {
   return addDaysToDateInput(days);
 }
@@ -33,10 +36,26 @@ async function main() {
   await db.delete(schema.recipeIngredients).run();
   await db.delete(schema.recipes).run();
   await db.delete(schema.items).run();
+  await db.delete(schema.accounts).run();
+  await db.delete(schema.sessions).run();
+  await db.delete(schema.verificationTokens).run();
+  await db.delete(schema.users).run();
   await db.delete(schema.categories).run();
 
   // Reset autoincrement counters so IDs start from 1
   await db.run(sql`DELETE FROM sqlite_sequence`);
+
+  await db
+    .insert(schema.users)
+    .values({
+      id: DEV_USER_ID,
+      name: "FreshTrack Dev",
+      email: DEV_USER_EMAIL,
+      image: null,
+    })
+    .run();
+
+  console.log(`  ✓ Dev user seeded (${DEV_USER_EMAIL})`);
 
   // Categories
   const categoryData = [
@@ -111,6 +130,7 @@ async function main() {
   for (const item of itemsData) {
     await db.insert(schema.items).values({
       ...item,
+      userId: DEV_USER_ID,
       status: "active",
     }).run();
   }
@@ -389,7 +409,11 @@ async function main() {
 
   for (const recipe of recipesData) {
     const { ingredients, ...recipeRow } = recipe;
-    const result = await db.insert(schema.recipes).values(recipeRow).returning().get();
+    const result = await db
+      .insert(schema.recipes)
+      .values({ ...recipeRow, userId: DEV_USER_ID })
+      .returning()
+      .get();
     for (const ing of ingredients) {
       await db.insert(schema.recipeIngredients)
         .values({ ...ing, recipeId: result.id })
@@ -450,7 +474,10 @@ async function main() {
   ];
 
   for (const entry of wasteLogData) {
-    await db.insert(schema.wasteLog).values(entry).run();
+    await db
+      .insert(schema.wasteLog)
+      .values({ ...entry, userId: DEV_USER_ID })
+      .run();
   }
 
   console.log("  ✓ Waste log seeded");

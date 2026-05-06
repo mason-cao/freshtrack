@@ -237,12 +237,16 @@ export function validatePatchItemPayload(
   return { ok: true, data };
 }
 
-export async function completeItem(itemId: number, action: ItemAction) {
+export async function completeItem(
+  itemId: number,
+  userId: string,
+  action: ItemAction
+) {
   return db.transaction(async (tx) => {
     const item = await tx
       .select()
       .from(items)
-      .where(eq(items.id, itemId))
+      .where(and(eq(items.id, itemId), eq(items.userId, userId)))
       .get();
 
     if (!item) {
@@ -259,12 +263,13 @@ export async function completeItem(itemId: number, action: ItemAction) {
     await tx
       .update(items)
       .set({ status: action, updatedAt: new Date().toISOString() })
-      .where(eq(items.id, itemId))
+      .where(and(eq(items.id, itemId), eq(items.userId, userId)))
       .run();
 
     await tx
       .insert(wasteLog)
       .values({
+        userId,
         itemId: item.id,
         itemName: item.name,
         action,
@@ -278,12 +283,12 @@ export async function completeItem(itemId: number, action: ItemAction) {
   });
 }
 
-export async function restoreItem(itemId: number) {
+export async function restoreItem(itemId: number, userId: string) {
   return db.transaction(async (tx) => {
     const item = await tx
       .select()
       .from(items)
-      .where(eq(items.id, itemId))
+      .where(and(eq(items.id, itemId), eq(items.userId, userId)))
       .get();
 
     if (!item) {
@@ -297,18 +302,27 @@ export async function restoreItem(itemId: number) {
     await tx
       .update(items)
       .set({ status: "active", updatedAt: new Date().toISOString() })
-      .where(eq(items.id, itemId))
+      .where(and(eq(items.id, itemId), eq(items.userId, userId)))
       .run();
 
     const latestLog = await tx
       .select({ id: wasteLog.id })
       .from(wasteLog)
-      .where(and(eq(wasteLog.itemId, itemId), eq(wasteLog.action, item.status)))
+      .where(
+        and(
+          eq(wasteLog.userId, userId),
+          eq(wasteLog.itemId, itemId),
+          eq(wasteLog.action, item.status)
+        )
+      )
       .orderBy(desc(wasteLog.loggedAt), desc(wasteLog.id))
       .get();
 
     if (latestLog) {
-      await tx.delete(wasteLog).where(eq(wasteLog.id, latestLog.id)).run();
+      await tx
+        .delete(wasteLog)
+        .where(and(eq(wasteLog.id, latestLog.id), eq(wasteLog.userId, userId)))
+        .run();
     }
 
     return { status: 200, body: { success: true, restored: true } };

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { items, categories } from "@/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
+import { getCurrentUserId } from "@/lib/session";
 import {
   categoryExists,
   isItemStatus,
@@ -9,6 +10,7 @@ import {
 } from "./_lib";
 
 export async function GET(request: NextRequest) {
+  const userId = await getCurrentUserId();
   const { searchParams } = request.nextUrl;
   const status = searchParams.get("status") || "active";
 
@@ -37,7 +39,7 @@ export async function GET(request: NextRequest) {
     })
     .from(items)
     .leftJoin(categories, eq(items.categoryId, categories.id))
-    .where(eq(items.status, status))
+    .where(and(eq(items.status, status), eq(items.userId, userId)))
     .orderBy(asc(items.expirationDate))
     .all();
 
@@ -45,6 +47,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const userId = await getCurrentUserId();
   let body: unknown;
   try {
     body = await request.json();
@@ -68,6 +71,7 @@ export async function POST(request: NextRequest) {
     .insert(items)
     .values({
       ...validation.data,
+      userId,
       status: "active",
     })
     .returning()

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { items } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { getCurrentUserId } from "@/lib/session";
 import {
   categoryExists,
   parseItemId,
@@ -12,6 +13,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const userId = await getCurrentUserId();
   const { id } = await params;
   const itemId = parseItemId(id);
   if (itemId === null) {
@@ -41,7 +43,7 @@ export async function PATCH(
   const updated = await db
     .update(items)
     .set({ ...validation.data, updatedAt: new Date().toISOString() })
-    .where(eq(items.id, itemId))
+    .where(and(eq(items.id, itemId), eq(items.userId, userId)))
     .returning()
     .get();
 
@@ -56,6 +58,7 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const userId = await getCurrentUserId();
   const { id } = await params;
   const itemId = parseItemId(id);
   if (itemId === null) {
@@ -65,14 +68,17 @@ export async function DELETE(
   const existing = await db
     .select({ id: items.id })
     .from(items)
-    .where(eq(items.id, itemId))
+    .where(and(eq(items.id, itemId), eq(items.userId, userId)))
     .get();
 
   if (!existing) {
     return NextResponse.json({ error: "Item not found" }, { status: 404 });
   }
 
-  await db.delete(items).where(eq(items.id, itemId)).run();
+  await db
+    .delete(items)
+    .where(and(eq(items.id, itemId), eq(items.userId, userId)))
+    .run();
 
   return NextResponse.json({ success: true });
 }

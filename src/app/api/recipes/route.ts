@@ -1,10 +1,25 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { recipes, recipeIngredients } from "@/db/schema";
+import { eq, inArray } from "drizzle-orm";
+import { getCurrentUserId } from "@/lib/session";
 
 export async function GET() {
-  const allRecipes = await db.select().from(recipes).all();
-  const allIngredients = await db.select().from(recipeIngredients).all();
+  const userId = await getCurrentUserId();
+  const allRecipes = await db
+    .select()
+    .from(recipes)
+    .where(eq(recipes.userId, userId))
+    .all();
+  const recipeIds = allRecipes.map((recipe) => recipe.id);
+  const allIngredients =
+    recipeIds.length > 0
+      ? await db
+          .select()
+          .from(recipeIngredients)
+          .where(inArray(recipeIngredients.recipeId, recipeIds))
+          .all()
+      : [];
   const ingredientsByRecipe = new Map<number, typeof allIngredients>();
 
   for (const ingredient of allIngredients) {
