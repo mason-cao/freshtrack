@@ -1,55 +1,55 @@
 import {
+  date,
+  doublePrecision,
   index,
   integer,
+  pgTable,
   primaryKey,
-  real,
-  sqliteTable,
+  serial,
   text,
-} from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
+  timestamp,
+} from "drizzle-orm/pg-core";
 
-export const categories = sqliteTable("categories", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
   icon: text("icon").notNull(),
   defaultShelfLifeDays: integer("default_shelf_life_days").notNull(),
 });
 
-export const users = sqliteTable("users", {
+export const users = pgTable("users", {
   id: text("id").primaryKey(),
   name: text("name"),
   email: text("email").notNull().unique(),
-  emailVerified: integer("email_verified", { mode: "timestamp_ms" }),
+  emailVerified: timestamp("email_verified", { mode: "date" }),
   image: text("image"),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now'))`),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 
-export const items = sqliteTable(
+export const items = pgTable(
   "items",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     categoryId: integer("category_id").references(() => categories.id),
-    quantity: real("quantity").notNull().default(1),
+    quantity: doublePrecision("quantity").notNull().default(1),
     unit: text("unit").notNull().default("count"),
-    purchaseDate: text("purchase_date").notNull(),
-    expirationDate: text("expiration_date").notNull(),
+    purchaseDate: date("purchase_date", { mode: "string" }).notNull(),
+    expirationDate: date("expiration_date", { mode: "string" }).notNull(),
     status: text("status", { enum: ["active", "consumed", "wasted"] })
       .notNull()
       .default("active"),
-    costEstimate: real("cost_estimate"),
+    costEstimate: doublePrecision("cost_estimate"),
     notes: text("notes"),
-    createdAt: text("created_at")
+    createdAt: timestamp("created_at", { mode: "string" })
       .notNull()
-      .default(sql`(datetime('now'))`),
-    updatedAt: text("updated_at")
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "string" })
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .defaultNow(),
   },
   (table) => [
     index("items_user_id_idx").on(table.userId),
@@ -58,10 +58,10 @@ export const items = sqliteTable(
   ]
 );
 
-export const recipes = sqliteTable(
+export const recipes = pgTable(
   "recipes",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -75,32 +75,32 @@ export const recipes = sqliteTable(
   (table) => [index("recipes_user_id_idx").on(table.userId)]
 );
 
-export const recipeIngredients = sqliteTable("recipe_ingredients", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const recipeIngredients = pgTable("recipe_ingredients", {
+  id: serial("id").primaryKey(),
   recipeId: integer("recipe_id")
     .notNull()
-    .references(() => recipes.id),
+    .references(() => recipes.id, { onDelete: "cascade" }),
   ingredientName: text("ingredient_name").notNull(),
-  quantity: real("quantity"),
+  quantity: doublePrecision("quantity"),
   unit: text("unit"),
 });
 
-export const wasteLog = sqliteTable(
+export const wasteLog = pgTable(
   "waste_log",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     itemId: integer("item_id"),
     itemName: text("item_name").notNull(),
     action: text("action", { enum: ["consumed", "wasted"] }).notNull(),
-    quantity: real("quantity"),
+    quantity: doublePrecision("quantity"),
     unit: text("unit"),
-    costEstimate: real("cost_estimate"),
-    loggedAt: text("logged_at")
+    costEstimate: doublePrecision("cost_estimate"),
+    loggedAt: timestamp("logged_at", { mode: "string" })
       .notNull()
-      .default(sql`(datetime('now'))`),
+      .defaultNow(),
   },
   (table) => [
     index("waste_log_user_id_idx").on(table.userId),
@@ -108,7 +108,7 @@ export const wasteLog = sqliteTable(
   ]
 );
 
-export const accounts = sqliteTable(
+export const accounts = pgTable(
   "accounts",
   {
     userId: text("user_id")
@@ -125,27 +125,25 @@ export const accounts = sqliteTable(
     id_token: text("id_token"),
     session_state: text("session_state"),
   },
-  (account) => ({
-    pk: primaryKey({ columns: [account.provider, account.providerAccountId] }),
-  })
+  (account) => [
+    primaryKey({ columns: [account.provider, account.providerAccountId] }),
+  ]
 );
 
-export const sessions = sqliteTable("sessions", {
+export const sessions = pgTable("sessions", {
   sessionToken: text("session_token").primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  expires: integer("expires", { mode: "timestamp_ms" }).notNull(),
+  expires: timestamp("expires", { mode: "date" }).notNull(),
 });
 
-export const verificationTokens = sqliteTable(
+export const verificationTokens = pgTable(
   "verification_tokens",
   {
     identifier: text("identifier").notNull(),
     token: text("token").notNull(),
-    expires: integer("expires", { mode: "timestamp_ms" }).notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
   },
-  (vt) => ({
-    pk: primaryKey({ columns: [vt.identifier, vt.token] }),
-  })
+  (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })]
 );

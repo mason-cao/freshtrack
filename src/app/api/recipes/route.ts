@@ -9,8 +9,7 @@ export async function GET() {
   const allRecipes = await db
     .select()
     .from(recipes)
-    .where(eq(recipes.userId, userId))
-    .all();
+    .where(eq(recipes.userId, userId));
   const recipeIds = allRecipes.map((recipe) => recipe.id);
   const allIngredients =
     recipeIds.length > 0
@@ -18,7 +17,6 @@ export async function GET() {
           .select()
           .from(recipeIngredients)
           .where(inArray(recipeIngredients.recipeId, recipeIds))
-          .all()
       : [];
   const ingredientsByRecipe = new Map<number, typeof allIngredients>();
 

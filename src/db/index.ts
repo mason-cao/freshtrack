@@ -1,10 +1,24 @@
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { resolveDatabaseUrl } from "./config";
 import * as schema from "./schema";
 
-const url = process.env.TURSO_DATABASE_URL ?? "file:./data/freshtrack.db";
-const authToken = process.env.TURSO_AUTH_TOKEN;
+const globalForDb = globalThis as unknown as {
+  freshtrackSqlClient?: postgres.Sql;
+};
 
-const client = createClient({ url, authToken });
+export const sqlClient =
+  globalForDb.freshtrackSqlClient ??
+  postgres(resolveDatabaseUrl(), {
+    prepare: false,
+  });
 
-export const db = drizzle(client, { schema });
+if (process.env.NODE_ENV !== "production") {
+  globalForDb.freshtrackSqlClient = sqlClient;
+}
+
+export const db = drizzle(sqlClient, { schema });
+
+export async function closeDb() {
+  await sqlClient.end();
+}

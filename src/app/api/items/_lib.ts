@@ -67,11 +67,11 @@ export function isItemStatus(value: string): value is ItemStatus {
 }
 
 export async function categoryExists(categoryId: number): Promise<boolean> {
-  const row = await db
+  const [row] = await db
     .select({ id: categories.id })
     .from(categories)
     .where(eq(categories.id, categoryId))
-    .get();
+    .limit(1);
   return Boolean(row);
 }
 
@@ -243,11 +243,11 @@ export async function completeItem(
   action: ItemAction
 ) {
   return db.transaction(async (tx) => {
-    const item = await tx
+    const [item] = await tx
       .select()
       .from(items)
       .where(and(eq(items.id, itemId), eq(items.userId, userId)))
-      .get();
+      .limit(1);
 
     if (!item) {
       return { status: 404, body: { error: "Item not found." } };
@@ -263,8 +263,7 @@ export async function completeItem(
     await tx
       .update(items)
       .set({ status: action, updatedAt: new Date().toISOString() })
-      .where(and(eq(items.id, itemId), eq(items.userId, userId)))
-      .run();
+      .where(and(eq(items.id, itemId), eq(items.userId, userId)));
 
     await tx
       .insert(wasteLog)
@@ -276,8 +275,7 @@ export async function completeItem(
         quantity: item.quantity,
         unit: item.unit,
         costEstimate: item.costEstimate,
-      })
-      .run();
+      });
 
     return { status: 200, body: { success: true } };
   });
@@ -285,11 +283,11 @@ export async function completeItem(
 
 export async function restoreItem(itemId: number, userId: string) {
   return db.transaction(async (tx) => {
-    const item = await tx
+    const [item] = await tx
       .select()
       .from(items)
       .where(and(eq(items.id, itemId), eq(items.userId, userId)))
-      .get();
+      .limit(1);
 
     if (!item) {
       return { status: 404, body: { error: "Item not found." } };
@@ -302,10 +300,9 @@ export async function restoreItem(itemId: number, userId: string) {
     await tx
       .update(items)
       .set({ status: "active", updatedAt: new Date().toISOString() })
-      .where(and(eq(items.id, itemId), eq(items.userId, userId)))
-      .run();
+      .where(and(eq(items.id, itemId), eq(items.userId, userId)));
 
-    const latestLog = await tx
+    const [latestLog] = await tx
       .select({ id: wasteLog.id })
       .from(wasteLog)
       .where(
@@ -316,13 +313,12 @@ export async function restoreItem(itemId: number, userId: string) {
         )
       )
       .orderBy(desc(wasteLog.loggedAt), desc(wasteLog.id))
-      .get();
+      .limit(1);
 
     if (latestLog) {
       await tx
         .delete(wasteLog)
-        .where(and(eq(wasteLog.id, latestLog.id), eq(wasteLog.userId, userId)))
-        .run();
+        .where(and(eq(wasteLog.id, latestLog.id), eq(wasteLog.userId, userId)));
     }
 
     return { status: 200, body: { success: true, restored: true } };

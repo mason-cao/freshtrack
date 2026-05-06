@@ -40,12 +40,11 @@ export async function PATCH(
     return NextResponse.json({ error: "Category not found." }, { status: 400 });
   }
 
-  const updated = await db
+  const [updated] = await db
     .update(items)
     .set({ ...validation.data, updatedAt: new Date().toISOString() })
     .where(and(eq(items.id, itemId), eq(items.userId, userId)))
-    .returning()
-    .get();
+    .returning();
 
   if (!updated) {
     return NextResponse.json({ error: "Item not found" }, { status: 404 });
@@ -65,11 +64,11 @@ export async function DELETE(
     return NextResponse.json({ error: "Invalid item id." }, { status: 400 });
   }
 
-  const existing = await db
+  const [existing] = await db
     .select({ id: items.id })
     .from(items)
     .where(and(eq(items.id, itemId), eq(items.userId, userId)))
-    .get();
+    .limit(1);
 
   if (!existing) {
     return NextResponse.json({ error: "Item not found" }, { status: 404 });
@@ -77,8 +76,7 @@ export async function DELETE(
 
   await db
     .delete(items)
-    .where(and(eq(items.id, itemId), eq(items.userId, userId)))
-    .run();
+    .where(and(eq(items.id, itemId), eq(items.userId, userId)));
 
   return NextResponse.json({ success: true });
 }

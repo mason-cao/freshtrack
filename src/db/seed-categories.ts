@@ -1,13 +1,7 @@
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
+import { sql } from "drizzle-orm";
 import { categorySeedData } from "./categories";
+import { closeDb, db } from "./index";
 import * as schema from "./schema";
-
-const url = process.env.TURSO_DATABASE_URL ?? "file:./data/freshtrack.db";
-const authToken = process.env.TURSO_AUTH_TOKEN;
-
-const client = createClient({ url, authToken });
-const db = drizzle(client, { schema });
 
 async function main() {
   console.log("Seeding global categories...");
@@ -23,14 +17,25 @@ async function main() {
           icon: category.icon,
           defaultShelfLifeDays: category.defaultShelfLifeDays,
         },
-      })
-      .run();
+      });
   }
+
+  await db.execute(sql`
+    SELECT setval(
+      pg_get_serial_sequence('categories', 'id'),
+      (SELECT COALESCE(MAX(id), 1) FROM categories),
+      true
+    )
+  `);
 
   console.log(`Done. Seeded ${categorySeedData.length} global categories.`);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main()
+  .catch((err) => {
+    console.error(err);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await closeDb();
+  });

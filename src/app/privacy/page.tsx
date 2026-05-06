@@ -22,7 +22,7 @@ const sections = [
     icon: Database,
     title: "Where Data Is Stored",
     body: [
-      "FreshTrack stores account and pantry data in Turso. The app runs on Vercel.",
+      "FreshTrack stores account and pantry data in Railway Postgres. The app runs on Railway.",
       "FreshTrack uses Google only for authentication. It does not request access to Gmail, Drive, Calendar, or other Google data.",
     ],
   },

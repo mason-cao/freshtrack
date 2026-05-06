@@ -40,8 +40,7 @@ export async function GET(request: NextRequest) {
     .from(items)
     .leftJoin(categories, eq(items.categoryId, categories.id))
     .where(and(eq(items.status, status), eq(items.userId, userId)))
-    .orderBy(asc(items.expirationDate))
-    .all();
+    .orderBy(asc(items.expirationDate));
 
   return NextResponse.json(result);
 }
@@ -67,15 +66,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Category not found." }, { status: 400 });
   }
 
-  const newItem = await db
+  const [newItem] = await db
     .insert(items)
     .values({
       ...validation.data,
       userId,
       status: "active",
     })
-    .returning()
-    .get();
+    .returning();
 
   return NextResponse.json(newItem, { status: 201 });
 }

@@ -17,8 +17,7 @@ export async function GET() {
   const allLogs = await db
     .select()
     .from(wasteLog)
-    .where(eq(wasteLog.userId, userId))
-    .all();
+    .where(eq(wasteLog.userId, userId));
 
   // Aggregate by month
   const monthlyMap = new Map<string, MonthlyData>();

@@ -1,15 +1,8 @@
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
 import { sql } from "drizzle-orm";
+import { closeDb, db } from "./index";
 import * as schema from "./schema";
 import { categorySeedData } from "./categories";
 import { addDaysToDateInput, toDateInputValue } from "../lib/dates";
-
-const url = process.env.TURSO_DATABASE_URL ?? "file:./data/freshtrack.db";
-const authToken = process.env.TURSO_AUTH_TOKEN;
-
-const client = createClient({ url, authToken });
-const db = drizzle(client, { schema });
 
 const DEV_USER_ID = "dev-user-local";
 const DEV_USER_EMAIL = "dev@freshtrack.local";
@@ -33,18 +26,15 @@ async function main() {
   console.log("Seeding database...");
 
   // Clear existing data
-  await db.delete(schema.wasteLog).run();
-  await db.delete(schema.recipeIngredients).run();
-  await db.delete(schema.recipes).run();
-  await db.delete(schema.items).run();
-  await db.delete(schema.accounts).run();
-  await db.delete(schema.sessions).run();
-  await db.delete(schema.verificationTokens).run();
-  await db.delete(schema.users).run();
-  await db.delete(schema.categories).run();
-
-  // Reset autoincrement counters so IDs start from 1
-  await db.run(sql`DELETE FROM sqlite_sequence`);
+  await db.delete(schema.wasteLog);
+  await db.delete(schema.recipeIngredients);
+  await db.delete(schema.recipes);
+  await db.delete(schema.items);
+  await db.delete(schema.accounts);
+  await db.delete(schema.sessions);
+  await db.delete(schema.verificationTokens);
+  await db.delete(schema.users);
+  await db.delete(schema.categories);
 
   await db
     .insert(schema.users)
@@ -53,15 +43,22 @@ async function main() {
       name: "FreshTrack Dev",
       email: DEV_USER_EMAIL,
       image: null,
-    })
-    .run();
+    });
 
   console.log(`  ✓ Dev user seeded (${DEV_USER_EMAIL})`);
 
   // Categories
   for (const cat of categorySeedData) {
-    await db.insert(schema.categories).values(cat).run();
+    await db.insert(schema.categories).values(cat);
   }
+
+  await db.execute(sql`
+    SELECT setval(
+      pg_get_serial_sequence('categories', 'id'),
+      (SELECT COALESCE(MAX(id), 1) FROM categories),
+      true
+    )
+  `);
 
   console.log("  ✓ Categories seeded");
 
@@ -120,7 +117,7 @@ async function main() {
       ...item,
       userId: DEV_USER_ID,
       status: "active",
-    }).run();
+    });
   }
 
   console.log("  ✓ Items seeded");
@@ -397,15 +394,13 @@ async function main() {
 
   for (const recipe of recipesData) {
     const { ingredients, ...recipeRow } = recipe;
-    const result = await db
+    const [result] = await db
       .insert(schema.recipes)
       .values({ ...recipeRow, userId: DEV_USER_ID })
-      .returning()
-      .get();
+      .returning();
     for (const ing of ingredients) {
       await db.insert(schema.recipeIngredients)
-        .values({ ...ing, recipeId: result.id })
-        .run();
+        .values({ ...ing, recipeId: result.id });
     }
   }
 
@@ -464,15 +459,18 @@ async function main() {
   for (const entry of wasteLogData) {
     await db
       .insert(schema.wasteLog)
-      .values({ ...entry, userId: DEV_USER_ID })
-      .run();
+      .values({ ...entry, userId: DEV_USER_ID });
   }
 
   console.log("  ✓ Waste log seeded");
   console.log("Done! Database seeded successfully.");
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main()
+  .catch((err) => {
+    console.error(err);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await closeDb();
+  });
