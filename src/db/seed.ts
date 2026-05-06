@@ -2,6 +2,7 @@ import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import { sql } from "drizzle-orm";
 import * as schema from "./schema";
+import { categorySeedData } from "./categories";
 import { addDaysToDateInput, toDateInputValue } from "../lib/dates";
 
 const url = process.env.TURSO_DATABASE_URL ?? "file:./data/freshtrack.db";
@@ -58,20 +59,7 @@ async function main() {
   console.log(`  ✓ Dev user seeded (${DEV_USER_EMAIL})`);
 
   // Categories
-  const categoryData = [
-    { name: "Produce", icon: "🥬", defaultShelfLifeDays: 7 },
-    { name: "Dairy", icon: "🥛", defaultShelfLifeDays: 14 },
-    { name: "Meat", icon: "🥩", defaultShelfLifeDays: 5 },
-    { name: "Bakery", icon: "🍞", defaultShelfLifeDays: 5 },
-    { name: "Frozen", icon: "🧊", defaultShelfLifeDays: 90 },
-    { name: "Canned", icon: "🥫", defaultShelfLifeDays: 365 },
-    { name: "Beverages", icon: "🥤", defaultShelfLifeDays: 30 },
-    { name: "Snacks", icon: "🍿", defaultShelfLifeDays: 60 },
-    { name: "Condiments", icon: "🫙", defaultShelfLifeDays: 180 },
-    { name: "Grains & Pasta", icon: "🌾", defaultShelfLifeDays: 365 },
-  ];
-
-  for (const cat of categoryData) {
+  for (const cat of categorySeedData) {
     await db.insert(schema.categories).values(cat).run();
   }
 

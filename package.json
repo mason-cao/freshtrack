@@ -12,6 +12,7 @@
     "icons:generate": "node scripts/generate-pwa-icons.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:seed:categories": "npx tsx src/db/seed-categories.ts",
     "db:seed": "npx tsx src/db/seed.ts"
   },
   "dependencies": {
