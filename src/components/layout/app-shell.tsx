@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Fab } from "./fab";
+import { FooterLegal } from "./footer-legal";
+import { InstallPrompt } from "./install-prompt";
 import {
   notifyPantryUpdated,
   subscribeToPantryActions,
@@ -32,10 +34,15 @@ const navItems = [
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const isLoginPage = pathname === "/login";
+  const isPublicPage = pathname === "/login" || pathname === "/privacy" || pathname === "/terms";
 
-  if (isLoginPage) {
-    return <div className="min-h-screen bg-cream">{children}</div>;
+  if (isPublicPage) {
+    return (
+      <div className="min-h-screen bg-cream">
+        {children}
+        <FooterLegal />
+      </div>
+    );
   }
 
   return (
@@ -179,6 +186,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       />
 
       {/* FAB */}
+      <InstallPrompt />
+
       <Fab
         onItemAdded={() => {
           notifyPantryUpdated();
@@ -193,6 +202,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <div className="mx-auto max-w-5xl xl:max-w-none px-4 py-6 pb-24 sm:px-6 md:px-8 xl:px-12 2xl:px-20 md:pb-8">
           {children}
+          <FooterLegal className="mt-10 border-t border-warm-100 px-0 pb-0 md:px-0" />
         </div>
       </main>
     </div>

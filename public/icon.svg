@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">FreshTrack icon</title>
+  <desc id="desc">A sage square with a cream FreshTrack monogram.</desc>
+  <rect width="512" height="512" rx="112" fill="#527a52"/>
+  <circle cx="256" cy="256" r="164" fill="#faf8f5" opacity="0.13"/>
+  <path fill="#faf8f5" d="M144 145h138v45h-84v59h75v43h-75v98h-54V145Zm188 45h-70v-45h194v45h-70v200h-54V190Z"/>
+  <path fill="#dce6dc" d="M330 108c45 6 73 31 84 75-43-7-69-30-84-75Z"/>
+  <path fill="#faf8f5" fill-opacity=".72" d="M344 123c23 9 40 23 51 43-22-8-38-22-51-43Z"/>
+</svg>
