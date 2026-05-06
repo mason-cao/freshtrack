@@ -2,61 +2,101 @@
 
 **Reduce food waste. Save money. Track what matters.**
 
-FreshTrack is a pantry management dashboard that helps you track food freshness, get alerts before items expire, discover recipes to use expiring ingredients, and visualize your waste patterns over time.
+FreshTrack is a pantry management dashboard that helps you track food freshness, get alerts before items expire, discover recipes to use expiring ingredients, and visualize waste patterns over time.
 
 ## The Problem
 
-~30-40% of food purchased by US households is wasted, costing the average family ~$1,500/year. The root cause: people forget what's in their pantry. Items expire unnoticed, meals aren't planned around what needs using first, and there's no feedback loop showing how much waste actually occurs.
+About 30-40% of food purchased by US households is wasted, costing the average family roughly $1,500/year. The root cause: people forget what's in their pantry. Items expire unnoticed, meals are not planned around what needs using first, and there is no feedback loop showing how much waste actually occurs.
 
 ## Features
 
-- **Freshness Dashboard** — Color-coded overview of all pantry items (green/yellow/red/gray by expiration urgency)
-- **Expiration Alerts** — Prominent warnings for items expiring within 2 days
-- **Pantry Management** — Add, edit, filter, and remove items with full inventory tracking
-- **Recipe Suggestions** — "Use It Up" recipes that match your expiring ingredients
-- **Consume/Waste Logging** — Track whether items were used or wasted for accountability
-- **Statistics & Charts** — Monthly trends, waste rates, and money saved estimates
+- **Freshness Dashboard** - Overview of active pantry items, urgency metrics, and the next recipe to try
+- **Expiration Alerts** - Prominent warnings for items expiring within 2 days
+- **Pantry Management** - Add, search, filter, sort, and track inventory by quantity, unit, purchase date, expiration date, and estimated cost
+- **Recipe Suggestions** - "Use It Up" recipes that match ingredients expiring within 5 days
+- **Consume/Waste Logging** - Mark items as used or wasted, log outcomes, and undo recent actions
+- **Statistics & Charts** - Monthly trends, waste rates, category breakdowns, and money saved estimates
+- **Google Sign-In** - Auth.js-powered Google OAuth gate for the application
+
+## Current Scope Notes
+
+- Google is the only configured sign-in provider.
+- Local development uses a SQLite/libSQL file by default; Turso can be used by setting the database environment variables.
+- Pantry, recipe, and waste rows are not currently scoped per authenticated user in the active schema/routes.
+- PWA assets, a web app manifest, and `/privacy` and `/terms` pages are not currently present.
 
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 (App Router) |
+|-------|------------|
+| Framework | Next.js 16 App Router |
 | Language | TypeScript |
 | Runtime | React 19 |
-| Database | SQLite via better-sqlite3 |
+| Authentication | Auth.js / NextAuth v5 beta with Google OAuth |
+| Database | libSQL-compatible SQLite via `@libsql/client` |
 | ORM | Drizzle ORM |
 | Styling | Tailwind CSS v4 |
 | UI Components | Radix UI primitives |
 | Charts | Recharts |
+| Motion | Framer Motion |
+| Icons | Lucide React |
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 20.9+ and npm
+- Google OAuth credentials for local sign-in
 
 ### Installation
 
 ```bash
 # Clone the repository
 git clone <repo-url>
-cd project
+cd freshtrack
 
 # Install dependencies
 npm install
 
-# Run database migrations
-npx drizzle-kit migrate
+# Create local environment config
+cp .env.example .env.local
+```
 
-# Seed the database with sample data
+Fill in `.env.local`:
+
+```bash
+TURSO_DATABASE_URL=file:./data/freshtrack.db
+TURSO_AUTH_TOKEN=
+AUTH_SECRET=<generate with: openssl rand -base64 32>
+AUTH_URL=http://localhost:3000
+GOOGLE_CLIENT_ID=<google-oauth-client-id>
+GOOGLE_CLIENT_SECRET=<google-oauth-client-secret>
+```
+
+For Google OAuth local development, add these callback settings to a Google OAuth web client:
+
+```text
+Authorized JavaScript origin: http://localhost:3000
+Authorized redirect URI: http://localhost:3000/api/auth/callback/google
+```
+
+Then prepare the local database and start the app:
+
+```bash
+# The local libSQL file needs its parent directory to exist
+mkdir -p data
+
+# Run database migrations
+npm run db:migrate
+
+# Seed the database with sample categories, items, recipes, and waste logs
 npm run db:seed
 
 # Start the development server
 npm run dev
 ```
 
-The app will be available at **http://localhost:3000**.
+The app will be available at **http://localhost:3000** and will redirect unauthenticated users to **/login**.
 
 ### Available Scripts
 
@@ -73,43 +113,69 @@ The app will be available at **http://localhost:3000**.
 
 ## Architecture
 
-```
+```text
 src/
 ├── app/              # Next.js App Router pages & API routes
-│   ├── api/          # REST API endpoints
+│   ├── api/          # REST API endpoints and Auth.js route handler
+│   ├── login/        # Google sign-in page
 │   ├── pantry/       # Pantry management page
 │   ├── recipes/      # Recipe suggestions page
 │   ├── stats/        # Statistics & charts page
 │   └── page.tsx      # Dashboard
 ├── components/       # React components
-│   ├── ui/           # Base UI components (Button, Card, Dialog, etc.)
+│   ├── ui/           # Base UI components
 │   ├── dashboard/    # Dashboard-specific components
 │   ├── pantry/       # Pantry page components
 │   ├── recipes/      # Recipe components
 │   ├── stats/        # Chart components
-│   └── layout/       # Navbar and page header
+│   └── layout/       # App shell, navigation, FAB, and undo toast
 ├── db/               # Database layer
-│   ├── schema.ts     # Drizzle ORM schema (5 tables)
-│   ├── index.ts      # Database connection
-│   └── seed.ts       # Seed script with realistic data
-└── lib/              # Shared utilities
-    ├── freshness.ts  # Expiration status calculations
-    └── utils.ts      # General helpers
+│   ├── schema.ts     # Drizzle ORM schema
+│   ├── index.ts      # libSQL database connection
+│   └── seed.ts       # Seed script with sample data
+├── lib/              # Shared utilities
+└── types/            # NextAuth type augmentation
 ```
 
-The database is stored locally at `data/freshtrack.db` (SQLite) — no external database server required.
+The active Drizzle schema includes pantry tables (`categories`, `items`), recipe tables (`recipes`, `recipe_ingredients`), waste tracking (`waste_log`), and Auth.js tables (`users`, `accounts`, `sessions`, `verification_tokens`).
+
+By default, the database is stored locally at `data/freshtrack.db`. To use Turso instead, set `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`.
 
 ## API Endpoints
 
+Most application routes are protected by middleware and require an authenticated session. Auth routes and the login route are public.
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| GET/POST | `/api/auth/[...nextauth]` | Auth.js route handler |
 | GET | `/api/items` | List active pantry items |
-| POST | `/api/items` | Add a new item |
+| GET | `/api/items?status=consumed` | List items by status: `active`, `consumed`, or `wasted` |
+| POST | `/api/items` | Add a new active item |
 | PATCH | `/api/items/:id` | Update an item |
 | DELETE | `/api/items/:id` | Remove an item |
-| POST | `/api/items/:id/consume` | Mark as consumed |
-| POST | `/api/items/:id/waste` | Mark as wasted |
+| POST | `/api/items/:id/consume` | Mark an active item as consumed and log it |
+| POST | `/api/items/:id/waste` | Mark an active item as wasted and log it |
+| POST | `/api/items/:id/restore` | Restore a consumed/wasted item to active and remove the latest matching log |
 | GET | `/api/categories` | List food categories |
-| GET | `/api/recipes` | List all recipes |
-| GET | `/api/recipes/suggestions` | Recipes using expiring items |
-| GET | `/api/stats` | Waste & consumption statistics |
+| GET | `/api/recipes` | List all recipes with ingredients |
+| GET | `/api/recipes/suggestions` | Recipes using active items expiring within 5 days |
+| GET | `/api/stats` | Waste and consumption statistics |
+
+## Deployment Notes
+
+FreshTrack can run on Vercel with a Turso/libSQL database. Set these environment variables in the hosting provider:
+
+```bash
+TURSO_DATABASE_URL=<turso-libsql-url>
+TURSO_AUTH_TOKEN=<turso-auth-token>
+AUTH_SECRET=<generated-secret>
+AUTH_URL=<deployed-origin>
+GOOGLE_CLIENT_ID=<google-oauth-client-id>
+GOOGLE_CLIENT_SECRET=<google-oauth-client-secret>
+```
+
+After configuring production environment variables, run Drizzle migrations against the production database:
+
+```bash
+TURSO_DATABASE_URL=<turso-libsql-url> TURSO_AUTH_TOKEN=<turso-auth-token> npm run db:migrate
+```
