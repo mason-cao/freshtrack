@@ -34,9 +34,10 @@ export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30, delay: 0.1 }}
-      className="rounded-2xl border border-warm-100 bg-warm-white p-5 shadow-warm sm:p-6 xl:p-7"
+      className="relative overflow-hidden rounded-2xl border border-sage-100 bg-gradient-to-br from-sage-50 via-warm-white to-amber-50/70 p-5 shadow-warm sm:p-6 xl:p-7"
     >
-      <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sage-500 via-amber-400 to-terracotta-400" />
+      <div className="relative grid gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-sage-50 px-3 py-1 text-sm font-semibold text-sage-700">
             <Leaf className="h-4 w-4" />
@@ -72,8 +73,8 @@ export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
           </div>
         </div>
 
-        <dl className="grid overflow-hidden rounded-xl border border-warm-100 sm:grid-cols-3 lg:grid-cols-1">
-          <div className="p-3 sm:border-r sm:border-warm-100 lg:border-b lg:border-r-0">
+        <dl className="grid overflow-hidden rounded-xl border border-sage-100 bg-warm-white/80 sm:grid-cols-3 lg:grid-cols-1">
+          <div className="p-3 sm:border-r sm:border-sage-100 lg:border-b lg:border-r-0">
             <dt className="flex items-center gap-1.5 text-xs font-medium text-sage-700">
               <TrendingUp className="h-4 w-4" />
               Used
@@ -82,7 +83,7 @@ export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
               <AnimatedNumber value={used} />
             </dd>
           </div>
-          <div className="p-3 sm:border-r sm:border-warm-100 lg:border-b lg:border-r-0">
+          <div className="p-3 sm:border-r sm:border-sage-100 lg:border-b lg:border-r-0">
             <dt className="flex items-center gap-1.5 text-xs font-medium text-terracotta-600">
               <TrendingDown className="h-4 w-4" />
               Wasted

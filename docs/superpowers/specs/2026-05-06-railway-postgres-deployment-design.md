@@ -40,7 +40,8 @@ Required production variables on Railway:
 4. Set Auth.js and Google OAuth environment variables on the app service.
 5. Run `npm run db:migrate` against the Railway `DATABASE_URL`.
 6. Run `npm run db:seed:categories` against production.
-7. Configure Google OAuth redirect URLs after the Railway public domain is known.
+7. Run `npm run db:seed:recipes` against production.
+8. Configure Google OAuth redirect URLs after the Railway public domain is known.
 
 ## Verification
 

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
+import { visibleRecipeWhere } from "@/db/recipe-visibility";
 import { recipes, recipeIngredients } from "@/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { getCurrentUserId } from "@/lib/session";
 
 export async function GET() {
@@ -9,7 +10,7 @@ export async function GET() {
   const allRecipes = await db
     .select()
     .from(recipes)
-    .where(eq(recipes.userId, userId));
+    .where(visibleRecipeWhere(userId));
   const recipeIds = allRecipes.map((recipe) => recipe.id);
   const allIngredients =
     recipeIds.length > 0

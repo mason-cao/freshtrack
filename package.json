@@ -13,6 +13,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed:categories": "npx tsx src/db/seed-categories.ts",
+    "db:seed:recipes": "npx tsx src/db/seed-recipes.ts",
     "db:seed": "npx tsx src/db/seed.ts"
   },
   "dependencies": {

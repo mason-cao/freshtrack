@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { RecipeCard } from "@/components/recipes/recipe-card";
 import { RecipeDetail } from "@/components/recipes/recipe-detail";
-import { Sparkles } from "lucide-react";
+import { BookOpen, Sparkles } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { fetchJson } from "@/lib/api-client";
 import { subscribeToPantryUpdates } from "@/lib/pantry-events";
 
@@ -133,25 +134,53 @@ export default function RecipesPage() {
         </section>
       )}
 
+      {suggestions.length === 0 && allRecipes.length > 0 && (
+        <section className="rounded-xl border border-amber-100 bg-amber-50/70 px-4 py-3 shadow-warm-sm">
+          <div className="flex items-start gap-3">
+            <div className="rounded-lg bg-warm-white/80 p-1.5">
+              <Sparkles className="h-4 w-4 text-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-stone-900">
+                No urgent matches yet
+              </h2>
+              <p className="mt-0.5 text-sm text-amber-800">
+                Recipes will appear here when expiring pantry items match a starter recipe.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
       <section>
         <h2 className="mb-3 text-base font-semibold text-stone-900">
           All Recipes
         </h2>
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 xl:gap-5"
-        >
-          {allRecipes.map((recipe) => (
-            <motion.div key={recipe.id} variants={item}>
-              <RecipeCard
-                recipe={recipe}
-                onSelect={setSelectedRecipe}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
+        {allRecipes.length > 0 ? (
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 xl:gap-5"
+          >
+            {allRecipes.map((recipe) => (
+              <motion.div key={recipe.id} variants={item}>
+                <RecipeCard
+                  recipe={recipe}
+                  onSelect={setSelectedRecipe}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-warm-200 bg-warm-white/70">
+            <EmptyState
+              icon={BookOpen}
+              title="No recipes yet"
+              description="Starter recipes have not been seeded for this environment."
+            />
+          </div>
+        )}
       </section>
 
       <RecipeDetail

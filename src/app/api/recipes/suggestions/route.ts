@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
+import { visibleRecipeWhere } from "@/db/recipe-visibility";
 import { items, recipes, recipeIngredients } from "@/db/schema";
 import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { addDaysToDateInput, toDateInputValue } from "@/lib/dates";
@@ -30,7 +31,7 @@ export async function GET() {
   const allRecipes = await db
     .select()
     .from(recipes)
-    .where(eq(recipes.userId, userId));
+    .where(visibleRecipeWhere(userId));
   const recipeIds = allRecipes.map((recipe) => recipe.id);
   const allIngredients =
     recipeIds.length > 0

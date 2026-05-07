@@ -62,9 +62,7 @@ export const recipes = pgTable(
   "recipes",
   {
     id: serial("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     description: text("description"),
     instructions: text("instructions"),

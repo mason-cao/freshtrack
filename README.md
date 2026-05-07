@@ -76,6 +76,7 @@ The app will be available at **http://localhost:3000**.
 | `npm run icons:generate` | Regenerate PWA icon PNGs |
 | `npm run db:seed` | Seed local dev database with sample data |
 | `npm run db:seed:categories` | Seed production-safe global categories only |
+| `npm run db:seed:recipes` | Seed production-safe global starter recipes only |
 | `npm run db:generate` | Generate new migrations from schema |
 | `npm run db:migrate` | Run pending migrations |
 
@@ -98,9 +99,10 @@ See `.env.example` for the full template. Required in production:
 2. Add a Railway Postgres service.
 3. Add the production environment variables in the Railway app service.
 4. Run migrations against production: `DATABASE_URL=... npm run db:migrate`
-5. Seed global categories only: `DATABASE_URL=... npm run db:seed:categories`
-6. Deploy the app service from Railway.
-7. Configure Google OAuth with:
+5. Seed global categories: `DATABASE_URL=... npm run db:seed:categories`
+6. Seed global starter recipes: `DATABASE_URL=... npm run db:seed:recipes`
+7. Deploy the app service from Railway.
+8. Configure Google OAuth with:
    - Authorized origin: your Railway public app URL
    - Redirect URI: `<your Railway public app URL>/api/auth/callback/google`
    - Privacy policy: `<your Railway public app URL>/privacy`
@@ -148,7 +150,8 @@ src/
 │   ├── schema.ts     # Drizzle ORM schema
 │   ├── index.ts      # Database connection
 │   ├── seed.ts       # Local dev seed script with realistic data
-│   └── seed-categories.ts # Production-safe global category seed
+│   ├── seed-categories.ts # Production-safe global category seed
+│   └── seed-recipes.ts # Production-safe global recipe seed
 └── lib/              # Shared utilities
     ├── freshness.ts  # Expiration status calculations
     └── utils.ts      # General helpers
