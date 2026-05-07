@@ -4,6 +4,8 @@
 
 FreshTrack is a pantry management dashboard that helps you track food freshness, get alerts before items expire, discover recipes to use expiring ingredients, and visualize your waste patterns over time.
 
+**Live app:** https://freshtrack-production-290e.up.railway.app
+
 ## The Problem
 
 ~30-40% of food purchased by US households is wasted, costing the average family ~$1,500/year. The root cause: people forget what's in their pantry. Items expire unnoticed, meals aren't planned around what needs using first, and there's no feedback loop showing how much waste actually occurs.
@@ -43,7 +45,7 @@ FreshTrack is a pantry management dashboard that helps you track food freshness,
 ```bash
 # Clone the repository
 git clone <repo-url>
-cd project
+cd freshtrack
 
 # Install dependencies
 npm install
@@ -84,13 +86,15 @@ The app will be available at **http://localhost:3000**.
 
 FreshTrack deploys as an installable PWA on Railway with Railway Postgres as the managed database.
 
+Production URL: https://freshtrack-production-290e.up.railway.app
+
 ### Environment Variables
 
 See `.env.example` for the full template. Required in production:
 
 - `DATABASE_URL` - Railway Postgres connection string
 - `AUTH_SECRET` - generate with `openssl rand -base64 32`
-- `AUTH_URL` - deployed origin, for example `https://freshtrack.up.railway.app`
+- `AUTH_URL` - deployed origin, for example `https://freshtrack-production-290e.up.railway.app`
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google Cloud OAuth credentials
 
 ### Deploy Steps
@@ -169,6 +173,7 @@ Local development uses the `DATABASE_URL` in `.env.local`, usually a local Postg
 | DELETE | `/api/items/:id` | Remove an item |
 | POST | `/api/items/:id/consume` | Mark as consumed |
 | POST | `/api/items/:id/waste` | Mark as wasted |
+| POST | `/api/items/:id/restore` | Restore an item to active status |
 | GET | `/api/categories` | List food categories |
 | GET | `/api/recipes` | List all recipes |
 | GET | `/api/recipes/suggestions` | Recipes using expiring items |
