@@ -150,7 +150,7 @@ export default function DashboardPage() {
           className="xl:col-span-5 xl:row-span-2"
         >
           <Link href="/recipes" className="block group cursor-pointer h-full">
-            <div className="rounded-2xl bg-warm-white shadow-warm transition-all duration-200 group-hover:shadow-warm-lg group-hover:translate-y-[-1px] h-full overflow-hidden">
+            <div className="h-full overflow-hidden rounded-2xl border border-amber-100 bg-gradient-to-br from-warm-white via-warm-white to-amber-50/70 shadow-warm transition-all duration-200 group-hover:translate-y-[-1px] group-hover:shadow-warm-lg">
               {/* Image banner — desktop */}
               <div className="hidden xl:block relative h-48 2xl:h-56 overflow-hidden bg-warm-50">
                 <Image
@@ -162,7 +162,7 @@ export default function DashboardPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
                 <div className="absolute top-3 left-3">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-sage-700 shadow-sm">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-warm-white/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-sage-700 shadow-sm">
                     <ChefHat className="h-3 w-3" /> Try Tonight
                   </span>
                 </div>

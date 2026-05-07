@@ -37,6 +37,7 @@ export function MetricCards({ activeItems, useRate, expiringSoon }: MetricCardsP
       accent: "bg-sage-500",
       iconColor: "text-sage-600",
       softBg: "bg-sage-50",
+      surface: "from-sage-50/80 via-warm-white to-warm-white",
     },
     {
       label: "Use rate",
@@ -46,6 +47,7 @@ export function MetricCards({ activeItems, useRate, expiringSoon }: MetricCardsP
       accent: "bg-amber-500",
       iconColor: "text-amber-700",
       softBg: "bg-amber-50",
+      surface: "from-amber-50/80 via-warm-white to-warm-white",
     },
     {
       label: "Expiring soon",
@@ -55,6 +57,10 @@ export function MetricCards({ activeItems, useRate, expiringSoon }: MetricCardsP
       accent: expiringSoon > 0 ? "bg-terracotta-500" : "bg-sage-500",
       iconColor: expiringSoon > 0 ? "text-terracotta-600" : "text-sage-600",
       softBg: expiringSoon > 0 ? "bg-terracotta-50" : "bg-sage-50",
+      surface:
+        expiringSoon > 0
+          ? "from-terracotta-50/80 via-warm-white to-warm-white"
+          : "from-sage-50/80 via-warm-white to-warm-white",
     },
   ];
 
@@ -72,7 +78,10 @@ export function MetricCards({ activeItems, useRate, expiringSoon }: MetricCardsP
           <motion.div
             key={metric.label}
             variants={item}
-            className="relative overflow-hidden rounded-xl border border-warm-100 bg-warm-white p-3 shadow-warm-sm transition-shadow duration-200 hover:shadow-warm xl:p-5"
+            className={cn(
+              "relative overflow-hidden rounded-xl border border-warm-100 bg-gradient-to-br p-3 shadow-warm-sm transition-shadow duration-200 hover:shadow-warm xl:p-5",
+              metric.surface
+            )}
           >
             <div className={cn("absolute inset-x-0 top-0 h-1", metric.accent)} />
             <div className={cn("mb-3 inline-flex rounded-lg p-2", metric.softBg)}>

@@ -1,17 +1,24 @@
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { resolveDatabaseUrl } from "./config";
 import * as schema from "./schema";
-import path from "path";
-import fs from "fs";
 
-const dbDir = path.join(process.cwd(), "data");
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+const globalForDb = globalThis as unknown as {
+  freshtrackSqlClient?: postgres.Sql;
+};
+
+export const sqlClient =
+  globalForDb.freshtrackSqlClient ??
+  postgres(resolveDatabaseUrl(), {
+    prepare: false,
+  });
+
+if (process.env.NODE_ENV !== "production") {
+  globalForDb.freshtrackSqlClient = sqlClient;
 }
 
-const dbPath = path.join(dbDir, "freshtrack.db");
-const sqlite = new Database(dbPath);
-sqlite.pragma("journal_mode = WAL");
-sqlite.pragma("foreign_keys = ON");
+export const db = drizzle(sqlClient, { schema });
 
-export const db = drizzle(sqlite, { schema });
+export async function closeDb() {
+  await sqlClient.end();
+}

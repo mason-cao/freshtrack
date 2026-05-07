@@ -11,6 +11,7 @@ import {
 import { getFoodImage } from "@/lib/food-images";
 import { formatDate } from "@/lib/utils";
 import { FreshnessMeter } from "./freshness-meter";
+import type { PantryActionOutcome } from "@/lib/pantry-events";
 
 interface Item {
   id: number;
@@ -29,7 +30,7 @@ interface Item {
 
 interface ItemTableProps {
   items: Item[];
-  onAction: () => void;
+  onAction: (outcome?: PantryActionOutcome) => void;
   filter: string;
 }
 
@@ -71,8 +72,7 @@ export function ItemTable({ items, onAction, filter }: ItemTableProps) {
               <tr key={item.id} className="hover:bg-warm-50/60 transition-colors duration-150">
                 <td className="px-4 xl:px-5 py-3">
                   <div className="flex items-center gap-3">
-                    <div className={`h-8 w-1 rounded-full ${colors.dot}`} />
-                    <div className="h-9 w-9 rounded-lg shrink-0 overflow-hidden bg-warm-50">
+                    <div className={`h-9 w-9 rounded-lg shrink-0 overflow-hidden border-2 bg-warm-50 ${colors.border}`}>
                       <Image
                         src={getFoodImage(item.name, item.categoryName)}
                         alt={item.name}

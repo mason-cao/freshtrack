@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { categories, items, wasteLog } from "@/db/schema";
 import { isDateInputValue, toDateInputValue } from "@/lib/dates";
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 export const itemStatuses = ["active", "consumed", "wasted"] as const;
 
@@ -66,14 +66,13 @@ export function isItemStatus(value: string): value is ItemStatus {
   return itemStatuses.includes(value as ItemStatus);
 }
 
-export function categoryExists(categoryId: number): boolean {
-  return Boolean(
-    db
-      .select({ id: categories.id })
-      .from(categories)
-      .where(eq(categories.id, categoryId))
-      .get()
-  );
+export async function categoryExists(categoryId: number): Promise<boolean> {
+  const [row] = await db
+    .select({ id: categories.id })
+    .from(categories)
+    .where(eq(categories.id, categoryId))
+    .limit(1);
+  return Boolean(row);
 }
 
 export function validateCreateItemPayload(
@@ -238,9 +237,17 @@ export function validatePatchItemPayload(
   return { ok: true, data };
 }
 
-export function completeItem(itemId: number, action: ItemAction) {
-  return db.transaction((tx) => {
-    const item = tx.select().from(items).where(eq(items.id, itemId)).get();
+export async function completeItem(
+  itemId: number,
+  userId: string,
+  action: ItemAction
+) {
+  return db.transaction(async (tx) => {
+    const [item] = await tx
+      .select()
+      .from(items)
+      .where(and(eq(items.id, itemId), eq(items.userId, userId)))
+      .limit(1);
 
     if (!item) {
       return { status: 404, body: { error: "Item not found." } };
@@ -253,22 +260,67 @@ export function completeItem(itemId: number, action: ItemAction) {
       };
     }
 
-    tx.update(items)
+    await tx
+      .update(items)
       .set({ status: action, updatedAt: new Date().toISOString() })
-      .where(eq(items.id, itemId))
-      .run();
+      .where(and(eq(items.id, itemId), eq(items.userId, userId)));
 
-    tx.insert(wasteLog)
+    await tx
+      .insert(wasteLog)
       .values({
+        userId,
         itemId: item.id,
         itemName: item.name,
         action,
         quantity: item.quantity,
         unit: item.unit,
         costEstimate: item.costEstimate,
-      })
-      .run();
+      });
 
     return { status: 200, body: { success: true } };
+  });
+}
+
+export async function restoreItem(itemId: number, userId: string) {
+  return db.transaction(async (tx) => {
+    const [item] = await tx
+      .select()
+      .from(items)
+      .where(and(eq(items.id, itemId), eq(items.userId, userId)))
+      .limit(1);
+
+    if (!item) {
+      return { status: 404, body: { error: "Item not found." } };
+    }
+
+    if (item.status === "active") {
+      return { status: 200, body: { success: true, restored: false } };
+    }
+
+    await tx
+      .update(items)
+      .set({ status: "active", updatedAt: new Date().toISOString() })
+      .where(and(eq(items.id, itemId), eq(items.userId, userId)));
+
+    const [latestLog] = await tx
+      .select({ id: wasteLog.id })
+      .from(wasteLog)
+      .where(
+        and(
+          eq(wasteLog.userId, userId),
+          eq(wasteLog.itemId, itemId),
+          eq(wasteLog.action, item.status)
+        )
+      )
+      .orderBy(desc(wasteLog.loggedAt), desc(wasteLog.id))
+      .limit(1);
+
+    if (latestLog) {
+      await tx
+        .delete(wasteLog)
+        .where(and(eq(wasteLog.id, latestLog.id), eq(wasteLog.userId, userId)));
+    }
+
+    return { status: 200, body: { success: true, restored: true } };
   });
 }

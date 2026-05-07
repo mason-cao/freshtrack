@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { items } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { getCurrentUserId } from "@/lib/session";
 import {
   categoryExists,
   parseItemId,
@@ -12,6 +13,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const userId = await getCurrentUserId();
   const { id } = await params;
   const itemId = parseItemId(id);
   if (itemId === null) {
@@ -33,17 +35,16 @@ export async function PATCH(
   if (
     validation.data.categoryId !== undefined &&
     validation.data.categoryId !== null &&
-    !categoryExists(validation.data.categoryId)
+    !(await categoryExists(validation.data.categoryId))
   ) {
     return NextResponse.json({ error: "Category not found." }, { status: 400 });
   }
 
-  const updated = db
+  const [updated] = await db
     .update(items)
     .set({ ...validation.data, updatedAt: new Date().toISOString() })
-    .where(eq(items.id, itemId))
-    .returning()
-    .get();
+    .where(and(eq(items.id, itemId), eq(items.userId, userId)))
+    .returning();
 
   if (!updated) {
     return NextResponse.json({ error: "Item not found" }, { status: 404 });
@@ -56,23 +57,26 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const userId = await getCurrentUserId();
   const { id } = await params;
   const itemId = parseItemId(id);
   if (itemId === null) {
     return NextResponse.json({ error: "Invalid item id." }, { status: 400 });
   }
 
-  const existing = db
+  const [existing] = await db
     .select({ id: items.id })
     .from(items)
-    .where(eq(items.id, itemId))
-    .get();
+    .where(and(eq(items.id, itemId), eq(items.userId, userId)))
+    .limit(1);
 
   if (!existing) {
     return NextResponse.json({ error: "Item not found" }, { status: 404 });
   }
 
-  db.delete(items).where(eq(items.id, itemId)).run();
+  await db
+    .delete(items)
+    .where(and(eq(items.id, itemId), eq(items.userId, userId)));
 
   return NextResponse.json({ success: true });
 }

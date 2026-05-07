@@ -2,9 +2,7 @@
 
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect } from "react";
-import Image from "next/image";
 import { TrendingUp, TrendingDown, DollarSign, Leaf, Percent } from "lucide-react";
-import { getFoodImage } from "@/lib/food-images";
 
 function AnimatedNumber({ value, prefix = "" }: { value: number; prefix?: string }) {
   const count = useMotionValue(0);
@@ -36,87 +34,74 @@ export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30, delay: 0.1 }}
-      className="relative overflow-hidden rounded-2xl bg-sage-800 px-5 py-6 text-white shadow-warm-lg sm:px-6 xl:p-8"
+      className="relative overflow-hidden rounded-2xl border border-sage-100 bg-gradient-to-br from-sage-50 via-warm-white to-amber-50/70 p-5 shadow-warm sm:p-6 xl:p-7"
     >
-      <div className="absolute inset-0">
-        <Image
-          src={getFoodImage("seasonal produce", "Produce")}
-          alt=""
-          fill
-          priority
-          className="object-cover opacity-30"
-          sizes="(min-width: 1280px) 70vw, 100vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-sage-900 via-sage-800/95 to-sage-700/75" />
-      </div>
-
-      <div className="relative z-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sage-500 via-amber-400 to-terracotta-400" />
+      <div className="relative grid gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-sm font-medium text-sage-50 backdrop-blur-sm">
-            <Leaf className="h-4 w-4 text-sage-200" />
-            Weekly impact
+          <div className="inline-flex items-center gap-2 rounded-full bg-sage-50 px-3 py-1 text-sm font-semibold text-sage-700">
+            <Leaf className="h-4 w-4" />
+            Weekly rhythm
           </div>
-          <div className="mt-4 flex items-end gap-3">
-            <span className="text-5xl font-bold leading-none xl:text-6xl">
-              <AnimatedNumber value={useRate} />
-            </span>
-            <div className="pb-1">
-              <div className="flex items-center gap-1 text-sage-100">
-                <Percent className="h-4 w-4" />
-                <span className="text-sm font-semibold">use rate</span>
-              </div>
-              <p className="mt-1 text-sm text-sage-100/85">
-                You&apos;re saving more than just food.
-              </p>
+          <div className="mt-4">
+            <p className="text-sm font-medium text-stone-500">Logged food use rate</p>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="text-3xl font-bold leading-none text-stone-900 xl:text-4xl">
+                <AnimatedNumber value={useRate} />
+              </span>
+              <Percent className="h-5 w-5 text-sage-600" />
             </div>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-stone-600">
+              {total > 0
+                ? "Most of this week's logged food became meals instead of waste."
+                : "Mark items used or wasted to start building your weekly signal."}
+            </p>
           </div>
           <div className="mt-5 max-w-xl">
-            <div className="h-2 overflow-hidden rounded-full bg-white/20">
+            <div className="h-2 overflow-hidden rounded-full bg-warm-100">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${useRate}%` }}
                 transition={{ duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="h-full rounded-full bg-amber-300"
+                className="h-full rounded-full bg-sage-500"
               />
             </div>
-            <div className="mt-2 flex justify-between text-xs font-medium text-sage-100/80">
+            <div className="mt-2 flex justify-between text-xs font-medium text-stone-500">
               <span>{used} used</span>
               <span>{wasted} wasted</span>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 lg:grid-cols-1 lg:gap-2">
-          <div className="border-l border-white/20 pl-3 lg:flex lg:items-center lg:justify-between lg:border-l-0 lg:border-t lg:pl-0 lg:pt-3">
-            <div className="flex items-center gap-1.5 text-sage-100">
-              <TrendingUp className="h-4 w-4 text-sage-200" />
-              <span className="text-xs font-medium">Used</span>
-            </div>
-            <span className="mt-1 block text-2xl font-bold lg:mt-0 xl:text-3xl">
+        <dl className="grid overflow-hidden rounded-xl border border-sage-100 bg-warm-white/80 sm:grid-cols-3 lg:grid-cols-1">
+          <div className="p-3 sm:border-r sm:border-sage-100 lg:border-b lg:border-r-0">
+            <dt className="flex items-center gap-1.5 text-xs font-medium text-sage-700">
+              <TrendingUp className="h-4 w-4" />
+              Used
+            </dt>
+            <dd className="mt-1 text-2xl font-bold text-stone-900 xl:text-3xl">
               <AnimatedNumber value={used} />
-            </span>
+            </dd>
           </div>
-
-          <div className="border-l border-white/20 pl-3 lg:flex lg:items-center lg:justify-between lg:border-l-0 lg:border-t lg:pl-0 lg:pt-3">
-            <div className="flex items-center gap-1.5 text-sage-100">
-              <TrendingDown className="h-4 w-4 text-terracotta-50" />
-              <span className="text-xs font-medium">Wasted</span>
-            </div>
-            <span className="mt-1 block text-2xl font-bold text-white/90 lg:mt-0 xl:text-3xl">
+          <div className="p-3 sm:border-r sm:border-sage-100 lg:border-b lg:border-r-0">
+            <dt className="flex items-center gap-1.5 text-xs font-medium text-terracotta-600">
+              <TrendingDown className="h-4 w-4" />
+              Wasted
+            </dt>
+            <dd className="mt-1 text-2xl font-bold text-stone-900 xl:text-3xl">
               <AnimatedNumber value={wasted} />
-            </span>
+            </dd>
           </div>
-
-          <div className="border-l border-white/20 pl-3 lg:flex lg:items-center lg:justify-between lg:border-l-0 lg:border-t lg:pl-0 lg:pt-3">
-            <div className="flex items-center gap-1.5 text-sage-100">
-              <DollarSign className="h-4 w-4 text-amber-300" />
-              <span className="text-xs font-medium">Saved</span>
-            </div>
-            <span className="mt-1 block text-2xl font-bold text-amber-200 lg:mt-0 xl:text-3xl">
+          <div className="p-3">
+            <dt className="flex items-center gap-1.5 text-xs font-medium text-amber-700">
+              <DollarSign className="h-4 w-4" />
+              Saved
+            </dt>
+            <dd className="mt-1 text-2xl font-bold text-stone-900 xl:text-3xl">
               <AnimatedNumber value={saved} prefix="$" />
-            </span>
+            </dd>
           </div>
-        </div>
+        </dl>
       </div>
     </motion.div>
   );

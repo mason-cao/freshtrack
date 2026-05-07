@@ -1,19 +1,11 @@
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { sql } from "drizzle-orm";
+import { closeDb, db } from "./index";
 import * as schema from "./schema";
-import path from "path";
-import fs from "fs";
+import { categorySeedData } from "./categories";
 import { addDaysToDateInput, toDateInputValue } from "../lib/dates";
 
-const dbDir = path.join(process.cwd(), "data");
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-}
-
-const dbPath = path.join(dbDir, "freshtrack.db");
-const sqlite = new Database(dbPath);
-sqlite.pragma("foreign_keys = ON");
-const db = drizzle(sqlite, { schema });
+const DEV_USER_ID = "dev-user-local";
+const DEV_USER_EMAIL = "dev@freshtrack.local";
 
 function daysFromNow(days: number): string {
   return addDaysToDateInput(days);
@@ -30,36 +22,43 @@ function monthsAgo(months: number, dayOffset = 0): string {
   return toDateInputValue(d);
 }
 
-async function seed() {
+async function main() {
   console.log("Seeding database...");
 
   // Clear existing data
-  db.delete(schema.wasteLog).run();
-  db.delete(schema.recipeIngredients).run();
-  db.delete(schema.recipes).run();
-  db.delete(schema.items).run();
-  db.delete(schema.categories).run();
+  await db.delete(schema.wasteLog);
+  await db.delete(schema.recipeIngredients);
+  await db.delete(schema.recipes);
+  await db.delete(schema.items);
+  await db.delete(schema.accounts);
+  await db.delete(schema.sessions);
+  await db.delete(schema.verificationTokens);
+  await db.delete(schema.users);
+  await db.delete(schema.categories);
 
-  // Reset autoincrement counters so IDs start from 1
-  sqlite.exec("DELETE FROM sqlite_sequence");
+  await db
+    .insert(schema.users)
+    .values({
+      id: DEV_USER_ID,
+      name: "FreshTrack Dev",
+      email: DEV_USER_EMAIL,
+      image: null,
+    });
+
+  console.log(`  ✓ Dev user seeded (${DEV_USER_EMAIL})`);
 
   // Categories
-  const categoryData = [
-    { name: "Produce", icon: "🥬", defaultShelfLifeDays: 7 },
-    { name: "Dairy", icon: "🥛", defaultShelfLifeDays: 14 },
-    { name: "Meat", icon: "🥩", defaultShelfLifeDays: 5 },
-    { name: "Bakery", icon: "🍞", defaultShelfLifeDays: 5 },
-    { name: "Frozen", icon: "🧊", defaultShelfLifeDays: 90 },
-    { name: "Canned", icon: "🥫", defaultShelfLifeDays: 365 },
-    { name: "Beverages", icon: "🥤", defaultShelfLifeDays: 30 },
-    { name: "Snacks", icon: "🍿", defaultShelfLifeDays: 60 },
-    { name: "Condiments", icon: "🫙", defaultShelfLifeDays: 180 },
-    { name: "Grains & Pasta", icon: "🌾", defaultShelfLifeDays: 365 },
-  ];
-
-  for (const cat of categoryData) {
-    db.insert(schema.categories).values(cat).run();
+  for (const cat of categorySeedData) {
+    await db.insert(schema.categories).values(cat);
   }
+
+  await db.execute(sql`
+    SELECT setval(
+      pg_get_serial_sequence('categories', 'id'),
+      (SELECT COALESCE(MAX(id), 1) FROM categories),
+      true
+    )
+  `);
 
   console.log("  ✓ Categories seeded");
 
@@ -114,10 +113,11 @@ async function seed() {
   ];
 
   for (const item of itemsData) {
-    db.insert(schema.items).values({
+    await db.insert(schema.items).values({
       ...item,
+      userId: DEV_USER_ID,
       status: "active",
-    }).run();
+    });
   }
 
   console.log("  ✓ Items seeded");
@@ -394,11 +394,13 @@ async function seed() {
 
   for (const recipe of recipesData) {
     const { ingredients, ...recipeRow } = recipe;
-    const result = db.insert(schema.recipes).values(recipeRow).returning().get();
+    const [result] = await db
+      .insert(schema.recipes)
+      .values({ ...recipeRow, userId: DEV_USER_ID })
+      .returning();
     for (const ing of ingredients) {
-      db.insert(schema.recipeIngredients)
-        .values({ ...ing, recipeId: result.id })
-        .run();
+      await db.insert(schema.recipeIngredients)
+        .values({ ...ing, recipeId: result.id });
     }
   }
 
@@ -455,15 +457,20 @@ async function seed() {
   ];
 
   for (const entry of wasteLogData) {
-    db.insert(schema.wasteLog).values(entry).run();
+    await db
+      .insert(schema.wasteLog)
+      .values({ ...entry, userId: DEV_USER_ID });
   }
 
   console.log("  ✓ Waste log seeded");
   console.log("Done! Database seeded successfully.");
-  process.exit(0);
 }
 
-seed().catch((err) => {
-  console.error("Seed failed:", err);
-  process.exit(1);
-});
+main()
+  .catch((err) => {
+    console.error(err);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await closeDb();
+  });

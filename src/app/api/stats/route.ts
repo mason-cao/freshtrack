@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { wasteLog } from "@/db/schema";
 import { formatMonthLabel, monthKeyFromDateValue } from "@/lib/dates";
+import { eq } from "drizzle-orm";
+import { getCurrentUserId } from "@/lib/session";
 
 interface MonthlyData {
   consumed: number;
@@ -11,7 +13,11 @@ interface MonthlyData {
 }
 
 export async function GET() {
-  const allLogs = db.select().from(wasteLog).all();
+  const userId = await getCurrentUserId();
+  const allLogs = await db
+    .select()
+    .from(wasteLog)
+    .where(eq(wasteLog.userId, userId));
 
   // Aggregate by month
   const monthlyMap = new Map<string, MonthlyData>();

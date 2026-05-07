@@ -4,6 +4,8 @@
 
 FreshTrack is a pantry management dashboard that helps you track food freshness, get alerts before items expire, discover recipes to use expiring ingredients, and visualize waste patterns over time.
 
+**Live app:** https://freshtrack-production-290e.up.railway.app
+
 ## The Problem
 
 About 30-40% of food purchased by US households is wasted, costing the average family roughly $1,500/year. The root cause: people forget what's in their pantry. Items expire unnoticed, meals are not planned around what needs using first, and there is no feedback loop showing how much waste actually occurs.
@@ -21,9 +23,11 @@ About 30-40% of food purchased by US households is wasted, costing the average f
 ## Current Scope Notes
 
 - Google is the only configured sign-in provider.
-- Local development uses a SQLite/libSQL file by default; Turso can be used by setting the database environment variables.
-- Pantry, recipe, and waste rows are not currently scoped per authenticated user in the active schema/routes.
-- PWA assets, a web app manifest, and `/privacy` and `/terms` pages are not currently present.
+- Production runs on Railway with Railway Postgres.
+- Local development uses PostgreSQL through `DATABASE_URL`.
+- Pantry, recipe, and waste rows are scoped per authenticated user.
+- Built-in categories and starter recipes are global seed data.
+- PWA assets, a web app manifest, `/privacy`, and `/terms` are present.
 
 ## Tech Stack
 
@@ -33,7 +37,7 @@ About 30-40% of food purchased by US households is wasted, costing the average f
 | Language | TypeScript |
 | Runtime | React 19 |
 | Authentication | Auth.js / NextAuth v5 beta with Google OAuth |
-| Database | libSQL-compatible SQLite via `@libsql/client` |
+| Database | PostgreSQL on Railway via `postgres` and Drizzle ORM |
 | ORM | Drizzle ORM |
 | Styling | Tailwind CSS v4 |
 | UI Components | Radix UI primitives |
@@ -46,6 +50,7 @@ About 30-40% of food purchased by US households is wasted, costing the average f
 ### Prerequisites
 
 - Node.js 20.9+ and npm
+- PostgreSQL, either local or Railway-hosted
 - Google OAuth credentials for local sign-in
 
 ### Installation
@@ -65,8 +70,7 @@ cp .env.example .env.local
 Fill in `.env.local`:
 
 ```bash
-TURSO_DATABASE_URL=file:./data/freshtrack.db
-TURSO_AUTH_TOKEN=
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/freshtrack
 AUTH_SECRET=<generate with: openssl rand -base64 32>
 AUTH_URL=http://localhost:3000
 GOOGLE_CLIENT_ID=<google-oauth-client-id>
@@ -83,9 +87,6 @@ Authorized redirect URI: http://localhost:3000/api/auth/callback/google
 Then prepare the local database and start the app:
 
 ```bash
-# The local libSQL file needs its parent directory to exist
-mkdir -p data
-
 # Run database migrations
 npm run db:migrate
 
@@ -107,9 +108,65 @@ The app will be available at **http://localhost:3000** and will redirect unauthe
 | `npm run start` | Start production server |
 | `npm run lint` | Type-check the project |
 | `npm run typecheck` | Type-check the project |
-| `npm run db:seed` | Seed database with sample data |
+| `npm run test` | Run Vitest tests |
+| `npm run icons:generate` | Regenerate PWA icon PNGs |
+| `npm run db:seed` | Seed local dev database with sample data |
+| `npm run db:seed:categories` | Seed production-safe global categories only |
+| `npm run db:seed:recipes` | Seed production-safe global starter recipes only |
 | `npm run db:generate` | Generate new migrations from schema |
 | `npm run db:migrate` | Run pending migrations |
+
+## Deployment
+
+FreshTrack deploys as an installable PWA on Railway with Railway Postgres as the managed database.
+
+Production URL: https://freshtrack-production-290e.up.railway.app
+
+### Environment Variables
+
+See `.env.example` for the full template. Required in production:
+
+- `DATABASE_URL` - Railway Postgres connection string
+- `AUTH_SECRET` - generate with `openssl rand -base64 32`
+- `AUTH_URL` - deployed origin, for example `https://freshtrack-production-290e.up.railway.app`
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google Cloud OAuth credentials
+
+### Deploy Steps
+
+1. Create a Railway project linked to this repo.
+2. Add a Railway Postgres service.
+3. Add the production environment variables in the Railway app service.
+4. Run migrations against production: `DATABASE_URL=... npm run db:migrate`
+5. Seed global categories: `DATABASE_URL=... npm run db:seed:categories`
+6. Seed global starter recipes: `DATABASE_URL=... npm run db:seed:recipes`
+7. Deploy the app service from Railway.
+8. Configure Google OAuth with:
+   - Authorized origin: your Railway public app URL
+   - Redirect URI: `<your Railway public app URL>/api/auth/callback/google`
+   - Privacy policy: `<your Railway public app URL>/privacy`
+   - Terms: `<your Railway public app URL>/terms`
+
+Do not run `npm run db:seed` against production. That command creates a local dev user and demo pantry data.
+
+## Scope
+
+### v1
+
+- Google sign-in
+- Per-user pantry, recipe, and waste tracking
+- Global built-in categories and starter recipes
+- Installable PWA manifest and icons
+- Public privacy policy and terms pages
+- Railway deployment with Railway Postgres
+
+### Planned
+
+- Email and password auth
+- Push notifications for expiring items
+- Custom domain
+- Household or shared pantry support
+- Offline mode with a service worker
+- Per-user custom categories
 
 ## Architecture
 
@@ -131,15 +188,17 @@ src/
 │   └── layout/       # App shell, navigation, FAB, and undo toast
 ├── db/               # Database layer
 │   ├── schema.ts     # Drizzle ORM schema
-│   ├── index.ts      # libSQL database connection
-│   └── seed.ts       # Seed script with sample data
+│   ├── index.ts      # Postgres database connection
+│   ├── seed.ts       # Local dev seed script with realistic data
+│   ├── seed-categories.ts # Production-safe global category seed
+│   └── seed-recipes.ts # Production-safe global recipe seed
 ├── lib/              # Shared utilities
 └── types/            # NextAuth type augmentation
 ```
 
 The active Drizzle schema includes pantry tables (`categories`, `items`), recipe tables (`recipes`, `recipe_ingredients`), waste tracking (`waste_log`), and Auth.js tables (`users`, `accounts`, `sessions`, `verification_tokens`).
 
-By default, the database is stored locally at `data/freshtrack.db`. To use Turso instead, set `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`.
+Local development uses the `DATABASE_URL` in `.env.local`, usually a local Postgres database or a Railway-provided development connection string. Production uses Railway Postgres through the same Drizzle Postgres driver.
 
 ## API Endpoints
 
@@ -160,22 +219,3 @@ Most application routes are protected by middleware and require an authenticated
 | GET | `/api/recipes` | List all recipes with ingredients |
 | GET | `/api/recipes/suggestions` | Recipes using active items expiring within 5 days |
 | GET | `/api/stats` | Waste and consumption statistics |
-
-## Deployment Notes
-
-FreshTrack can run on Vercel with a Turso/libSQL database. Set these environment variables in the hosting provider:
-
-```bash
-TURSO_DATABASE_URL=<turso-libsql-url>
-TURSO_AUTH_TOKEN=<turso-auth-token>
-AUTH_SECRET=<generated-secret>
-AUTH_URL=<deployed-origin>
-GOOGLE_CLIENT_ID=<google-oauth-client-id>
-GOOGLE_CLIENT_SECRET=<google-oauth-client-secret>
-```
-
-After configuring production environment variables, run Drizzle migrations against the production database:
-
-```bash
-TURSO_DATABASE_URL=<turso-libsql-url> TURSO_AUTH_TOKEN=<turso-auth-token> npm run db:migrate
-```
