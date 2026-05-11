@@ -31,7 +31,7 @@ export function CategoryBreakdown({ data }: CategoryBreakdownProps) {
           barGap={8}
           barCategoryGap="24%"
         >
-          <CartesianGrid vertical={false} stroke="#ebe5d8" />
+          <CartesianGrid vertical={false} stroke="#e6dcc4" />
           <XAxis
             dataKey="monthLabel"
             axisLine={false}
@@ -47,13 +47,13 @@ export function CategoryBreakdown({ data }: CategoryBreakdownProps) {
             stroke="#78716c"
           />
           <Tooltip
-            cursor={{ fill: "#f5f0e8" }}
+            cursor={{ fill: "#f3ead8" }}
             formatter={(value) => formatCurrency(Number(value))}
             contentStyle={{
               borderRadius: "12px",
-              border: "none",
-              boxShadow: "0 8px 32px rgba(180, 160, 120, 0.12)",
-              background: "#faf8f5",
+              border: "1px solid #e6dcc4",
+              boxShadow: "0 14px 40px rgba(120, 95, 50, 0.14)",
+              background: "#fffdf7",
             }}
           />
           <Bar

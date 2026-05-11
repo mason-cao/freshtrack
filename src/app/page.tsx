@@ -130,11 +130,11 @@ export default function DashboardPage() {
 
       {/* Left Column: Metrics + Attention */}
       <div className="xl:col-span-7 space-y-6">
-        {/* Metric Cards */}
+        {/* Metric Ledger */}
         <MetricCards
-          activeItems={items.length}
+          items={items}
           useRate={stats ? 100 - stats.totals.wasteRate : 0}
-          expiringSoon={expiringCount}
+          expiringCount={expiringCount}
         />
 
         {/* Needs Attention */}

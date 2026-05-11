@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -15,12 +15,7 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   BarChart3,
-  CalendarDays,
-  TrendingUp,
-  TrendingDown,
   DollarSign,
-  Leaf,
-  Target,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { fetchJson } from "@/lib/api-client";
@@ -50,54 +45,87 @@ const container = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+    transition: { staggerChildren: 0.1, delayChildren: 0.15 },
   },
 };
 
-const item = {
-  hidden: { opacity: 0, y: 12 },
+const cell = {
+  hidden: { opacity: 0, y: 10 },
   show: {
     opacity: 1,
     y: 0,
-    transition: { type: "spring" as const, stiffness: 300, damping: 30 },
+    transition: { type: "spring" as const, stiffness: 260, damping: 30 },
   },
 };
 
+function AnimatedNumber({
+  value,
+  prefix = "",
+  suffix = "",
+}: {
+  value: number;
+  prefix?: string;
+  suffix?: string;
+}) {
+  const count = useMotionValue(0);
+  const rounded = useTransform(
+    count,
+    (v) => `${prefix}${Math.round(v)}${suffix}`,
+  );
+
+  useEffect(() => {
+    const controls = animate(count, value, {
+      duration: 1.4,
+      ease: [0.16, 1, 0.3, 1],
+    });
+    return controls.stop;
+  }, [count, value]);
+
+  return <motion.span>{rounded}</motion.span>;
+}
+
 function WasteRateRing({ rate }: { rate: number }) {
-  const circumference = 2 * Math.PI * 40;
+  const circumference = 2 * Math.PI * 42;
   const fillPercent = Math.min(rate, 100);
   const offset = circumference - (fillPercent / 100) * circumference;
-  const isHigh = rate > 30;
+  // Two-tier semantic color, intuitive direction:
+  // low waste = sage (calm), high waste = terracotta (alert).
+  const isHigh = rate > 25;
+  const ringColor = isHigh ? "#c2410c" : "#527a52";
+  const centerColor = isHigh ? "text-terracotta-600" : "text-sage-600";
 
   return (
-    <div className="relative h-32 w-32 shrink-0 xl:h-36 xl:w-36">
+    <div className="relative h-40 w-40 shrink-0 sm:h-44 sm:w-44 xl:h-48 xl:w-48">
       <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
         <circle
           cx="50"
           cy="50"
-          r="40"
+          r="42"
           fill="none"
-          stroke="#f5f0e8"
-          strokeWidth="8"
+          stroke="#f3ead8"
+          strokeWidth="6"
         />
         <motion.circle
-          cx="50" cy="50" r="40" fill="none"
-          stroke={isHigh ? "#f97316" : "#fcd34d"}
-          strokeWidth="8"
+          cx="50"
+          cy="50"
+          r="42"
+          fill="none"
+          stroke={ringColor}
+          strokeWidth="6"
           strokeLinecap="round"
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.3 }}
+          transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.35 }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={`text-3xl font-bold xl:text-4xl ${isHigh ? "text-terracotta-500" : "text-sage-600"}`}>
-          {rate}%
+        <span
+          className={`num text-[42px] font-bold leading-none tracking-[-0.02em] xl:text-5xl ${centerColor}`}
+        >
+          <AnimatedNumber value={rate} suffix="%" />
         </span>
-        <span className="text-[10px] font-medium text-stone-400">
-          waste rate
-        </span>
+        <span className="eyebrow mt-1.5 text-stone-500">Waste rate</span>
       </div>
     </div>
   );
@@ -120,7 +148,9 @@ export default function StatsPage() {
         setLoading(false);
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : "Unable to load statistics.");
+        setError(
+          err instanceof Error ? err.message : "Unable to load statistics.",
+        );
         setLoading(false);
       });
   }, []);
@@ -159,188 +189,139 @@ export default function StatsPage() {
     ? latestMonth.consumed + latestMonth.wasted
     : stats.totals.consumed + stats.totals.wasted;
   const latestWasteCost = latestMonth?.wastedCost ?? stats.totals.wastedCost;
-  const previousWasteCost = previousMonth?.wastedCost ?? latestWasteCost;
-  const wasteCostDelta = latestWasteCost - previousWasteCost;
 
-  const kpis = [
-    {
-      label: "Consumed",
-      value: stats.totals.consumed,
-      detail: formatCurrency(stats.totals.consumedCost),
-      icon: TrendingUp,
-      tone: "sage",
-    },
-    {
-      label: "Wasted",
-      value: stats.totals.wasted,
-      detail: formatCurrency(stats.totals.wastedCost),
-      icon: TrendingDown,
-      tone: "terracotta",
-    },
-    {
-      label: "Use rate",
-      value: `${useRate}%`,
-      detail: useRate > 70 ? "Strong habit" : "Room to improve",
-      icon: Leaf,
-      tone: "sage",
-    },
-    {
-      label: "Saved",
-      value: formatCurrency(stats.totals.moneySaved),
-      detail: "Total value consumed",
-      icon: DollarSign,
-      tone: "amber",
-    },
-  ];
+  const headlineQualifier =
+    useRate >= 85
+      ? "Most of what you logged became meals, not waste."
+      : useRate >= 65
+        ? "More than half of your logged food found a meal."
+        : useRate > 0
+          ? "There's room to use more of what you log."
+          : "Mark items used or wasted to start your ledger.";
 
   return (
     <div className="space-y-6 xl:space-y-8">
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
+      {/* Editorial hero */}
+      <motion.section
+        initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="rounded-2xl border border-warm-100 bg-warm-white p-5 shadow-warm sm:p-6 xl:p-7"
+        transition={{ type: "spring", stiffness: 260, damping: 30 }}
+        className="relative overflow-hidden rounded-3xl border border-warm-100 bg-warm-white p-6 shadow-warm sm:p-8 xl:p-10"
       >
-        <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-sage-50 px-3 py-1 text-sm font-semibold text-sage-700">
-              <BarChart3 className="h-4 w-4" />
-              Waste intelligence
-            </div>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight text-stone-900 xl:text-4xl">
-              Statistics
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600 xl:text-base">
-              Track how much food gets used, what it saves, and where waste is
-              still costing you.
-            </p>
+        <h1 className="eyebrow text-stone-500">
+          Statistics · last {stats.monthly.length || 6} months
+        </h1>
 
-            <dl className="mt-5 grid overflow-hidden rounded-xl border border-warm-100 sm:grid-cols-3">
-              <div className="p-3 sm:border-r sm:border-warm-100">
-                <dt className="flex items-center gap-2 text-xs font-medium text-stone-500">
-                  <CalendarDays className="h-3.5 w-3.5" />
-                  Latest month
-                </dt>
-                <dd className="mt-2 text-lg font-bold text-stone-900">
-                  {latestMonth?.monthLabel ?? "No data"}
-                </dd>
-              </div>
-              <div className="border-t border-warm-100 p-3 sm:border-t-0 sm:border-r">
-                <dt className="flex items-center gap-2 text-xs font-medium text-stone-500">
-                  <Target className="h-3.5 w-3.5" />
-                  Use rate trend
-                </dt>
-                <dd className="mt-2 flex items-center gap-1 text-lg font-bold text-stone-900">
-                  {useRateDelta >= 0 ? (
-                    <ArrowUpRight className="h-4 w-4 text-sage-600" />
-                  ) : (
-                    <ArrowDownRight className="h-4 w-4 text-terracotta-500" />
-                  )}
+        <div className="mt-6 grid items-start gap-6 lg:grid-cols-[1.3fr_auto] lg:gap-10">
+          <div>
+            <p className="eyebrow text-sage-700">Use rate</p>
+            <div className="mt-3 flex items-end gap-2">
+              <motion.span
+                initial={{ scale: 1.03, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{
+                  duration: 0.55,
+                  ease: [0.16, 1, 0.3, 1],
+                  delay: 0.18,
+                }}
+                className="num font-bold leading-[0.85] tracking-[-0.03em] text-stone-900 text-[clamp(3.5rem,9vw,6rem)]"
+              >
+                <AnimatedNumber value={useRate} />
+              </motion.span>
+              <span className="pb-3 text-3xl font-semibold text-stone-400">
+                %
+              </span>
+            </div>
+
+            {latestMonth && previousMonth && (
+              <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium">
+                {useRateDelta >= 0 ? (
+                  <ArrowUpRight className="h-4 w-4 text-sage-600" />
+                ) : (
+                  <ArrowDownRight className="h-4 w-4 text-terracotta-500" />
+                )}
+                <span
+                  className={
+                    useRateDelta >= 0
+                      ? "text-sage-700"
+                      : "text-terracotta-600"
+                  }
+                >
                   {Math.abs(useRateDelta)} pts
-                </dd>
+                </span>
+                <span className="text-stone-500">
+                  vs. {previousMonth.monthLabel}
+                </span>
               </div>
-              <div className="border-t border-warm-100 p-3 sm:border-t-0">
-                <dt className="flex items-center gap-2 text-xs font-medium text-stone-500">
-                  <DollarSign className="h-3.5 w-3.5" />
-                  Waste cost shift
-                </dt>
-                <dd className="mt-2 flex items-center gap-1 text-lg font-bold text-stone-900">
-                  {wasteCostDelta <= 0 ? (
-                    <ArrowDownRight className="h-4 w-4 text-sage-600" />
-                  ) : (
-                    <ArrowUpRight className="h-4 w-4 text-terracotta-500" />
-                  )}
-                  {formatCurrency(Math.abs(wasteCostDelta))}
-                </dd>
-              </div>
-            </dl>
+            )}
+
+            <p className="mt-4 max-w-md text-base leading-7 text-stone-600 xl:text-lg xl:leading-8">
+              {headlineQualifier}
+            </p>
           </div>
 
-          <div className="flex justify-center lg:justify-end">
+          <div className="flex justify-center lg:justify-end lg:pt-2">
             <WasteRateRing rate={stats.totals.wasteRate} />
           </div>
         </div>
-      </motion.div>
 
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 gap-3 xl:grid-cols-4"
-      >
-        {kpis.map((stat) => {
-          const Icon = stat.icon;
-          const toneClasses =
-            stat.tone === "terracotta"
-              ? {
-                  rail: "bg-terracotta-500",
-                  iconBg: "bg-terracotta-50",
-                  icon: "text-terracotta-500",
-                  value: "text-stone-900",
-                }
-              : stat.tone === "amber"
-                ? {
-                    rail: "bg-amber-500",
-                    iconBg: "bg-amber-50",
-                    icon: "text-amber-600",
-                    value: "text-amber-700",
-                  }
-                : {
-                    rail: "bg-sage-500",
-                    iconBg: "bg-sage-50",
-                    icon: "text-sage-600",
-                    value: "text-stone-900",
-                  };
-
-          return (
+        {/* Hairline + inline ledger row */}
+        <div className="mt-8 border-t border-warm-100 pt-6 xl:mt-10 xl:pt-7">
+          <motion.dl
+            variants={container}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-2 gap-y-6 sm:grid-cols-4 sm:gap-y-0 sm:divide-x sm:divide-warm-100"
+          >
             <motion.div
-              key={stat.label}
-              variants={item}
-              className="relative overflow-hidden rounded-xl border border-warm-100 bg-warm-white p-4 shadow-warm-sm transition-shadow duration-200 hover:shadow-warm xl:p-5"
+              variants={cell}
+              className="sm:px-5 sm:first:pl-0 sm:last:pr-0"
             >
-              <div className={`absolute inset-x-0 top-0 h-1 ${toneClasses.rail}`} />
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-medium text-stone-400">{stat.label}</p>
-                  <p className={`mt-2 text-2xl font-bold leading-none xl:text-3xl ${toneClasses.value}`}>
-                    {stat.value}
-                  </p>
-                  <p className="mt-2 text-xs text-stone-500">{stat.detail}</p>
-                </div>
-                <div className={`rounded-lg p-2 ${toneClasses.iconBg}`}>
-                  <Icon className={`h-4 w-4 ${toneClasses.icon}`} />
-                </div>
-              </div>
+              <dt className="eyebrow text-stone-500">Consumed</dt>
+              <dd className="num mt-2 text-3xl font-bold tracking-[-0.02em] text-stone-900 xl:text-4xl">
+                <AnimatedNumber value={stats.totals.consumed} />
+              </dd>
+              <dd className="mt-1 text-xs text-stone-500">
+                {formatCurrency(stats.totals.consumedCost)} value
+              </dd>
             </motion.div>
-          );
-        })}
-      </motion.div>
 
-      <motion.div
-        variants={item}
-        initial="hidden"
-        animate="show"
-        className="grid gap-3 sm:grid-cols-3"
-      >
-        <div className="rounded-xl border border-sage-100 bg-sage-50 p-4 shadow-warm-sm">
-          <p className="text-xs font-medium text-sage-700">Latest activity</p>
-          <p className="mt-2 text-2xl font-bold text-stone-900">{latestActions}</p>
-          <p className="text-xs text-stone-500">items logged this month</p>
-        </div>
-        <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-warm-sm">
-          <p className="text-xs font-medium text-amber-700">Current use rate</p>
-          <p className="mt-2 text-2xl font-bold text-stone-900">{latestUseRate}%</p>
-          <p className="text-xs text-stone-500">for {latestMonth?.monthLabel ?? "latest month"}</p>
-        </div>
-        <div className="rounded-xl border border-terracotta-100 bg-terracotta-50 p-4 shadow-warm-sm">
-          <p className="text-xs font-medium text-terracotta-600">Wasted value</p>
-          <p className="mt-2 text-2xl font-bold text-stone-900">
-            {formatCurrency(latestWasteCost)}
-          </p>
-          <p className="text-xs text-stone-500">for {latestMonth?.monthLabel ?? "latest month"}</p>
-        </div>
-      </motion.div>
+            <motion.div variants={cell} className="sm:px-5">
+              <dt className="eyebrow text-stone-500">Wasted</dt>
+              <dd className="num mt-2 text-3xl font-bold tracking-[-0.02em] text-stone-900 xl:text-4xl">
+                <AnimatedNumber value={stats.totals.wasted} />
+              </dd>
+              <dd className="mt-1 text-xs text-stone-500">
+                {formatCurrency(stats.totals.wastedCost)} lost
+              </dd>
+            </motion.div>
 
+            <motion.div variants={cell} className="sm:px-5">
+              <dt className="eyebrow text-amber-700">Saved</dt>
+              <dd className="num mt-2 text-3xl font-bold tracking-[-0.02em] text-amber-700 xl:text-4xl">
+                {formatCurrency(stats.totals.moneySaved)}
+              </dd>
+              <dd className="mt-1 text-xs text-stone-500">
+                total value consumed
+              </dd>
+            </motion.div>
+
+            <motion.div variants={cell} className="sm:px-5 sm:last:pr-0">
+              <dt className="eyebrow text-stone-500">
+                {latestMonth?.monthLabel ?? "This month"}
+              </dt>
+              <dd className="num mt-2 text-3xl font-bold tracking-[-0.02em] text-stone-900 xl:text-4xl">
+                <AnimatedNumber value={latestActions} />
+              </dd>
+              <dd className="mt-1 text-xs text-stone-500">
+                actions · {formatCurrency(latestWasteCost)} wasted
+              </dd>
+            </motion.div>
+          </motion.dl>
+        </div>
+      </motion.section>
+
+      {/* Charts */}
       <motion.div
         variants={container}
         initial="hidden"
@@ -348,7 +329,7 @@ export default function StatsPage() {
         className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:gap-8"
       >
         <Card className="overflow-hidden border border-warm-100 shadow-warm">
-          <CardHeader className="border-b border-warm-100 bg-warm-white/80">
+          <CardHeader className="border-b border-warm-100 bg-warm-white">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <CardTitle>Consumption vs Waste</CardTitle>
@@ -367,7 +348,7 @@ export default function StatsPage() {
         </Card>
 
         <Card className="overflow-hidden border border-warm-100 shadow-warm">
-          <CardHeader className="border-b border-warm-100 bg-warm-white/80">
+          <CardHeader className="border-b border-warm-100 bg-warm-white">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <CardTitle>Cost Breakdown</CardTitle>

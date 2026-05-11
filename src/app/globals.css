@@ -13,12 +13,13 @@
   --color-sage-800: #1f301f;
   --color-sage-900: #101910;
 
-  /* Warm Neutrals */
-  --color-cream: #fefcf3;
-  --color-warm-white: #faf8f5;
-  --color-warm-50: #f5f0e8;
-  --color-warm-100: #ebe5d8;
-  --color-warm-200: #d6cdc0;
+  /* Warm Neutrals — canvas is deeper, cards are lighter,
+     so surfaces actually lift off the page. */
+  --color-cream: #fbf5e6;
+  --color-warm-white: #fffdf7;
+  --color-warm-50: #f3ead8;
+  --color-warm-100: #e6dcc4;
+  --color-warm-200: #d2c4a4;
 
   /* Terracotta */
   --color-terracotta-50: #fff5f0;
@@ -32,16 +33,17 @@
   --color-primary-hover: #3d5e3d;
   --color-accent: #d97706;
   --color-danger: #c2410c;
-  --color-surface: #faf8f5;
-  --color-background: #fefcf3;
+  --color-surface: #fffdf7;
+  --color-background: #fbf5e6;
   --color-text-primary: #292524;
   --color-text-secondary: #78716c;
   --color-text-muted: #a8a29e;
 
-  /* Shadows */
-  --shadow-warm-sm: 0 1px 4px rgba(180, 160, 120, 0.06);
-  --shadow-warm: 0 2px 12px rgba(180, 160, 120, 0.08);
-  --shadow-warm-lg: 0 8px 32px rgba(180, 160, 120, 0.12);
+  /* Shadows — warmer, slightly stronger so lift is visible
+     on the deeper cream canvas. */
+  --shadow-warm-sm: 0 1px 4px rgba(120, 95, 50, 0.08);
+  --shadow-warm: 0 2px 14px rgba(120, 95, 50, 0.10);
+  --shadow-warm-lg: 0 14px 40px rgba(120, 95, 50, 0.14);
 
   /* Font */
   --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
@@ -54,6 +56,37 @@
     color: var(--color-text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Paper grain — fixed, low-opacity warm noise tile.
+       Adds tactile depth without color shift. */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch' seed='4'/><feColorMatrix values='0 0 0 0 0.42 0 0 0 0 0.33 0 0 0 0 0.18 0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.4'/></svg>");
+    background-attachment: fixed;
+    background-size: 180px 180px;
+    background-blend-mode: multiply;
+  }
+
+  /* Tabular numerals globally on number-heavy contexts.
+     Inline via Tailwind's `tabular-nums` utility for specific spots. */
+  .num {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  /* Editorial eyebrow label — used above display numbers
+     and section heads for the "kitchen ledger" voice. */
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  /* Hairline horizontal rule that slides in left-to-right
+     on first paint. Used in ledger spreads. */
+  .hairline {
+    height: 1px;
+    background-color: var(--color-warm-100);
+    transform-origin: left center;
+    animation: hairline-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 }
 
@@ -76,6 +109,11 @@
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
+}
+
+@keyframes hairline-in {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
 }
 
 .animate-fade-in {
@@ -106,7 +144,8 @@
   .animate-fade-in,
   .animate-slide-up,
   .animate-scale-in,
-  .animate-shimmer {
+  .animate-shimmer,
+  .hairline {
     animation: none;
   }
 
