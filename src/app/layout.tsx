@@ -2,13 +2,36 @@ import type { Metadata, Viewport } from "next";
 import { AppShell } from "@/components/layout/app-shell";
 import "./globals.css";
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  process.env.AUTH_URL ??
+  "https://freshtrack-production-290e.up.railway.app";
+
+const defaultTitle = "FreshTrack. Stop throwing out groceries. Save money. Waste less food.";
+const defaultDescription =
+  "FreshTrack is a free pantry tracker that shows what's about to go bad, suggests recipes to use it up, and tells you how much you've saved. Built for busy households.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   applicationName: "FreshTrack",
   title: {
-    default: "FreshTrack - Reduce Food Waste",
-    template: "%s - FreshTrack",
+    default: defaultTitle,
+    template: "%s · FreshTrack",
   },
-  description: "Track your pantry, reduce food waste, and save money with smart expiration tracking.",
+  description: defaultDescription,
+  keywords: [
+    "pantry tracker",
+    "food waste app",
+    "reduce food waste",
+    "expiration date tracker",
+    "kitchen inventory",
+    "use it up recipes",
+    "grocery tracker",
+    "save money on groceries",
+  ],
+  alternates: {
+    canonical: "/",
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -26,6 +49,30 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
+  openGraph: {
+    type: "website",
+    siteName: "FreshTrack",
+    title: defaultTitle,
+    description: defaultDescription,
+    url: siteUrl,
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: defaultTitle,
+    description: defaultDescription,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  category: "productivity",
 };
 
 export const viewport: Viewport = {

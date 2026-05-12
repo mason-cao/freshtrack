@@ -8,7 +8,7 @@ import { getFoodImage } from "@/lib/food-images";
 export default async function LoginPage() {
   const session = await auth();
   if (session?.user) {
-    redirect("/");
+    redirect("/app");
   }
 
   return (
@@ -94,7 +94,7 @@ export default async function LoginPage() {
             className="mt-8"
             action={async () => {
               "use server";
-              await signIn("google", { redirectTo: "/" });
+              await signIn("google", { redirectTo: "/app" });
             }}
           >
             <Button type="submit" className="w-full" size="lg">

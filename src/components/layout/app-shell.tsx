@@ -27,7 +27,7 @@ import {
 import { fetchJson } from "@/lib/api-client";
 
 const navItems = [
-  { href: "/", label: "Home", icon: LayoutDashboard },
+  { href: "/app", label: "Home", icon: LayoutDashboard },
   { href: "/pantry", label: "Pantry", icon: UtensilsCrossed },
   { href: "/recipes", label: "Recipes", icon: ChefHat },
   { href: "/stats", label: "Stats", icon: BarChart3 },
@@ -36,7 +36,11 @@ const navItems = [
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const isPublicPage = pathname === "/login" || pathname === "/privacy" || pathname === "/terms";
+  const isPublicPage =
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/privacy" ||
+    pathname === "/terms";
   const [signingOut, setSigningOut] = useState(false);
 
   function handleSignOut() {
@@ -45,10 +49,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   if (isPublicPage) {
+    // Landing page renders its own footer; legal pages get the shared FooterLegal.
+    const showFooterLegal = pathname !== "/";
     return (
       <div className="min-h-screen bg-cream">
         {children}
-        <FooterLegal />
+        {showFooterLegal && <FooterLegal />}
       </div>
     );
   }
@@ -66,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="fixed left-0 top-0 z-40 hidden h-full w-[72px] xl:w-[220px] flex-col items-center xl:items-stretch border-r border-warm-100 bg-warm-white py-6 md:flex transition-[width] duration-300 ease-out"
         aria-label="Primary"
       >
-        <Link href="/" className="mb-8 group flex items-center justify-center xl:justify-start xl:px-5 xl:gap-3">
+        <Link href="/app" className="mb-8 group flex items-center justify-center xl:justify-start xl:px-5 xl:gap-3">
           <motion.div
             whileHover={{ scale: 1.1, rotate: 12 }}
             whileTap={{ scale: 0.95 }}
@@ -83,8 +89,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
-              item.href === "/"
-                ? pathname === "/"
+              item.href === "/app"
+                ? pathname === "/app"
                 : pathname.startsWith(item.href);
 
             return (
@@ -152,8 +158,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
-              item.href === "/"
-                ? pathname === "/"
+              item.href === "/app"
+                ? pathname === "/app"
                 : pathname.startsWith(item.href);
 
             return (

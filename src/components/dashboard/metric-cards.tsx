@@ -69,7 +69,7 @@ export function MetricCards({ items, useRate, expiringCount }: MetricCardsProps)
       animate="show"
       className="relative overflow-hidden rounded-2xl border border-warm-100 bg-warm-white shadow-warm"
     >
-      <div className="grid grid-cols-3 divide-x divide-warm-100">
+      <div className="grid grid-cols-1 divide-y divide-warm-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
         {/* In rotation */}
         <motion.div variants={enterCell} className="p-5 xl:p-7">
           <p className="eyebrow text-stone-500">In rotation</p>

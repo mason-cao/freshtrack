@@ -37,7 +37,8 @@ next-env.d.ts
 
 # tooling
 .codex/
-.claude/skills/ui-ux-pro-max/
+.claude/
+.agents/
 .stitch/designs
 .superpowers/brainstorm
 docs/session_summary.md

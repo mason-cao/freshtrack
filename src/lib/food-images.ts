@@ -226,3 +226,12 @@ export function getHeroImage(name: string, category?: string | null): string {
   const base = getFoodImage(name, category);
   return base.replace(/w=\d+/, "w=1500").replace(/h=\d+/, "h=1200");
 }
+
+/**
+ * Get a higher-resolution recipe image for the dashboard "Try Tonight" panel.
+ * Aspect ratio leans wide to suit the card's banner crop (~16:9).
+ */
+export function getRecipeHeroImage(name: string): string {
+  const base = getRecipeImage(name);
+  return base.replace(/w=\d+/, "w=1200").replace(/h=\d+/, "h=720");
+}
