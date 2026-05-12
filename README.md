@@ -4,7 +4,7 @@
 
 FreshTrack is a pantry management dashboard that helps you track food freshness, get alerts before items expire, discover recipes to use expiring ingredients, and visualize waste patterns over time.
 
-**Live app:** https://freshtrack-production-290e.up.railway.app
+**Live app:** https://freshtrack.up.railway.app
 
 ## The Problem
 
@@ -120,7 +120,7 @@ The app will be available at **http://localhost:3000** and will redirect unauthe
 
 FreshTrack deploys as an installable PWA on Railway with Railway Postgres as the managed database.
 
-Production URL: https://freshtrack-production-290e.up.railway.app
+Production URL: https://freshtrack.up.railway.app
 
 ### Environment Variables
 
@@ -128,7 +128,7 @@ See `.env.example` for the full template. Required in production:
 
 - `DATABASE_URL` - Railway Postgres connection string
 - `AUTH_SECRET` - generate with `openssl rand -base64 32`
-- `AUTH_URL` - deployed origin, for example `https://freshtrack-production-290e.up.railway.app`
+- `AUTH_URL` - deployed origin, for example `https://freshtrack.up.railway.app`
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google Cloud OAuth credentials
 
 ### Deploy Steps

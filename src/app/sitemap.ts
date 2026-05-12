@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
   process.env.AUTH_URL ??
-  "https://freshtrack-production-290e.up.railway.app";
+  "https://freshtrack.up.railway.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
