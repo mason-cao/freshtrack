@@ -8,6 +8,8 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/privacy")).toBe(true);
     expect(isPublicPath("/terms")).toBe(true);
     expect(isPublicPath("/api/auth/signin")).toBe(true);
+    expect(isPublicPath("/foods")).toBe(true);
+    expect(isPublicPath("/foods/avocado")).toBe(true);
   });
 
   it("keeps app and data routes protected", () => {

@@ -1,4 +1,4 @@
-const PUBLIC_PATHS = ["/login", "/privacy", "/terms"];
+const PUBLIC_PATHS = ["/login", "/privacy", "/terms", "/foods"];
 
 export function isPublicPath(pathname: string): boolean {
   if (pathname === "/") return true;

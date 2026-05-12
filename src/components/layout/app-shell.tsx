@@ -40,7 +40,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     pathname === "/" ||
     pathname === "/login" ||
     pathname === "/privacy" ||
-    pathname === "/terms";
+    pathname === "/terms" ||
+    pathname === "/foods" ||
+    pathname.startsWith("/foods/");
   const [signingOut, setSigningOut] = useState(false);
 
   function handleSignOut() {
@@ -49,8 +51,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   if (isPublicPage) {
-    // Landing page renders its own footer; legal pages get the shared FooterLegal.
-    const showFooterLegal = pathname !== "/";
+    // Landing and food pages render their own footer; legal pages get the shared FooterLegal.
+    const showFooterLegal =
+      pathname !== "/" &&
+      pathname !== "/foods" &&
+      !pathname.startsWith("/foods/");
     return (
       <div className="min-h-screen bg-cream">
         {children}
