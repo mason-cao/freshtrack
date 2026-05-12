@@ -16,6 +16,9 @@ export function LandingFooter() {
         </div>
 
         <nav className="flex items-center gap-6 text-sm text-stone-600">
+          <Link href="/foods" className="transition-colors hover:text-stone-900">
+            Food guides
+          </Link>
           <Link href="/privacy" className="transition-colors hover:text-stone-900">
             Privacy
           </Link>
