@@ -55,6 +55,9 @@ export function LandingNav({ isAuthenticated }: LandingNavProps) {
           <a href="#features" className="transition-colors hover:text-stone-900">
             How it works
           </a>
+          <a href="#faq" className="transition-colors hover:text-stone-900">
+            FAQ
+          </a>
           <a href="#free" className="transition-colors hover:text-stone-900">
             Pricing
           </a>

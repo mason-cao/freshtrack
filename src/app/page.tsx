@@ -4,6 +4,7 @@ import { LandingNav } from "@/components/landing/landing-nav";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { LandingProblem } from "@/components/landing/landing-problem";
 import { LandingFeatures } from "@/components/landing/landing-features";
+import { LandingFaq } from "@/components/landing/landing-faq";
 import { LandingCta } from "@/components/landing/landing-cta";
 import { LandingFooter } from "@/components/landing/landing-footer";
 
@@ -25,6 +26,7 @@ export default async function LandingPage() {
         <LandingHero isAuthenticated={isAuthenticated} />
         <LandingProblem />
         <LandingFeatures />
+        <LandingFaq />
         <LandingCta isAuthenticated={isAuthenticated} />
       </main>
       <LandingFooter />
