@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Leaf } from "lucide-react";
+import { Reveal } from "./reveal";
 
 interface LandingCtaProps {
   isAuthenticated: boolean;
@@ -36,32 +37,36 @@ export function LandingCta({ isAuthenticated }: LandingCtaProps) {
       />
 
       <div className="relative mx-auto max-w-5xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-28">
-        <div className="max-w-3xl">
-          <p className="inline-flex items-center gap-2 rounded-full bg-warm-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sage-50 ring-1 ring-warm-white/20">
-            <Leaf className="h-3.5 w-3.5" />
-            The whole pitch
-          </p>
-          <h2 className="mt-5 text-3xl font-bold leading-tight tracking-tight text-warm-white sm:text-4xl lg:text-5xl">
-            Free forever. No paywall, no ads.
-          </h2>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-sage-50/90 sm:text-lg">
-            FreshTrack is one person&apos;s project, kept free on purpose. Sign in, start
-            tracking, see what changes. That&apos;s the whole pitch.
-          </p>
-        </div>
+        <Reveal>
+          <div className="max-w-3xl">
+            <p className="inline-flex items-center gap-2 rounded-full bg-warm-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sage-50 ring-1 ring-warm-white/20">
+              <Leaf className="h-3.5 w-3.5" />
+              The whole pitch
+            </p>
+            <h2 className="mt-5 text-3xl font-bold leading-tight tracking-tight text-warm-white sm:text-4xl lg:text-5xl">
+              Free forever. No paywall, no ads.
+            </h2>
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-sage-50/90 sm:text-lg">
+              FreshTrack is one person&apos;s project, kept free on purpose. Sign in,
+              start tracking, see what changes. That&apos;s the whole pitch.
+            </p>
+          </div>
+        </Reveal>
 
         <dl className="mt-12 grid gap-8 sm:grid-cols-3 sm:gap-10">
-          {promises.map((promise) => (
-            <div key={promise.title} className="border-t border-warm-white/25 pt-5">
-              <dt className="text-base font-semibold text-warm-white">{promise.title}</dt>
-              <dd className="mt-2 text-sm leading-relaxed text-sage-50/85">
-                {promise.body}
-              </dd>
-            </div>
+          {promises.map((promise, i) => (
+            <Reveal key={promise.title} delay={0.1 + i * 0.08}>
+              <div className="border-t border-warm-white/25 pt-5">
+                <dt className="text-base font-semibold text-warm-white">{promise.title}</dt>
+                <dd className="mt-2 text-sm leading-relaxed text-sage-50/85">
+                  {promise.body}
+                </dd>
+              </div>
+            </Reveal>
           ))}
         </dl>
 
-        <div className="mt-14 flex flex-wrap items-center gap-4">
+        <Reveal delay={0.3} className="mt-14 flex flex-wrap items-center gap-4">
           <Link
             href={ctaHref}
             className="inline-flex h-12 items-center gap-2 rounded-xl bg-warm-white px-6 text-sm font-semibold text-sage-700 shadow-warm-lg transition-all duration-200 hover:translate-y-[-1px] hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warm-white focus-visible:ring-offset-2 focus-visible:ring-offset-sage-500"
@@ -80,7 +85,7 @@ export function LandingCta({ isAuthenticated }: LandingCtaProps) {
             </Link>
             .
           </p>
-        </div>
+        </Reveal>
       </div>
     </section>
   );

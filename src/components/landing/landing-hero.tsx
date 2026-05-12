@@ -1,19 +1,34 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Apple, Leaf } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, Leaf } from "lucide-react";
 import { getHeroImage } from "@/lib/food-images";
+import { HeroBadge } from "./hero-badge";
 
 interface LandingHeroProps {
   isAuthenticated: boolean;
 }
 
+const EASE_OUT_QUART = [0.16, 1, 0.3, 1] as const;
+
 export function LandingHero({ isAuthenticated }: LandingHeroProps) {
+  const reduceMotion = useReducedMotion();
   const ctaHref = isAuthenticated ? "/app" : "/login";
   const ctaLabel = isAuthenticated ? "Open your kitchen" : "Sign in with Google";
 
+  const stagger = (index: number) =>
+    reduceMotion
+      ? {}
+      : {
+          initial: { opacity: 0, y: 18 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.7, ease: EASE_OUT_QUART, delay: 0.1 + index * 0.08 },
+        };
+
   return (
     <section className="relative isolate overflow-hidden bg-sage-500 text-warm-white">
-      {/* Soft warm wash to keep the sage from feeling flat. */}
       <div
         className="pointer-events-none absolute inset-0 opacity-70"
         style={{
@@ -26,22 +41,34 @@ export function LandingHero({ isAuthenticated }: LandingHeroProps) {
       <div className="relative mx-auto max-w-6xl px-4 pt-28 pb-20 sm:px-6 sm:pt-32 sm:pb-24 lg:px-8 lg:pt-36 lg:pb-32">
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
           <div className="max-w-2xl">
-            <p className="inline-flex items-center gap-2 rounded-full bg-warm-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sage-50 backdrop-blur-sm ring-1 ring-warm-white/20">
+            <motion.p
+              {...stagger(0)}
+              className="inline-flex items-center gap-2 rounded-full bg-warm-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sage-50 backdrop-blur-sm ring-1 ring-warm-white/20"
+            >
               <Leaf className="h-3.5 w-3.5" />
               A kitchen ledger
-            </p>
+            </motion.p>
 
-            <h1 className="mt-6 text-4xl font-bold leading-[1.05] tracking-tight text-warm-white sm:text-5xl lg:text-6xl">
+            <motion.h1
+              {...stagger(1)}
+              className="mt-6 text-4xl font-bold leading-[1.05] tracking-tight text-warm-white sm:text-5xl lg:text-6xl"
+            >
               Stop throwing out groceries.
-            </h1>
+            </motion.h1>
 
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-sage-50/90 sm:text-lg">
+            <motion.p
+              {...stagger(2)}
+              className="mt-5 max-w-xl text-base leading-relaxed text-sage-50/90 sm:text-lg"
+            >
               FreshTrack is a free pantry tracker that shows what&apos;s about to expire,
-              suggests recipes to use it up, and tells you how much you&apos;ve saved. Built
-              for busy households, not factory inventory.
-            </p>
+              suggests recipes to use it up, and tells you how much you&apos;ve saved.
+              Built for busy households, not factory inventory.
+            </motion.p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <motion.div
+              {...stagger(3)}
+              className="mt-8 flex flex-wrap items-center gap-3"
+            >
               <Link
                 href={ctaHref}
                 className="inline-flex h-12 items-center gap-2 rounded-xl bg-warm-white px-5 text-sm font-semibold text-sage-700 shadow-warm-lg transition-all duration-200 hover:translate-y-[-1px] hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warm-white focus-visible:ring-offset-2 focus-visible:ring-offset-sage-500"
@@ -55,9 +82,12 @@ export function LandingHero({ isAuthenticated }: LandingHeroProps) {
               >
                 See how it works
               </a>
-            </div>
+            </motion.div>
 
-            <ul className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-sage-50/80">
+            <motion.ul
+              {...stagger(4)}
+              className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-sage-50/80"
+            >
               <li className="inline-flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-warm-white/70" aria-hidden />
                 Free forever
@@ -70,11 +100,15 @@ export function LandingHero({ isAuthenticated }: LandingHeroProps) {
                 <span className="h-1.5 w-1.5 rounded-full bg-warm-white/70" aria-hidden />
                 Your data stays in your account
               </li>
-            </ul>
+            </motion.ul>
           </div>
 
-          <div className="relative">
-            {/* Editorial inset: real produce photo + a single composed "use today" badge. */}
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.9, ease: EASE_OUT_QUART, delay: 0.15 }}
+            className="relative"
+          >
             <div className="relative aspect-[5/6] overflow-hidden rounded-3xl shadow-warm-lg ring-1 ring-warm-white/20">
               <Image
                 src={getHeroImage("seasonal produce", "Produce")}
@@ -87,23 +121,8 @@ export function LandingHero({ isAuthenticated }: LandingHeroProps) {
               <div className="absolute inset-0 bg-gradient-to-t from-stone-900/45 via-stone-900/0 to-stone-900/0" />
             </div>
 
-            <div className="absolute -bottom-6 -left-4 w-[min(280px,80%)] rounded-2xl bg-warm-white p-4 shadow-warm-lg ring-1 ring-warm-100 sm:-left-6">
-              <div className="flex items-start gap-3">
-                <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
-                  <Apple className="h-5 w-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="eyebrow text-stone-500">Use today</p>
-                  <p className="mt-1 text-sm font-semibold text-stone-900">
-                    Spinach, Greek yogurt
-                  </p>
-                  <p className="mt-0.5 text-xs text-stone-500">
-                    Recipe ready: 25 minutes, four servings.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+            <HeroBadge />
+          </motion.div>
         </div>
       </div>
     </section>

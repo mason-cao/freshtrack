@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Reveal } from "./reveal";
 import { PreviewDashboard } from "./preview-dashboard";
 import { PreviewRecipes } from "./preview-recipes";
 import { PreviewStats } from "./preview-stats";
@@ -25,7 +26,7 @@ function FeatureBlock({
 
   return (
     <article className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
-      <div className={`max-w-xl ${copyOrder}`}>
+      <Reveal className={`max-w-xl ${copyOrder}`}>
         <p className="eyebrow text-sage-700">{eyebrow}</p>
         <h3 className="mt-3 text-2xl font-bold tracking-tight text-stone-900 sm:text-3xl lg:text-4xl">
           {title}
@@ -42,8 +43,10 @@ function FeatureBlock({
             </li>
           ))}
         </ul>
-      </div>
-      <div className={previewOrder}>{preview}</div>
+      </Reveal>
+      <Reveal delay={0.1} className={previewOrder}>
+        {preview}
+      </Reveal>
     </article>
   );
 }
@@ -52,16 +55,18 @@ export function LandingFeatures() {
   return (
     <section id="features" className="relative bg-warm-white">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-28">
-        <div className="max-w-2xl">
-          <p className="eyebrow text-sage-700">How it works</p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl lg:text-5xl">
-            One small loop, every week.
-          </h2>
-          <p className="mt-4 text-base leading-relaxed text-stone-600 sm:text-lg">
-            See what&apos;s expiring. Cook around it. Watch the savings stack up. That&apos;s the
-            whole product.
-          </p>
-        </div>
+        <Reveal>
+          <div className="max-w-2xl">
+            <p className="eyebrow text-sage-700">How it works</p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl lg:text-5xl">
+              One small loop, every week.
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-stone-600 sm:text-lg">
+              See what&apos;s expiring. Cook around it. Watch the savings stack up.
+              That&apos;s the whole product.
+            </p>
+          </div>
+        </Reveal>
 
         <div className="mt-16 space-y-24 lg:mt-20 lg:space-y-32">
           <FeatureBlock
@@ -71,7 +76,7 @@ export function LandingFeatures() {
             bullets={[
               "Per-item freshness pills: use today, two days left, three days left.",
               "Add items in seconds while unpacking groceries.",
-              "Works on phone and desktop. Installs as a home-screen app, no app store."
+              "Works on phone and desktop. Installs as a home-screen app, no app store.",
             ]}
             preview={<PreviewDashboard />}
             imageSide="right"
@@ -84,7 +89,7 @@ export function LandingFeatures() {
             bullets={[
               "Use-it-up matching across produce, dairy, proteins, and pantry staples.",
               "Real food photography, prep and cook times, serving counts.",
-              "Built-in starter recipes. Bring your own coming soon."
+              "Built-in starter recipes. Bring your own coming soon.",
             ]}
             preview={<PreviewRecipes />}
             imageSide="left"
@@ -97,7 +102,7 @@ export function LandingFeatures() {
             bullets={[
               "Money saved this month, plus a clean monthly trend.",
               "Per-category breakdown: which foods are dragging you down.",
-              "Streak tracking that rewards low-waste weeks without shaming the rest."
+              "Streak tracking that rewards low-waste weeks without shaming the rest.",
             ]}
             preview={<PreviewStats />}
             imageSide="right"

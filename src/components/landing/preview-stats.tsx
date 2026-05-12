@@ -1,4 +1,8 @@
+"use client";
+
+import { motion, useReducedMotion } from "framer-motion";
 import { TrendingDown, ArrowUpRight, Leaf } from "lucide-react";
+import { CountUp } from "./count-up";
 
 const bars = [
   { label: "Jan", value: 52 },
@@ -9,6 +13,7 @@ const bars = [
 ];
 
 export function PreviewStats() {
+  const reduceMotion = useReducedMotion();
   const maxValue = Math.max(...bars.map((b) => b.value));
 
   return (
@@ -17,40 +22,50 @@ export function PreviewStats() {
         <div>
           <p className="eyebrow text-sage-700">Saved this month</p>
           <p className="num mt-2 text-5xl font-bold tracking-tight text-stone-900 sm:text-6xl">
-            $142
+            <CountUp value={142} prefix="$" duration={1.6} />
           </p>
           <p className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-sage-700">
             <TrendingDown className="h-4 w-4" />
-            Waste rate dropped 63%
+            Waste rate dropped <CountUp value={63} suffix="%" duration={1.4} />
           </p>
         </div>
-        <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-sage-500 text-warm-white shadow-warm-sm">
+        <div className="hidden h-14 w-14 items-center justify-center rounded-2xl bg-sage-500 text-warm-white shadow-warm-sm sm:flex">
           <Leaf className="h-6 w-6" />
         </div>
       </div>
 
       <div className="mt-6 rounded-2xl border border-warm-100 bg-cream/40 p-4">
         <div className="flex items-end justify-between gap-3">
-          {bars.map((bar) => (
-            <div key={bar.label} className="flex flex-1 flex-col items-center gap-2">
-              <div className="flex h-24 w-full items-end">
-                <div
-                  className={`w-full rounded-t-md transition-all ${
-                    bar.current ? "bg-sage-500" : "bg-warm-200"
+          {bars.map((bar, index) => {
+            const targetHeight = `${(bar.value / maxValue) * 100}%`;
+            return (
+              <div key={bar.label} className="flex flex-1 flex-col items-center gap-2">
+                <div className="flex h-24 w-full items-end">
+                  <motion.div
+                    initial={reduceMotion ? false : { height: 0 }}
+                    whileInView={{ height: targetHeight }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{
+                      duration: 0.9,
+                      ease: [0.16, 1, 0.3, 1],
+                      delay: 0.1 + index * 0.12,
+                    }}
+                    className={`w-full rounded-t-md ${
+                      bar.current ? "bg-sage-500" : "bg-warm-200"
+                    }`}
+                    aria-hidden
+                  />
+                </div>
+                <p
+                  className={`text-[10px] font-semibold ${
+                    bar.current ? "text-sage-700" : "text-stone-400"
                   }`}
-                  style={{ height: `${(bar.value / maxValue) * 100}%` }}
-                  aria-hidden
-                />
+                >
+                  {bar.label}
+                </p>
               </div>
-              <p
-                className={`text-[10px] font-semibold ${
-                  bar.current ? "text-sage-700" : "text-stone-400"
-                }`}
-              >
-                {bar.label}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <p className="mt-3 text-xs text-stone-500">
           Pounds of food wasted, month over month.
