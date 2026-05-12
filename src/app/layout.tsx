@@ -73,6 +73,9 @@ export const metadata: Metadata = {
     },
   },
   category: "productivity",
+  verification: {
+    google: "YW0n3kbf87Wy-tlqyQWCGuywSnu1HgjWRYOpahnucyA",
+  },
 };
 
 export const viewport: Viewport = {
