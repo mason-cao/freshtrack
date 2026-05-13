@@ -1,12 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
-import { completeItem, parseItemId } from "../../_lib";
+import {
+  checkItemMutationRateLimit,
+  completeItem,
+  parseItemId,
+} from "../../_lib";
 import { getCurrentUserId } from "@/lib/session";
+
+function rateLimitResponse(retryAfterSeconds: number) {
+  return NextResponse.json(
+    {
+      error: `Too many item changes. Try again in ${retryAfterSeconds} seconds.`,
+    },
+    {
+      status: 429,
+      headers: { "Retry-After": String(retryAfterSeconds) },
+    }
+  );
+}
 
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const userId = await getCurrentUserId();
+  const rateLimit = checkItemMutationRateLimit(userId);
+  if (!rateLimit.ok) {
+    return rateLimitResponse(rateLimit.retryAfterSeconds);
+  }
+
   const { id } = await params;
   const itemId = parseItemId(id);
   if (itemId === null) {

@@ -146,7 +146,11 @@ See `.env.example` for the full template. Required in production:
    - Privacy policy: `<your Railway public app URL>/privacy`
    - Terms: `<your Railway public app URL>/terms`
 
-Do not run `npm run db:seed` against production. That command creates a local dev user and demo pantry data.
+Do not run `npm run db:seed` against production. That command creates a local dev user and demo pantry data. It is guarded and only runs outside production with:
+
+```bash
+ALLOW_DESTRUCTIVE_SEED=1 npm run db:seed
+```
 
 ## Scope
 

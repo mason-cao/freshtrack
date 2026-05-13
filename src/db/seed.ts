@@ -3,6 +3,7 @@ import { closeDb, db } from "./index";
 import * as schema from "./schema";
 import { categorySeedData } from "./categories";
 import { addDaysToDateInput, toDateInputValue } from "../lib/dates";
+import { assertCanRunDestructiveSeed } from "./seed-safety";
 
 const DEV_USER_ID = "dev-user-local";
 const DEV_USER_EMAIL = "dev@freshtrack.local";
@@ -23,6 +24,7 @@ function monthsAgo(months: number, dayOffset = 0): string {
 }
 
 async function main() {
+  assertCanRunDestructiveSeed();
   console.log("Seeding database...");
 
   // Clear existing data

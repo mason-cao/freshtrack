@@ -5,15 +5,41 @@ import { and, eq } from "drizzle-orm";
 import { getCurrentUserId } from "@/lib/session";
 import {
   categoryExists,
+  checkItemMutationRateLimit,
+  isRequestBodyTooLarge,
   parseItemId,
   validatePatchItemPayload,
 } from "../_lib";
+
+function rateLimitResponse(retryAfterSeconds: number) {
+  return NextResponse.json(
+    {
+      error: `Too many item changes. Try again in ${retryAfterSeconds} seconds.`,
+    },
+    {
+      status: 429,
+      headers: { "Retry-After": String(retryAfterSeconds) },
+    }
+  );
+}
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const userId = await getCurrentUserId();
+  if (isRequestBodyTooLarge(request)) {
+    return NextResponse.json(
+      { error: "Request body is too large." },
+      { status: 413 }
+    );
+  }
+
+  const rateLimit = checkItemMutationRateLimit(userId);
+  if (!rateLimit.ok) {
+    return rateLimitResponse(rateLimit.retryAfterSeconds);
+  }
+
   const { id } = await params;
   const itemId = parseItemId(id);
   if (itemId === null) {
@@ -58,6 +84,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const userId = await getCurrentUserId();
+  const rateLimit = checkItemMutationRateLimit(userId);
+  if (!rateLimit.ok) {
+    return rateLimitResponse(rateLimit.retryAfterSeconds);
+  }
+
   const { id } = await params;
   const itemId = parseItemId(id);
   if (itemId === null) {

@@ -5,9 +5,24 @@ import { and, asc, eq } from "drizzle-orm";
 import { getCurrentUserId } from "@/lib/session";
 import {
   categoryExists,
+  checkItemMutationRateLimit,
+  hasReachedItemLimit,
+  isRequestBodyTooLarge,
   isItemStatus,
   validateCreateItemPayload,
 } from "./_lib";
+
+function rateLimitResponse(retryAfterSeconds: number) {
+  return NextResponse.json(
+    {
+      error: `Too many item changes. Try again in ${retryAfterSeconds} seconds.`,
+    },
+    {
+      status: 429,
+      headers: { "Retry-After": String(retryAfterSeconds) },
+    }
+  );
+}
 
 export async function GET(request: NextRequest) {
   const userId = await getCurrentUserId();
@@ -47,6 +62,18 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const userId = await getCurrentUserId();
+  if (isRequestBodyTooLarge(request)) {
+    return NextResponse.json(
+      { error: "Request body is too large." },
+      { status: 413 }
+    );
+  }
+
+  const rateLimit = checkItemMutationRateLimit(userId);
+  if (!rateLimit.ok) {
+    return rateLimitResponse(rateLimit.retryAfterSeconds);
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -57,6 +84,13 @@ export async function POST(request: NextRequest) {
   const validation = validateCreateItemPayload(body);
   if (!validation.ok) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+
+  if (await hasReachedItemLimit(userId)) {
+    return NextResponse.json(
+      { error: "Item limit reached. Delete old items before adding more." },
+      { status: 409 }
+    );
   }
 
   if (

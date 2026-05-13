@@ -1,9 +1,16 @@
 import { db } from "@/db";
 import { categories, items, wasteLog } from "@/db/schema";
 import { isDateInputValue, toDateInputValue } from "@/lib/dates";
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 
 export const itemStatuses = ["active", "consumed", "wasted"] as const;
+export const MAX_ITEM_NAME_LENGTH = 80;
+export const MAX_ITEM_UNIT_LENGTH = 24;
+export const MAX_ITEM_NOTES_LENGTH = 500;
+export const MAX_ITEM_REQUEST_BODY_BYTES = 8 * 1024;
+export const MAX_ITEMS_PER_USER = 500;
+export const ITEM_MUTATION_RATE_LIMIT = 60;
+export const ITEM_MUTATION_RATE_LIMIT_WINDOW_MS = 60_000;
 
 export type ItemStatus = (typeof itemStatuses)[number];
 export type ItemAction = Extract<ItemStatus, "consumed" | "wasted">;
@@ -26,6 +33,19 @@ type ItemPatch = Partial<ItemInput> & {
 type ValidationResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: string };
+
+type RateLimitResult =
+  | { ok: true }
+  | { ok: false; retryAfterSeconds: number };
+
+const globalForItemSecurity = globalThis as unknown as {
+  freshtrackItemMutationBuckets?: Map<string, number[]>;
+};
+
+const itemMutationBuckets =
+  globalForItemSecurity.freshtrackItemMutationBuckets ?? new Map<string, number[]>();
+
+globalForItemSecurity.freshtrackItemMutationBuckets = itemMutationBuckets;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -58,6 +78,13 @@ function normalizedText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function validateMaxLength(value: string, label: string, maxLength: number) {
+  if (value.length > maxLength) {
+    return `${label} must be ${maxLength} characters or fewer.`;
+  }
+  return null;
+}
+
 export function parseItemId(id: string): number | null {
   return positiveInteger(id);
 }
@@ -75,6 +102,46 @@ export async function categoryExists(categoryId: number): Promise<boolean> {
   return Boolean(row);
 }
 
+export function isRequestBodyTooLarge(request: Request): boolean {
+  const contentLength = request.headers.get("content-length");
+  if (!contentLength) return false;
+
+  const byteLength = Number(contentLength);
+  return Number.isFinite(byteLength) && byteLength > MAX_ITEM_REQUEST_BODY_BYTES;
+}
+
+export function checkItemMutationRateLimit(
+  userId: string,
+  now = Date.now()
+): RateLimitResult {
+  const windowStart = now - ITEM_MUTATION_RATE_LIMIT_WINDOW_MS;
+  const timestamps = (itemMutationBuckets.get(userId) ?? []).filter(
+    (timestamp) => timestamp > windowStart
+  );
+
+  if (timestamps.length >= ITEM_MUTATION_RATE_LIMIT) {
+    const oldest = timestamps[0] ?? now;
+    const retryAfterSeconds = Math.max(
+      1,
+      Math.ceil((ITEM_MUTATION_RATE_LIMIT_WINDOW_MS - (now - oldest)) / 1000)
+    );
+    itemMutationBuckets.set(userId, timestamps);
+    return { ok: false, retryAfterSeconds };
+  }
+
+  timestamps.push(now);
+  itemMutationBuckets.set(userId, timestamps);
+  return { ok: true };
+}
+
+export async function hasReachedItemLimit(userId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ value: count() })
+    .from(items)
+    .where(eq(items.userId, userId));
+  return Number(row?.value ?? 0) >= MAX_ITEMS_PER_USER;
+}
+
 export function validateCreateItemPayload(
   payload: unknown
 ): ValidationResult<ItemInput> {
@@ -86,6 +153,12 @@ export function validateCreateItemPayload(
   if (!name) {
     return { ok: false, error: "Item name is required." };
   }
+  const nameLengthError = validateMaxLength(
+    name,
+    "Item name",
+    MAX_ITEM_NAME_LENGTH
+  );
+  if (nameLengthError) return { ok: false, error: nameLengthError };
 
   const expirationDate = normalizedText(payload.expirationDate);
   if (!isDateInputValue(expirationDate)) {
@@ -111,6 +184,8 @@ export function validateCreateItemPayload(
   }
 
   const unit = normalizedText(payload.unit) || "count";
+  const unitLengthError = validateMaxLength(unit, "Unit", MAX_ITEM_UNIT_LENGTH);
+  if (unitLengthError) return { ok: false, error: unitLengthError };
 
   const purchaseDate = normalizedText(payload.purchaseDate) || toDateInputValue();
   if (!isDateInputValue(purchaseDate)) {
@@ -128,6 +203,14 @@ export function validateCreateItemPayload(
   }
 
   const notes = normalizedText(payload.notes) || null;
+  if (notes) {
+    const notesLengthError = validateMaxLength(
+      notes,
+      "Notes",
+      MAX_ITEM_NOTES_LENGTH
+    );
+    if (notesLengthError) return { ok: false, error: notesLengthError };
+  }
 
   return {
     ok: true,
@@ -156,6 +239,12 @@ export function validatePatchItemPayload(
   if (isPresent(payload, "name")) {
     const name = normalizedText(payload.name);
     if (!name) return { ok: false, error: "Item name cannot be empty." };
+    const nameLengthError = validateMaxLength(
+      name,
+      "Item name",
+      MAX_ITEM_NAME_LENGTH
+    );
+    if (nameLengthError) return { ok: false, error: nameLengthError };
     data.name = name;
   }
 
@@ -182,6 +271,8 @@ export function validatePatchItemPayload(
   if (isPresent(payload, "unit")) {
     const unit = normalizedText(payload.unit);
     if (!unit) return { ok: false, error: "Unit cannot be empty." };
+    const unitLengthError = validateMaxLength(unit, "Unit", MAX_ITEM_UNIT_LENGTH);
+    if (unitLengthError) return { ok: false, error: unitLengthError };
     data.unit = unit;
   }
 
@@ -220,7 +311,16 @@ export function validatePatchItemPayload(
   }
 
   if (isPresent(payload, "notes")) {
-    data.notes = normalizedText(payload.notes) || null;
+    const notes = normalizedText(payload.notes) || null;
+    if (notes) {
+      const notesLengthError = validateMaxLength(
+        notes,
+        "Notes",
+        MAX_ITEM_NOTES_LENGTH
+      );
+      if (notesLengthError) return { ok: false, error: notesLengthError };
+    }
+    data.notes = notes;
   }
 
   if (isPresent(payload, "status")) {
