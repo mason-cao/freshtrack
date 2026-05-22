@@ -8,6 +8,7 @@ import {
   checkItemMutationRateLimit,
   isRequestBodyTooLarge,
   parseItemId,
+  readJsonRequestBody,
   validatePatchItemPayload,
 } from "../_lib";
 
@@ -46,14 +47,15 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid item id." }, { status: 400 });
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+  const bodyResult = await readJsonRequestBody(request);
+  if (!bodyResult.ok) {
+    return NextResponse.json(
+      { error: bodyResult.error },
+      { status: bodyResult.status }
+    );
   }
 
-  const validation = validatePatchItemPayload(body);
+  const validation = validatePatchItemPayload(bodyResult.body);
   if (!validation.ok) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }

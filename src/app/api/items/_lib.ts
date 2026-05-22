@@ -26,9 +26,7 @@ interface ItemInput {
   notes: string | null;
 }
 
-type ItemPatch = Partial<ItemInput> & {
-  status?: ItemStatus;
-};
+type ItemPatch = Partial<ItemInput>;
 
 type ValidationResult<T> =
   | { ok: true; data: T }
@@ -37,6 +35,10 @@ type ValidationResult<T> =
 type RateLimitResult =
   | { ok: true }
   | { ok: false; retryAfterSeconds: number };
+
+type JsonBodyResult =
+  | { ok: true; body: unknown }
+  | { ok: false; status: 400 | 413; error: string };
 
 const globalForItemSecurity = globalThis as unknown as {
   freshtrackItemMutationBuckets?: Map<string, number[]>;
@@ -108,6 +110,45 @@ export function isRequestBodyTooLarge(request: Request): boolean {
 
   const byteLength = Number(contentLength);
   return Number.isFinite(byteLength) && byteLength > MAX_ITEM_REQUEST_BODY_BYTES;
+}
+
+export async function readJsonRequestBody(
+  request: Request
+): Promise<JsonBodyResult> {
+  if (isRequestBodyTooLarge(request)) {
+    return { ok: false, status: 413, error: "Request body is too large." };
+  }
+
+  const reader = request.body?.getReader();
+  if (!reader) {
+    return { ok: false, status: 400, error: "Invalid JSON body." };
+  }
+
+  const decoder = new TextDecoder();
+  let byteLength = 0;
+  let text = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+
+    byteLength += value.byteLength;
+    if (byteLength > MAX_ITEM_REQUEST_BODY_BYTES) {
+      await reader.cancel().catch(() => undefined);
+      return { ok: false, status: 413, error: "Request body is too large." };
+    }
+
+    text += decoder.decode(value, { stream: true });
+  }
+
+  text += decoder.decode();
+
+  try {
+    return { ok: true, body: JSON.parse(text) };
+  } catch {
+    return { ok: false, status: 400, error: "Invalid JSON body." };
+  }
 }
 
 export function checkItemMutationRateLimit(
@@ -324,10 +365,10 @@ export function validatePatchItemPayload(
   }
 
   if (isPresent(payload, "status")) {
-    if (typeof payload.status !== "string" || !isItemStatus(payload.status)) {
-      return { ok: false, error: "Status must be active, consumed, or wasted." };
-    }
-    data.status = payload.status;
+    return {
+      ok: false,
+      error: "Use the consume, waste, or restore endpoints to change item status.",
+    };
   }
 
   if (Object.keys(data).length === 0) {
@@ -344,26 +385,39 @@ export async function completeItem(
 ) {
   return db.transaction(async (tx) => {
     const [item] = await tx
-      .select()
-      .from(items)
-      .where(and(eq(items.id, itemId), eq(items.userId, userId)))
-      .limit(1);
-
-    if (!item) {
-      return { status: 404, body: { error: "Item not found." } };
-    }
-
-    if (item.status !== "active") {
-      return {
-        status: 409,
-        body: { error: `Item is already marked as ${item.status}.` },
-      };
-    }
-
-    await tx
       .update(items)
       .set({ status: action, updatedAt: new Date().toISOString() })
-      .where(and(eq(items.id, itemId), eq(items.userId, userId)));
+      .where(
+        and(
+          eq(items.id, itemId),
+          eq(items.userId, userId),
+          eq(items.status, "active")
+        )
+      )
+      .returning({
+        id: items.id,
+        name: items.name,
+        quantity: items.quantity,
+        unit: items.unit,
+        costEstimate: items.costEstimate,
+      });
+
+    if (!item) {
+      const [existing] = await tx
+        .select({ status: items.status })
+        .from(items)
+        .where(and(eq(items.id, itemId), eq(items.userId, userId)))
+        .limit(1);
+
+      if (!existing) {
+        return { status: 404, body: { error: "Item not found." } };
+      }
+
+      return {
+        status: 409,
+        body: { error: `Item is already marked as ${existing.status}.` },
+      };
+    }
 
     await tx
       .insert(wasteLog)

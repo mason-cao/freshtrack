@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   checkItemMutationRateLimit,
   isRequestBodyTooLarge,
+  readJsonRequestBody,
   validateCreateItemPayload,
   validatePatchItemPayload,
 } from "./_lib";
@@ -54,6 +55,13 @@ describe("item API security limits", () => {
     });
   });
 
+  it("rejects direct status changes through generic item patches", () => {
+    expect(validatePatchItemPayload({ status: "wasted" })).toEqual({
+      ok: false,
+      error: "Use the consume, waste, or restore endpoints to change item status.",
+    });
+  });
+
   it("detects oversized JSON requests from the content-length header", () => {
     expect(
       isRequestBodyTooLarge(
@@ -78,6 +86,35 @@ describe("item API security limits", () => {
         })
       )
     ).toBe(false);
+  });
+
+  it("rejects oversized JSON requests when content-length is missing", async () => {
+    const result = await readJsonRequestBody(
+      new Request("https://freshtrack.test/api/items", {
+        method: "POST",
+        body: JSON.stringify({ notes: "x".repeat(9000) }),
+      })
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      status: 413,
+      error: "Request body is too large.",
+    });
+  });
+
+  it("parses valid JSON requests within the body size limit", async () => {
+    const result = await readJsonRequestBody(
+      new Request("https://freshtrack.test/api/items", {
+        method: "POST",
+        body: JSON.stringify({ name: "Greek yogurt" }),
+      })
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      body: { name: "Greek yogurt" },
+    });
   });
 
   it("limits item mutations per user within a fixed window", () => {

@@ -1,4 +1,11 @@
-const PUBLIC_PATHS = ["/login", "/privacy", "/terms", "/foods"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/privacy",
+  "/terms",
+  "/foods",
+  "/opengraph-image",
+  "/twitter-image",
+];
 
 export function isPublicPath(pathname: string): boolean {
   if (pathname === "/") return true;

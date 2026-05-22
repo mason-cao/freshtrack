@@ -37,13 +37,17 @@ export function generateStaticParams() {
   return foods.map((food) => ({ slug: food.slug }));
 }
 
+export function buildFoodMetadataTitle(food: Pick<FoodPageData, "h1">): string {
+  return food.h1.replace(/\.$/, "");
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const food = getFoodBySlug(slug);
   if (!food) {
     return { title: "Not found" };
   }
-  const title = `${food.h1.replace(/\.$/, "")} · FreshTrack`;
+  const title = buildFoodMetadataTitle(food);
   return {
     title,
     description: food.metaDescription,

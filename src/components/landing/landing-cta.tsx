@@ -13,7 +13,7 @@ const promises = [
   },
   {
     title: "No app store",
-    body: "Add it to your home screen from any browser. Works offline-friendly on phone and desktop.",
+    body: "Add it to your home screen from any browser. Works on phone and desktop.",
   },
   {
     title: "Your kitchen, your data",
