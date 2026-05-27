@@ -36,6 +36,8 @@ function expectedRequestOrigins(request: Request): Set<string> {
   return new Set(
     [
       url.origin,
+      originFromHeader(process.env.NEXT_PUBLIC_SITE_URL ?? null),
+      originFromHeader(process.env.AUTH_URL ?? null),
       originFromHost(request.headers.get("host"), protocol),
       originFromHost(request.headers.get("x-forwarded-host"), protocol),
     ].filter((origin): origin is string => Boolean(origin))

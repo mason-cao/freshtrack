@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { isSameOriginRequest } from "./request-security";
 
 function requestWithHeaders(headers: Record<string, string>) {
@@ -16,6 +16,14 @@ function proxiedRequestWithHeaders(headers: Record<string, string>) {
 }
 
 describe("isSameOriginRequest", () => {
+  const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const originalAuthUrl = process.env.AUTH_URL;
+
+  afterEach(() => {
+    process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
+    process.env.AUTH_URL = originalAuthUrl;
+  });
+
   it("allows requests with a matching origin", () => {
     expect(
       isSameOriginRequest(
@@ -44,6 +52,19 @@ describe("isSameOriginRequest", () => {
           host: "internal.railway",
           "x-forwarded-host": "freshtrack.up.railway.app",
           "x-forwarded-proto": "https",
+        })
+      )
+    ).toBe(true);
+  });
+
+  it("allows the configured public site origin", () => {
+    process.env.NEXT_PUBLIC_SITE_URL = "https://freshtrack.up.railway.app";
+
+    expect(
+      isSameOriginRequest(
+        proxiedRequestWithHeaders({
+          origin: "https://freshtrack.up.railway.app",
+          host: "internal.railway",
         })
       )
     ).toBe(true);
