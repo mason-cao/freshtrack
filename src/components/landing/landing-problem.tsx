@@ -3,6 +3,7 @@ import { CountUp } from "./count-up";
 
 interface Stat {
   value: number;
+  startValue?: number;
   prefix?: string;
   suffix?: string;
   formatted: string; // fallback for reduced-motion / SEO crawlers
@@ -13,6 +14,7 @@ interface Stat {
 const stats: Stat[] = [
   {
     value: 40,
+    startValue: 30,
     prefix: "30–",
     suffix: "%",
     formatted: "30–40%",
@@ -69,6 +71,7 @@ export function LandingProblem() {
                 <dt className="num text-4xl font-bold tracking-tight text-stone-900 sm:text-5xl">
                   <CountUp
                     value={stat.value}
+                    startValue={stat.startValue}
                     prefix={stat.prefix}
                     suffix={stat.suffix}
                     duration={1.6}
