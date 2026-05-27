@@ -106,6 +106,38 @@ export const wasteLog = pgTable(
   ]
 );
 
+export const analyticsEvents = pgTable(
+  "analytics_events",
+  {
+    id: serial("id").primaryKey(),
+    visitorId: text("visitor_id").notNull(),
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+    eventName: text("event_name").notNull(),
+    path: text("path").notNull(),
+    referrer: text("referrer"),
+    utmSource: text("utm_source"),
+    utmMedium: text("utm_medium"),
+    utmCampaign: text("utm_campaign"),
+    utmContent: text("utm_content"),
+    utmTerm: text("utm_term"),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at", { mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("analytics_events_visitor_id_idx").on(table.visitorId),
+    index("analytics_events_user_id_idx").on(table.userId),
+    index("analytics_events_event_name_idx").on(table.eventName),
+    index("analytics_events_created_at_idx").on(table.createdAt),
+    index("analytics_events_utm_idx").on(
+      table.utmSource,
+      table.utmCampaign,
+      table.utmContent
+    ),
+  ]
+);
+
 export const accounts = pgTable(
   "accounts",
   {

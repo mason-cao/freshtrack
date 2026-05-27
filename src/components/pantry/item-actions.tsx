@@ -9,6 +9,7 @@ import {
   type PantryActionOutcome,
   type PantryCompletionAction,
 } from "@/lib/pantry-events";
+import { trackAnalyticsEvent } from "@/lib/analytics-client";
 
 interface ItemActionsProps {
   itemId: number;
@@ -27,6 +28,7 @@ export function ItemActions({ itemId, itemName, onAction }: ItemActionsProps) {
 
     try {
       await fetchJson(`/api/items/${itemId}/${action}`, { method: "POST" });
+      trackAnalyticsEvent(action === "consume" ? "item_consumed" : "item_wasted");
       const outcome = { itemId, itemName, action };
       notifyPantryActionCompleted(outcome);
       setConfirming(null);

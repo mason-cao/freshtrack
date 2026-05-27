@@ -92,6 +92,7 @@ export default async function LoginPage() {
 
           <form
             className="mt-8"
+            data-analytics-event="sign_in_clicked"
             action={async () => {
               "use server";
               await signIn("google", { redirectTo: "/app" });

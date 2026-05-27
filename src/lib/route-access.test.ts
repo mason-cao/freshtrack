@@ -8,6 +8,7 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/privacy")).toBe(true);
     expect(isPublicPath("/terms")).toBe(true);
     expect(isPublicPath("/api/auth/signin")).toBe(true);
+    expect(isPublicPath("/api/analytics")).toBe(true);
     expect(isPublicPath("/opengraph-image")).toBe(true);
     expect(isPublicPath("/twitter-image")).toBe(true);
     expect(isPublicPath("/foods")).toBe(true);
@@ -18,5 +19,6 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/app")).toBe(false);
     expect(isPublicPath("/pantry")).toBe(false);
     expect(isPublicPath("/api/items")).toBe(false);
+    expect(isPublicPath("/api/analytics/export")).toBe(false);
   });
 });

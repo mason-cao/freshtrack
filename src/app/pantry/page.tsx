@@ -10,6 +10,7 @@ import { AddItemDialog } from "@/components/pantry/add-item-dialog";
 import { PantrySkeleton } from "@/components/pantry/pantry-skeleton";
 import { fetchJson } from "@/lib/api-client";
 import { subscribeToPantryUpdates } from "@/lib/pantry-events";
+import { trackAnalyticsEvent } from "@/lib/analytics-client";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PackageSearch, SearchX } from "lucide-react";
 
@@ -25,6 +26,8 @@ interface Item {
   expirationDate: string;
   estimatedCost: number | null;
 }
+
+const FIRST_FIVE_ITEMS_EVENT_KEY = "freshtrack:analytics:first-5-items-sent";
 
 export default function PantryPage() {
   const [items, setItems] = useState<Item[]>([]);
@@ -51,6 +54,19 @@ export default function PantryPage() {
     loadItems();
     return subscribeToPantryUpdates(loadItems);
   }, [loadItems]);
+
+  useEffect(() => {
+    if (items.length < 5) return;
+
+    try {
+      if (window.localStorage.getItem(FIRST_FIVE_ITEMS_EVENT_KEY) === "true") return;
+      window.localStorage.setItem(FIRST_FIVE_ITEMS_EVENT_KEY, "true");
+    } catch {
+      return;
+    }
+
+    trackAnalyticsEvent("first_5_items_added");
+  }, [items.length]);
 
   const filteredItems = useMemo(() => {
     let result = items;

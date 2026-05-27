@@ -15,6 +15,7 @@ import {
   type PantryCompletionAction,
 } from "@/lib/pantry-events";
 import { FreshnessMeter } from "./freshness-meter";
+import { trackAnalyticsEvent } from "@/lib/analytics-client";
 
 interface ItemCardProps {
   item: {
@@ -50,6 +51,7 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
     setError(null);
     try {
       await fetchJson(`/api/items/${item.id}/${action}`, { method: "POST" });
+      trackAnalyticsEvent(action === "consume" ? "item_consumed" : "item_wasted");
       setDismissed(true);
       const outcome = { itemId: item.id, itemName: item.name, action };
       if (action === "consume") {

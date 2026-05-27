@@ -19,12 +19,14 @@ import { cn } from "@/lib/utils";
 import { Fab } from "./fab";
 import { FooterLegal } from "./footer-legal";
 import { InstallPrompt } from "./install-prompt";
+import { AnalyticsTracker } from "./analytics-tracker";
 import {
   notifyPantryUpdated,
   subscribeToPantryActions,
   type PantryActionOutcome,
 } from "@/lib/pantry-events";
 import { fetchJson } from "@/lib/api-client";
+import { trackAnalyticsEvent } from "@/lib/analytics-client";
 
 const navItems = [
   { href: "/app", label: "Home", icon: LayoutDashboard },
@@ -58,6 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       !pathname.startsWith("/foods/");
     return (
       <div className="min-h-screen bg-cream">
+        <AnalyticsTracker isPublicPage={isPublicPage} />
         {children}
         {showFooterLegal && <FooterLegal />}
       </div>
@@ -66,6 +69,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-cream">
+      <AnalyticsTracker isPublicPage={isPublicPage} />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-warm-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-sage-700 focus:shadow-warm-lg"
@@ -280,6 +284,7 @@ function PantryUndoToast({ onRestored }: { onRestored: () => void }) {
     setError(null);
     try {
       await fetchJson(`/api/items/${outcome.itemId}/restore`, { method: "POST" });
+      trackAnalyticsEvent("item_restored");
       setOutcome(null);
       onRestored();
     } catch (err) {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Download, Share, Smartphone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { trackAnalyticsEvent } from "@/lib/analytics-client";
 
 const DISMISS_KEY = "freshtrack:install-prompt-dismissed";
 
@@ -22,13 +23,29 @@ function isIOS() {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 }
 
+function hasDismissedInstallPrompt() {
+  try {
+    return window.localStorage.getItem(DISMISS_KEY) === "true";
+  } catch {
+    return true;
+  }
+}
+
+function rememberInstallPromptDismissal() {
+  try {
+    window.localStorage.setItem(DISMISS_KEY, "true");
+  } catch {
+    // Browser storage can be unavailable in privacy modes.
+  }
+}
+
 export function InstallPrompt() {
   const [ready, setReady] = useState(false);
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOSDevice, setIsIOSDevice] = useState(false);
 
   useEffect(() => {
-    if (window.localStorage.getItem(DISMISS_KEY) === "true" || isStandalone()) {
+    if (hasDismissedInstallPrompt() || isStandalone()) {
       return;
     }
 
@@ -49,15 +66,27 @@ export function InstallPrompt() {
   async function handleInstall() {
     if (!installEvent) return;
     await installEvent.prompt();
-    await installEvent.userChoice;
+    const choice = await installEvent.userChoice;
+    trackAnalyticsEvent(
+      choice.outcome === "accepted" ? "pwa_install_accepted" : "pwa_install_prompt_dismissed"
+    );
     setInstallEvent(null);
-    dismiss();
+    dismiss({ track: false });
   }
 
-  function dismiss() {
-    window.localStorage.setItem(DISMISS_KEY, "true");
+  function dismiss({ track = true }: { track?: boolean } = {}) {
+    if (track) {
+      trackAnalyticsEvent("pwa_install_prompt_dismissed");
+    }
+    rememberInstallPromptDismissal();
     setReady(false);
   }
+
+  useEffect(() => {
+    if (ready) {
+      trackAnalyticsEvent("pwa_install_prompt_shown");
+    }
+  }, [ready]);
 
   if (!ready) return null;
 
@@ -87,14 +116,14 @@ export function InstallPrompt() {
                   Share menu
                 </span>
               ) : null}
-              <Button size="sm" variant="ghost" onClick={dismiss}>
+              <Button size="sm" variant="ghost" onClick={() => dismiss()}>
                 Not now
               </Button>
             </div>
           </div>
           <button
             type="button"
-            onClick={dismiss}
+            onClick={() => dismiss()}
             aria-label="Dismiss install prompt"
             className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-stone-400 transition-colors duration-200 hover:bg-warm-50 hover:text-stone-700 cursor-pointer"
           >

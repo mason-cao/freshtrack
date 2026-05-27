@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { ChevronDown, Plus } from "lucide-react";
 import { addDaysToDateInput, toDateInputValue } from "@/lib/dates";
+import { trackAnalyticsEvent } from "@/lib/analytics-client";
 
 interface Category {
   id: number;
@@ -92,6 +93,8 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
         const data = await response.json().catch(() => null);
         throw new Error(data?.error ?? "Unable to add item.");
       }
+
+      trackAnalyticsEvent("item_added");
 
       // Reset form
       setName("");
