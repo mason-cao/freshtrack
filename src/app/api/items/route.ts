@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { items, categories } from "@/db/schema";
 import { and, asc, eq } from "drizzle-orm";
 import { getCurrentUserId } from "@/lib/session";
+import { isSameOriginRequest } from "@/lib/request-security";
 import {
   categoryExists,
   checkItemMutationRateLimit,
@@ -62,6 +63,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 });
+  }
+
   const userId = await getCurrentUserId();
   if (isRequestBodyTooLarge(request)) {
     return NextResponse.json(

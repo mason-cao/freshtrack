@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { items } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { getCurrentUserId } from "@/lib/session";
+import { isSameOriginRequest } from "@/lib/request-security";
 import {
   categoryExists,
   checkItemMutationRateLimit,
@@ -28,6 +29,10 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 });
+  }
+
   const userId = await getCurrentUserId();
   if (isRequestBodyTooLarge(request)) {
     return NextResponse.json(
@@ -82,9 +87,13 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 });
+  }
+
   const userId = await getCurrentUserId();
   const rateLimit = checkItemMutationRateLimit(userId);
   if (!rateLimit.ok) {

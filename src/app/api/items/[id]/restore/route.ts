@@ -5,6 +5,7 @@ import {
   restoreItem,
 } from "../../_lib";
 import { getCurrentUserId } from "@/lib/session";
+import { isSameOriginRequest } from "@/lib/request-security";
 
 function rateLimitResponse(retryAfterSeconds: number) {
   return NextResponse.json(
@@ -19,9 +20,13 @@ function rateLimitResponse(retryAfterSeconds: number) {
 }
 
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 });
+  }
+
   const userId = await getCurrentUserId();
   const rateLimit = checkItemMutationRateLimit(userId);
   if (!rateLimit.ok) {
