@@ -8,11 +8,43 @@ function requestWithHeaders(headers: Record<string, string>) {
   });
 }
 
+function proxiedRequestWithHeaders(headers: Record<string, string>) {
+  return new Request("http://internal.railway/api/items", {
+    method: "POST",
+    headers,
+  });
+}
+
 describe("isSameOriginRequest", () => {
   it("allows requests with a matching origin", () => {
     expect(
       isSameOriginRequest(
         requestWithHeaders({ origin: "https://freshtrack.up.railway.app" })
+      )
+    ).toBe(true);
+  });
+
+  it("allows matching public host headers when the runtime URL is internal", () => {
+    expect(
+      isSameOriginRequest(
+        proxiedRequestWithHeaders({
+          origin: "https://freshtrack.up.railway.app",
+          host: "freshtrack.up.railway.app",
+          "x-forwarded-proto": "https",
+        })
+      )
+    ).toBe(true);
+  });
+
+  it("allows matching forwarded host headers when the host header is internal", () => {
+    expect(
+      isSameOriginRequest(
+        proxiedRequestWithHeaders({
+          origin: "https://freshtrack.up.railway.app",
+          host: "internal.railway",
+          "x-forwarded-host": "freshtrack.up.railway.app",
+          "x-forwarded-proto": "https",
+        })
       )
     ).toBe(true);
   });
