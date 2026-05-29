@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUserId } from "@/lib/session";
 import { normalizeOpenFoodFactsProduct, sanitizeBarcode } from "@/lib/barcode";
 import { mapCategoryTagsToCategoryId } from "@/lib/barcode-category";
+import { checkProductLookupRateLimit, parseUpcItemDbName } from "./_lib";
 
 /** Shape returned to the add-item form; `found: false` is always recoverable. */
 export interface ProductLookupResult {
@@ -75,12 +76,44 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ProductLookupResult
   };
 }
 
+// Best-effort secondary source for products Open Food Facts doesn't know. The
+// keyless trial endpoint is not food-specific (~100 req/day shared), so we take
+// the name only and fail silently — it just rescues a name the user would
+// otherwise type by hand.
+async function lookupUpcItemDb(barcode: string): Promise<ProductLookupResult> {
+  const url = `https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`;
+
+  try {
+    const response = await fetch(url, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(3000),
+      next: { revalidate: 86400 },
+    });
+    if (!response.ok) return NOT_FOUND;
+
+    const name = parseUpcItemDbName(await response.json().catch(() => null));
+    if (!name) return NOT_FOUND;
+
+    return { ...NOT_FOUND, found: true, name };
+  } catch {
+    return NOT_FOUND;
+  }
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ barcode: string }> }
 ) {
   // Session-gated like every other data route.
-  await getCurrentUserId();
+  const userId = await getCurrentUserId();
+
+  const rateLimit = checkProductLookupRateLimit(userId);
+  if (!rateLimit.ok) {
+    return NextResponse.json(
+      { error: `Too many lookups. Try again in ${rateLimit.retryAfterSeconds} seconds.` },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+    );
+  }
 
   const { barcode: rawBarcode } = await params;
   const barcode = sanitizeBarcode(rawBarcode);
@@ -88,7 +121,12 @@ export async function GET(
     return NextResponse.json({ error: "Invalid barcode." }, { status: 400 });
   }
 
-  const result = await lookupOpenFoodFacts(barcode);
+  // Open Food Facts is primary (food-specific: gives category/quantity/image).
+  // Fall back to UPCitemdb for a name when OFF has no entry.
+  let result = await lookupOpenFoodFacts(barcode);
+  if (!result.found) {
+    result = await lookupUpcItemDb(barcode);
+  }
 
   // Found products are stable enough to let the browser reuse a re-scan; misses
   // stay uncached since a barcode may be added to OFF later.
