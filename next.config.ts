@@ -7,7 +7,7 @@ const contentSecurityPolicy = [
   `script-src 'self' 'unsafe-inline'${isProduction ? "" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
-  "img-src 'self' data: blob: https://images.unsplash.com https://lh3.googleusercontent.com",
+  "img-src 'self' data: blob: https://images.unsplash.com https://lh3.googleusercontent.com https://images.openfoodfacts.org",
   "connect-src 'self' https://accounts.google.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
@@ -28,6 +28,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "images.openfoodfacts.org",
+      },
     ],
   },
   async headers() {
@@ -39,7 +43,7 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
+            value: "camera=(self), microphone=(), geolocation=()",
           },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Content-Security-Policy", value: contentSecurityPolicy },
