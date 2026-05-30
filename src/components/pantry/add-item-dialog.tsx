@@ -18,9 +18,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronDown, Plus } from "lucide-react";
+import { ChevronDown, Loader2, Plus, ScanBarcode } from "lucide-react";
 import { addDaysToDateInput, toDateInputValue } from "@/lib/dates";
 import { trackAnalyticsEvent } from "@/lib/analytics-client";
+import { fetchJson } from "@/lib/api-client";
+import { BarcodeScanner } from "@/components/pantry/barcode-scanner";
+import type { ProductLookupResult } from "@/app/api/products/[barcode]/route";
+
+// Open Food Facts reports metric/imperial units; map the ones that fit the
+// add-item form's unit list. Anything else (g, ml, kg…) can't be represented
+// here, so we skip the quantity prefill rather than show a misleading value.
+const OFF_UNIT_MAP: Record<string, string> = {
+  oz: "oz",
+  ounce: "oz",
+  ounces: "oz",
+  lb: "lbs",
+  lbs: "lbs",
+  pound: "lbs",
+  pounds: "lbs",
+  count: "count",
+  ct: "count",
+  pcs: "count",
+  piece: "count",
+  pieces: "count",
+  unit: "count",
+  units: "count",
+};
 
 interface Category {
   id: number;
@@ -43,6 +66,9 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [lookupPending, setLookupPending] = useState(false);
+  const [lookupNote, setLookupNote] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -65,6 +91,49 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
     if (cat && !expirationDate) {
       setExpirationDate(addDaysToDateInput(cat.defaultShelfLifeDays));
     }
+  }
+
+  function applyProduct(product: ProductLookupResult) {
+    if (product.name) setName(product.name.slice(0, 80));
+    if (product.categoryId !== null) {
+      // Reuse the category change handler so the shelf-life default fills in too.
+      handleCategoryChange(String(product.categoryId));
+    }
+    const mappedUnit = product.unit ? OFF_UNIT_MAP[product.unit] : undefined;
+    if (product.quantity && mappedUnit) {
+      setQuantity(String(product.quantity));
+      setUnit(mappedUnit);
+      setDetailsOpen(true); // surface the prefilled amount
+    }
+  }
+
+  async function handleBarcodeDetected(barcode: string) {
+    setScannerOpen(false);
+    setLookupPending(true);
+    setLookupNote(null);
+    try {
+      const product = await fetchJson<ProductLookupResult>(`/api/products/${barcode}`);
+      if (product.found) {
+        applyProduct(product);
+      } else {
+        setLookupNote("We couldn't find that product. Add the details below.");
+      }
+    } catch {
+      setLookupNote("Lookup failed. Add the details below.");
+    } finally {
+      setLookupPending(false);
+    }
+  }
+
+  function handleDialogOpenChange(next: boolean) {
+    if (!next) {
+      // Reset scan state so a reopened dialog starts clean (and the camera,
+      // if open, unmounts and releases the stream).
+      setScannerOpen(false);
+      setLookupPending(false);
+      setLookupNote(null);
+    }
+    setOpen(next);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -115,7 +184,7 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4" />
@@ -124,9 +193,39 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add pantry item</DialogTitle>
+          <DialogTitle>{scannerOpen ? "Scan barcode" : "Add pantry item"}</DialogTitle>
         </DialogHeader>
+        {scannerOpen ? (
+          <BarcodeScanner
+            onDetected={handleBarcodeDetected}
+            onCancel={() => setScannerOpen(false)}
+          />
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              setLookupNote(null);
+              setScannerOpen(true);
+            }}
+            disabled={lookupPending}
+          >
+            <ScanBarcode className="h-4 w-4" />
+            Scan barcode
+          </Button>
+
+          {lookupPending && (
+            <p className="flex items-center gap-2 rounded-lg bg-sage-50 px-3 py-2 text-xs text-sage-700">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Looking up product…
+            </p>
+          )}
+          {lookupNote && (
+            <p className="rounded-lg bg-warm-50 px-3 py-2 text-xs text-stone-600">{lookupNote}</p>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="name">Item name *</Label>
             <Input
@@ -257,6 +356,7 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
             {saving ? "Adding..." : "Add to Pantry"}
           </Button>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );
