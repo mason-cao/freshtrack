@@ -69,6 +69,13 @@ export const recipes = pgTable(
     prepTimeMinutes: integer("prep_time_minutes"),
     cookTimeMinutes: integer("cook_time_minutes"),
     servings: integer("servings"),
+    // Recipe Dive catalog fields (nullable so existing seeded rows are
+    // unaffected). Populated by the one-time TheMealDB import.
+    imageUrl: text("image_url"),
+    cuisine: text("cuisine"),
+    category: text("category"),
+    sourceUrl: text("source_url"),
+    externalId: text("external_id").unique(),
   },
   (table) => [index("recipes_user_id_idx").on(table.userId)]
 );
