@@ -68,7 +68,7 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [lookupPending, setLookupPending] = useState(false);
-  const [lookupNote, setLookupNote] = useState<string | null>(null);
+  const [lookupNote, setLookupNote] = useState<{ tone: "ok" | "warn"; text: string } | null>(null);
 
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -111,15 +111,25 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
     setScannerOpen(false);
     setLookupPending(true);
     setLookupNote(null);
+    trackAnalyticsEvent("barcode_scanned");
     try {
       const product = await fetchJson<ProductLookupResult>(`/api/products/${barcode}`);
       if (product.found) {
         applyProduct(product);
+        trackAnalyticsEvent("barcode_lookup_hit");
+        setLookupNote({
+          tone: "ok",
+          text: product.name
+            ? `Prefilled “${product.name}”. Review and save.`
+            : "Prefilled from the scanned product. Review and save.",
+        });
       } else {
-        setLookupNote("We couldn't find that product. Add the details below.");
+        trackAnalyticsEvent("barcode_lookup_miss");
+        setLookupNote({ tone: "warn", text: "We couldn't find that product. Add the details below." });
       }
     } catch {
-      setLookupNote("Lookup failed. Add the details below.");
+      trackAnalyticsEvent("barcode_lookup_miss");
+      setLookupNote({ tone: "warn", text: "Lookup failed. Add the details below." });
     } finally {
       setLookupPending(false);
     }
@@ -223,7 +233,15 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
             </p>
           )}
           {lookupNote && (
-            <p className="rounded-lg bg-warm-50 px-3 py-2 text-xs text-stone-600">{lookupNote}</p>
+            <p
+              className={
+                lookupNote.tone === "ok"
+                  ? "rounded-lg bg-sage-50 px-3 py-2 text-xs text-sage-700"
+                  : "rounded-lg bg-warm-50 px-3 py-2 text-xs text-stone-600"
+              }
+            >
+              {lookupNote.text}
+            </p>
           )}
 
           <div className="space-y-2">

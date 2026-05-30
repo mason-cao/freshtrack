@@ -35,6 +35,13 @@ describe("analytics event validation", () => {
     });
   });
 
+  it("accepts the barcode scanning events", () => {
+    for (const eventName of ["barcode_scanned", "barcode_lookup_hit", "barcode_lookup_miss"]) {
+      const result = validateAnalyticsEventPayload({ eventName, visitorId: "visitor-123", path: "/app" });
+      expect(result.ok).toBe(true);
+    }
+  });
+
   it("rejects unknown events and oversized fields", () => {
     expect(validateAnalyticsEventPayload({ eventName: "anything" })).toEqual({
       ok: false,
