@@ -5,6 +5,7 @@ import { items, recipes, recipeIngredients } from "@/db/schema";
 import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { addDaysToDateInput, toDateInputValue } from "@/lib/dates";
 import { getCurrentUserId } from "@/lib/session";
+import { countExpiringMatches } from "@/lib/recipe-matching";
 
 export async function GET() {
   const userId = await getCurrentUserId();
@@ -24,9 +25,7 @@ export async function GET() {
       )
     );
 
-  const expiringNames = expiringItems.map((item) =>
-    item.name.toLowerCase()
-  );
+  const expiringNames = expiringItems.map((item) => item.name);
 
   const allRecipes = await db
     .select()
@@ -51,20 +50,16 @@ export async function GET() {
   const suggestions = allRecipes
     .map((recipe) => {
       const ingredients = ingredientsByRecipe.get(recipe.id) ?? [];
-
-      const matchingIngredients = ingredients.filter((ing) =>
-        expiringNames.some(
-          (name) =>
-            name.includes(ing.ingredientName.toLowerCase()) ||
-            ing.ingredientName.toLowerCase().includes(name.toLowerCase())
-        )
+      const { matchCount, matchingIngredients } = countExpiringMatches(
+        ingredients.map((ing) => ing.ingredientName),
+        expiringNames
       );
 
       return {
         ...recipe,
         ingredients,
-        matchingIngredients: matchingIngredients.map((i) => i.ingredientName),
-        matchCount: matchingIngredients.length,
+        matchingIngredients,
+        matchCount,
       };
     })
     .filter((r) => r.matchCount > 0)
