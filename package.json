@@ -42,10 +42,7 @@
     "tailwind-merge": "^3.5.0"
   },
   "overrides": {
-    "postcss": "8.5.14",
-    "@esbuild-kit/core-utils": {
-      "esbuild": "0.28.0"
-    }
+    "postcss": "8.5.14"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.2",
