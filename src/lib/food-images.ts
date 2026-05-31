@@ -235,3 +235,13 @@ export function getRecipeHeroImage(name: string): string {
   const base = getRecipeImage(name);
   return base.replace(/w=\d+/, "w=1200").replace(/h=\d+/, "h=720");
 }
+
+/**
+ * Editorial hero image for the dashboard weekly ledger: a prepared healthy meal
+ * on a rustic table. Intentionally distinct from the marketing landing hero
+ * (leafy greens) so the app and landing pages don't echo, and a warm,
+ * full-bleed crop that blends with the sage ledger panel.
+ */
+export function getDashboardHeroImage(): string {
+  return u("photo-1490645935967-10de6ba17061", 1500, 1200);
+}

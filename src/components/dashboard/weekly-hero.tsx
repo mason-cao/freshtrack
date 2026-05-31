@@ -3,7 +3,7 @@
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect } from "react";
 import Image from "next/image";
-import { getHeroImage } from "@/lib/food-images";
+import { getDashboardHeroImage } from "@/lib/food-images";
 
 function AnimatedNumber({ value, prefix = "" }: { value: number; prefix?: string }) {
   const count = useMotionValue(0);
@@ -46,9 +46,7 @@ const grainTile =
 export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
   const total = used + wasted;
   const useRate = total > 0 ? Math.round((used / total) * 100) : 0;
-  // Intentionally a different shot than the marketing landing hero (which uses
-  // the "Produce" leafy-greens image) so the app and landing pages don't echo.
-  const heroImage = getHeroImage("bell pepper", "Produce");
+  const heroImage = getDashboardHeroImage();
 
   return (
     <motion.section
@@ -145,7 +143,7 @@ export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
         <div className="relative hidden h-full min-h-[360px] lg:block">
           <Image
             src={heroImage}
-            alt="Fresh vegetables on a counter"
+            alt="A fresh, healthy meal on a rustic table"
             fill
             sizes="(min-width: 1280px) 45vw, (min-width: 1024px) 50vw, 0px"
             className="object-cover"
