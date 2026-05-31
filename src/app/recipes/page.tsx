@@ -91,6 +91,16 @@ export default function RecipesPage() {
     setQuery((current) => ({ ...current, ...patch }));
   }, []);
 
+  const clearFilters = useCallback(() => {
+    setQuery((current) => ({
+      search: "",
+      cuisine: null,
+      category: null,
+      maxMinutes: null,
+      sort: current.sort,
+    }));
+  }, []);
+
   const loadSuggestions = useCallback(() => {
     fetchJson<Recipe[]>("/api/recipes/suggestions")
       .then(setSuggestions)
@@ -244,6 +254,8 @@ export default function RecipesPage() {
                   ? "Try a different search or clear a filter to see more."
                   : "Recipes have not been added for this environment yet."
               }
+              actionLabel={hasActiveFilters ? "Clear filters" : undefined}
+              onAction={hasActiveFilters ? clearFilters : undefined}
             />
           </div>
         )}

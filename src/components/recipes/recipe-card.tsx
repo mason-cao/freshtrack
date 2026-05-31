@@ -58,7 +58,7 @@ export function RecipeCard({ recipe, onSelect, isUseItUp }: RecipeCardProps) {
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-        {isUseItUp && recipe.matchCount && (
+        {(recipe.matchCount ?? 0) > 0 && (
           <div className="absolute top-2.5 right-2.5">
             <Badge variant="warning" className="text-[10px] shadow-sm">
               Uses {recipe.matchCount} expiring
@@ -86,6 +86,20 @@ export function RecipeCard({ recipe, onSelect, isUseItUp }: RecipeCardProps) {
         <h3 className="font-semibold text-stone-900 text-sm xl:text-base line-clamp-1">
           {recipe.name}
         </h3>
+        {(recipe.cuisine || recipe.category) && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {recipe.cuisine && (
+              <span className="inline-flex items-center rounded-full bg-sage-50 px-2 py-0.5 text-[10px] font-medium text-sage-700">
+                {recipe.cuisine}
+              </span>
+            )}
+            {recipe.category && (
+              <span className="inline-flex items-center rounded-full bg-warm-50 px-2 py-0.5 text-[10px] font-medium text-stone-500">
+                {recipe.category}
+              </span>
+            )}
+          </div>
+        )}
         {recipe.description && (
           <p className="text-xs text-stone-500 mt-1 line-clamp-2">{recipe.description}</p>
         )}
