@@ -10,6 +10,8 @@ FreshTrack is a pantry management dashboard that helps you track food freshness,
 
 About 30-40% of food purchased by US households is wasted, costing the average family roughly $1,500/year. The root cause: people forget what's in their pantry. Items expire unnoticed, meals are not planned around what needs using first, and there is no feedback loop showing how much waste actually occurs.
 
+This habit does not just drain your wallet. It actively hurts the planet. Food waste drives climate change, causing roughly 8% of global greenhouse emissions. When we throw away food, we also waste the water, land, and energy used to grow it. That organic waste then rots in landfills and releases methane, a greenhouse gas far more potent than carbon dioxide. Because families lack a feedback loop showing how much waste actually occurs, this costly cycle continues completely unnoticed.
+
 ## Features
 
 - **Freshness Dashboard** - Overview of active pantry items, urgency metrics, and the next recipe to try
