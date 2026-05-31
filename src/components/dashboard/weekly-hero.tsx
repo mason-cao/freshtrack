@@ -46,7 +46,9 @@ const grainTile =
 export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
   const total = used + wasted;
   const useRate = total > 0 ? Math.round((used / total) * 100) : 0;
-  const heroImage = getHeroImage("seasonal produce", "Produce");
+  // Intentionally a different shot than the marketing landing hero (which uses
+  // the "Produce" leafy-greens image) so the app and landing pages don't echo.
+  const heroImage = getHeroImage("bell pepper", "Produce");
 
   return (
     <motion.section
@@ -143,7 +145,7 @@ export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
         <div className="relative hidden h-full min-h-[360px] lg:block">
           <Image
             src={heroImage}
-            alt="Fresh produce on a counter"
+            alt="Fresh vegetables on a counter"
             fill
             sizes="(min-width: 1280px) 45vw, (min-width: 1024px) 50vw, 0px"
             className="object-cover"
