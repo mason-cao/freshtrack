@@ -43,6 +43,31 @@ function getWeekRange(): string {
 const grainTile =
   "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='2' stitchTiles='stitch' seed='9'/><feColorMatrix values='0 0 0 0 0.95 0 0 0 0 0.92 0 0 0 0 0.78 0 0 0 0.7 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.55'/></svg>\")";
 
+function Stat({
+  label,
+  value,
+  prefix = "",
+  accent = false,
+}: {
+  label: string;
+  value: number;
+  prefix?: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="px-4 py-3.5 sm:px-5">
+      <p className="eyebrow text-warm-white/65">{label}</p>
+      <p
+        className={`num mt-1.5 text-2xl font-bold xl:text-[1.75rem] ${
+          accent ? "text-amber-100" : "text-warm-white"
+        }`}
+      >
+        <AnimatedNumber value={value} prefix={prefix} />
+      </p>
+    </div>
+  );
+}
+
 export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
   const total = used + wasted;
   const useRate = total > 0 ? Math.round((used / total) * 100) : 0;
@@ -53,32 +78,64 @@ export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 260, damping: 30, delay: 0.05 }}
-      className="relative isolate overflow-hidden rounded-3xl text-sage-50 shadow-warm-lg"
+      className="relative isolate overflow-hidden rounded-3xl text-sage-50 shadow-warm-lg ring-1 ring-inset ring-white/10"
     >
-      {/* Base — brighter sage range so the panel reads vivid, not murky */}
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-gradient-to-br from-sage-400 via-sage-500 to-sage-700"
+      {/* Full-bleed photo — the panel is composed on top of the picture */}
+      <Image
+        src={heroImage}
+        alt="A fresh, healthy meal on a rustic table"
+        fill
+        sizes="(min-width: 1280px) 1100px, 100vw"
+        className="object-cover object-center"
+        priority
+        quality={90}
       />
 
-      {/* Soft ambient light from upper-left, broad and unsaturated so it
-          reads as window light, not a yellow patch */}
+      {/* Sage wash that multiplies into the photo, tying it to the app palette */}
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none mix-blend-multiply"
+        style={{ background: "rgba(82, 122, 82, 0.30)" }}
+      />
+
+      {/* Directional scrim: opaque sage behind the copy, dissolving to reveal
+          the photo on the right so the panel and picture read as one surface */}
       <div
         aria-hidden
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse 115% 85% at 18% 22%, rgba(254, 240, 199, 0.14), transparent 65%)",
+            "linear-gradient(100deg, rgba(38,58,38,0.96) 0%, rgba(52,78,52,0.9) 30%, rgba(70,104,70,0.62) 52%, rgba(82,122,82,0.22) 76%, rgba(82,122,82,0) 100%)",
         }}
       />
 
-      {/* Subtle corner vignette for grounded depth */}
+      {/* Bottom lift so the stat strip stays legible across the full width */}
       <div
         aria-hidden
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse 130% 105% at 50% 45%, transparent 60%, rgba(16, 25, 16, 0.28) 100%)",
+            "linear-gradient(to top, rgba(28,44,28,0.82) 0%, rgba(28,44,28,0.30) 16%, transparent 40%)",
+        }}
+      />
+
+      {/* Soft ambient light from upper-left, reads as window light */}
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 110% 80% at 16% 18%, rgba(254, 240, 199, 0.16), transparent 62%)",
+        }}
+      />
+
+      {/* Corner vignette for grounded depth */}
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 130% 110% at 50% 45%, transparent 58%, rgba(14, 22, 14, 0.34) 100%)",
         }}
       />
 
@@ -86,98 +143,40 @@ export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
       <div
         aria-hidden
         className="absolute inset-0 pointer-events-none opacity-[0.06] mix-blend-overlay"
-        style={{
-          backgroundImage: grainTile,
-          backgroundSize: "220px 220px",
-        }}
+        style={{ backgroundImage: grainTile, backgroundSize: "220px 220px" }}
       />
 
-      <div className="relative grid lg:grid-cols-[1.15fr_0.85fr]">
-        <div className="relative p-6 sm:p-8 xl:p-10">
-          <p className="eyebrow text-warm-white/75">
+      {/* Content */}
+      <div className="relative flex min-h-[330px] flex-col justify-between gap-8 p-7 sm:min-h-[360px] sm:p-9 xl:min-h-[420px] xl:p-11">
+        <div className="max-w-lg">
+          <p className="eyebrow text-warm-white/80">
             Weekly ledger · {getWeekRange()}
           </p>
 
-          <div className="mt-7 flex items-end gap-2">
+          <div className="mt-6 flex items-end gap-2.5">
             <motion.span
               initial={{ scale: 1.04, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-              className="num font-bold leading-[0.85] tracking-[-0.03em] text-warm-white text-[clamp(4rem,11vw,7rem)]"
+              className="num font-bold leading-[0.82] tracking-[-0.035em] text-warm-white text-[clamp(4.25rem,12vw,7.5rem)] [text-shadow:0_2px_24px_rgba(16,28,16,0.45)]"
             >
               <AnimatedNumber value={useRate} />
             </motion.span>
-            <span className="pb-3 text-3xl font-semibold text-warm-white/55">
-              %
-            </span>
+            <span className="pb-3 text-3xl font-semibold text-warm-white/55">%</span>
           </div>
 
-          <p className="mt-3 max-w-md text-base leading-7 text-warm-white/85 xl:text-lg xl:leading-8">
+          <p className="mt-3 max-w-md text-base leading-7 text-warm-white/90 xl:text-lg xl:leading-8 [text-shadow:0_1px_12px_rgba(16,28,16,0.5)]">
             {total > 0
               ? "of what you logged this week became meals, not waste."
               : "Mark items used or wasted to start your weekly ledger."}
           </p>
-
-          <div className="mt-9 grid grid-cols-3 divide-x divide-warm-white/15 border-t border-warm-white/15 pt-5">
-            <div className="pr-3 sm:pr-4">
-              <p className="eyebrow text-warm-white/65">Used</p>
-              <p className="num mt-1.5 text-2xl font-bold text-warm-white xl:text-3xl">
-                <AnimatedNumber value={used} />
-              </p>
-            </div>
-            <div className="px-3 sm:px-4">
-              <p className="eyebrow text-warm-white/65">Wasted</p>
-              <p className="num mt-1.5 text-2xl font-bold text-warm-white xl:text-3xl">
-                <AnimatedNumber value={wasted} />
-              </p>
-            </div>
-            <div className="pl-3 sm:pl-4">
-              <p className="eyebrow text-amber-200/90">Saved</p>
-              <p className="num mt-1.5 text-2xl font-bold text-amber-100 xl:text-3xl">
-                <AnimatedNumber value={saved} prefix="$" />
-              </p>
-            </div>
-          </div>
         </div>
 
-        <div className="relative hidden h-full min-h-[360px] lg:block">
-          <Image
-            src={heroImage}
-            alt="A fresh, healthy meal on a rustic table"
-            fill
-            sizes="(min-width: 1280px) 45vw, (min-width: 1024px) 50vw, 0px"
-            className="object-cover"
-            priority
-            quality={90}
-          />
-          {/* Sage tint over the photo to unify it with the panel
-              without losing detail. Multiply respects shadows, overlay
-              brightens highlights — the combo blends without muddying. */}
-          <div
-            aria-hidden
-            className="absolute inset-0 pointer-events-none mix-blend-multiply"
-            style={{ background: "rgba(82, 122, 82, 0.18)" }}
-          />
-          {/* Left-edge seam fade — uses the actual sage tones at this
-              part of the gradient (sage-500 → sage-600) so the photo
-              feels grown from the panel, not pasted on. */}
-          <div
-            aria-hidden
-            className="absolute inset-y-0 left-0 w-[55%]"
-            style={{
-              background:
-                "linear-gradient(to right, rgba(82, 122, 82, 0.88) 0%, rgba(82, 122, 82, 0.45) 38%, rgba(82, 122, 82, 0.14) 72%, transparent 100%)",
-            }}
-          />
-          {/* Soft top-and-bottom photo darkening for editorial mood */}
-          <div
-            aria-hidden
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                "linear-gradient(to bottom, rgba(31, 48, 31, 0.18) 0%, transparent 25%, transparent 75%, rgba(31, 48, 31, 0.22) 100%)",
-            }}
-          />
+        {/* Frosted-glass stat strip — the photo shows softly through it */}
+        <div className="grid max-w-lg grid-cols-3 divide-x divide-white/10 rounded-2xl border border-white/[0.12] bg-white/[0.07] shadow-[0_10px_34px_rgba(14,22,14,0.28)] backdrop-blur-md">
+          <Stat label="Used" value={used} />
+          <Stat label="Wasted" value={wasted} />
+          <Stat label="Saved" value={saved} prefix="$" accent />
         </div>
       </div>
     </motion.section>
