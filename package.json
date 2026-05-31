@@ -14,7 +14,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:seed:categories": "npx tsx src/db/seed-categories.ts",
     "db:seed:recipes": "npx tsx src/db/seed-recipes.ts",
-    "db:seed": "npx tsx src/db/seed.ts"
+    "db:seed": "npx tsx src/db/seed.ts",
+    "db:import:recipes": "npx tsx src/db/import-mealdb.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",
