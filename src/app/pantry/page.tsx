@@ -9,10 +9,12 @@ import { ItemTable } from "@/components/pantry/item-table";
 import { AddItemDialog } from "@/components/pantry/add-item-dialog";
 import { PantrySkeleton } from "@/components/pantry/pantry-skeleton";
 import { fetchJson } from "@/lib/api-client";
-import { subscribeToPantryUpdates } from "@/lib/pantry-events";
+import { notifyPantryUpdated, subscribeToPantryUpdates } from "@/lib/pantry-events";
 import { trackAnalyticsEvent } from "@/lib/analytics-client";
 import { EmptyState } from "@/components/ui/empty-state";
-import { PackageSearch, SearchX } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PackageSearch, SearchX, Trash2 } from "lucide-react";
 
 interface Item {
   id: number;
@@ -125,6 +127,12 @@ export default function PantryPage() {
     setFilter("all");
   }
 
+  async function handleClearPantry() {
+    await fetchJson("/api/account/pantry", { method: "DELETE" });
+    notifyPantryUpdated();
+    loadItems();
+  }
+
   if (loading) {
     return <PantrySkeleton />;
   }
@@ -152,8 +160,29 @@ export default function PantryPage() {
             {items.length} item{items.length !== 1 ? "s" : ""} tracked
           </p>
         </div>
-        <div className="hidden md:block">
-          <AddItemDialog onItemAdded={loadItems} />
+        <div className="flex items-center gap-2">
+          {items.length > 0 && (
+            <ConfirmDialog
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-stone-500 hover:bg-terracotta-50 hover:text-terracotta-600"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Clear pantry</span>
+                </Button>
+              }
+              title="Clear your pantry?"
+              description="This permanently deletes all your pantry items — active, consumed, and wasted. Your Stats history is kept. This can't be undone."
+              confirmLabel="Clear pantry"
+              pendingLabel="Clearing…"
+              onConfirm={handleClearPantry}
+            />
+          )}
+          <div className="hidden md:block">
+            <AddItemDialog onItemAdded={loadItems} />
+          </div>
         </div>
       </motion.div>
 

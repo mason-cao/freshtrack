@@ -13,9 +13,11 @@ import {
   Leaf,
   LogOut,
   RotateCcw,
+  Eraser,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Fab } from "./fab";
 import { FooterLegal } from "./footer-legal";
 import { InstallPrompt } from "./install-prompt";
@@ -51,6 +53,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     setSigningOut(true);
     void signOut({ callbackUrl: "/login" });
   }
+
+  async function handleEraseHistory() {
+    await fetchJson("/api/account/history", { method: "DELETE" });
+    notifyPantryUpdated();
+    router.refresh();
+  }
+
+  const eraseHistoryDescription =
+    "This permanently clears your Stats history — your used, wasted, and saved totals and trends — and removes your consumed and wasted item records. Your active pantry and sign-in are kept. This can't be undone.";
 
   if (isPublicPage) {
     // Landing and food pages render their own footer; legal pages get the shared FooterLegal.
@@ -145,11 +156,28 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
+        <ConfirmDialog
+          trigger={
+            <button
+              type="button"
+              className="mx-2 mt-4 flex items-center justify-center gap-1 rounded-xl px-2 py-2 text-stone-400 transition-colors duration-200 hover:bg-terracotta-50 hover:text-terracotta-600 xl:mx-3 xl:justify-start xl:gap-3 xl:px-3 xl:py-2.5 cursor-pointer"
+            >
+              <Eraser className="h-5 w-5" />
+              <span className="hidden text-sm font-medium xl:inline">Erase history</span>
+            </button>
+          }
+          title="Erase account history?"
+          description={eraseHistoryDescription}
+          confirmLabel="Erase history"
+          pendingLabel="Erasing…"
+          onConfirm={handleEraseHistory}
+        />
+
         <button
           type="button"
           onClick={handleSignOut}
           disabled={signingOut}
-          className="mx-2 mt-4 flex items-center justify-center gap-1 rounded-xl px-2 py-2 text-stone-400 transition-colors duration-200 hover:bg-warm-50 hover:text-stone-700 disabled:cursor-not-allowed disabled:opacity-60 xl:mx-3 xl:justify-start xl:gap-3 xl:px-3 xl:py-2.5 cursor-pointer"
+          className="mx-2 mt-1 flex items-center justify-center gap-1 rounded-xl px-2 py-2 text-stone-400 transition-colors duration-200 hover:bg-warm-50 hover:text-stone-700 disabled:cursor-not-allowed disabled:opacity-60 xl:mx-3 xl:justify-start xl:gap-3 xl:px-3 xl:py-2.5 cursor-pointer"
         >
           <LogOut className="h-5 w-5" />
           <span className="hidden text-sm font-medium xl:inline">
@@ -210,11 +238,27 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          <ConfirmDialog
+            trigger={
+              <button
+                type="button"
+                className="relative flex min-w-0 flex-col items-center gap-0.5 px-2 py-1 text-stone-400 transition-colors duration-200 hover:text-terracotta-600 cursor-pointer"
+              >
+                <Eraser className="h-5 w-5" />
+                <span className="text-[10px] font-medium">Erase</span>
+              </button>
+            }
+            title="Erase account history?"
+            description={eraseHistoryDescription}
+            confirmLabel="Erase history"
+            pendingLabel="Erasing…"
+            onConfirm={handleEraseHistory}
+          />
           <button
             type="button"
             onClick={handleSignOut}
             disabled={signingOut}
-            className="relative flex min-w-[64px] flex-col items-center gap-0.5 px-3 py-1 text-stone-400 transition-colors duration-200 hover:text-stone-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+            className="relative flex min-w-0 flex-col items-center gap-0.5 px-2 py-1 text-stone-400 transition-colors duration-200 hover:text-stone-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
           >
             <LogOut className="h-5 w-5" />
             <span className="text-[10px] font-medium">
