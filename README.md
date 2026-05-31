@@ -15,7 +15,9 @@ About 30-40% of food purchased by US households is wasted, costing the average f
 - **Freshness Dashboard** - Overview of active pantry items, urgency metrics, and the next recipe to try
 - **Expiration Alerts** - Prominent warnings for items expiring within 2 days
 - **Pantry Management** - Add, search, filter, sort, and track inventory by quantity, unit, purchase date, expiration date, and estimated cost
+- **Barcode Scanning** - Scan a product barcode to prefill name, category, and expiration via Open Food Facts; works cross-browser (native Barcode Detection API with a ZXing fallback) and always offers manual entry
 - **Recipe Suggestions** - "Use It Up" recipes that match ingredients expiring within 5 days
+- **Recipe Dive** - Search and filter a catalog of recipes (imported from TheMealDB), ranked by how many of your expiring ingredients each one uses
 - **Consume/Waste Logging** - Mark items as used or wasted, log outcomes, and undo recent actions
 - **Statistics & Charts** - Monthly trends, waste rates, category breakdowns, and money saved estimates
 - **Google Sign-In** - Auth.js-powered Google OAuth gate for the application
@@ -113,6 +115,7 @@ The app will be available at **http://localhost:3000** and will redirect unauthe
 | `npm run db:seed` | Seed local dev database with sample data |
 | `npm run db:seed:categories` | Seed production-safe global categories only |
 | `npm run db:seed:recipes` | Seed production-safe global starter recipes only |
+| `npm run db:import:recipes` | Import the global recipe catalog from TheMealDB (idempotent, production-safe) |
 | `npm run db:generate` | Generate new migrations from schema |
 | `npm run db:migrate` | Run pending migrations |
 
@@ -139,8 +142,9 @@ See `.env.example` for the full template. Required in production:
 4. Run migrations against production: `DATABASE_URL=... npm run db:migrate`
 5. Seed global categories: `DATABASE_URL=... npm run db:seed:categories`
 6. Seed global starter recipes: `DATABASE_URL=... npm run db:seed:recipes`
-7. Deploy the app service from Railway.
-8. Configure Google OAuth with:
+7. Import the recipe catalog: `DATABASE_URL=... npm run db:import:recipes`
+8. Deploy the app service from Railway.
+9. Configure Google OAuth with:
    - Authorized origin: your Railway public app URL
    - Redirect URI: `<your Railway public app URL>/api/auth/callback/google`
    - Privacy policy: `<your Railway public app URL>/privacy`
@@ -158,7 +162,8 @@ ALLOW_DESTRUCTIVE_SEED=1 npm run db:seed
 
 - Google sign-in
 - Per-user pantry, recipe, and waste tracking
-- Global built-in categories and starter recipes
+- Barcode scanning for quick item entry
+- Global built-in categories and an imported recipe catalog with search, filters, and expiring-ingredient ranking
 - Installable PWA manifest and icons
 - Public privacy policy and terms pages
 - Railway deployment with Railway Postgres
@@ -220,6 +225,7 @@ Most application routes are protected by middleware and require an authenticated
 | POST | `/api/items/:id/waste` | Mark an active item as wasted and log it |
 | POST | `/api/items/:id/restore` | Restore a consumed/wasted item to active and remove the latest matching log |
 | GET | `/api/categories` | List food categories |
-| GET | `/api/recipes` | List all recipes with ingredients |
+| GET | `/api/products/:barcode` | Look up a product by barcode (Open Food Facts, with a UPCitemdb name fallback) for add-item prefill |
+| GET | `/api/recipes` | List recipes with ingredients; supports `search`, `cuisine`, `category`, `maxMinutes`, and `sort`, and annotates each with expiring-ingredient matches |
 | GET | `/api/recipes/suggestions` | Recipes using active items expiring within 5 days |
 | GET | `/api/stats` | Waste and consumption statistics |
