@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users } from "lucide-react";
+import { Clock, ExternalLink, Users } from "lucide-react";
 import { getRecipeImage } from "@/lib/food-images";
 
 interface RecipeIngredient {
@@ -27,6 +27,10 @@ interface Recipe {
   prepTimeMinutes: number | null;
   cookTimeMinutes: number | null;
   servings: number | null;
+  imageUrl?: string | null;
+  cuisine?: string | null;
+  category?: string | null;
+  sourceUrl?: string | null;
   ingredients: RecipeIngredient[];
   matchingIngredients?: string[];
 }
@@ -49,7 +53,7 @@ export function RecipeDetail({ recipe, open, onClose }: RecipeDetailProps) {
         {/* Hero image */}
         <div className="relative h-48 xl:h-56 w-full overflow-hidden bg-warm-50">
           <Image
-            src={getRecipeImage(recipe.name)}
+            src={recipe.imageUrl || getRecipeImage(recipe.name)}
             alt={recipe.name}
             fill
             className="object-cover"
@@ -64,6 +68,13 @@ export function RecipeDetail({ recipe, open, onClose }: RecipeDetailProps) {
             <DialogDescription>{recipe.description}</DialogDescription>
           )}
         </DialogHeader>
+
+        {(recipe.cuisine || recipe.category) && (
+          <div className="flex flex-wrap gap-2">
+            {recipe.cuisine && <Badge variant="secondary">{recipe.cuisine}</Badge>}
+            {recipe.category && <Badge variant="secondary">{recipe.category}</Badge>}
+          </div>
+        )}
 
         <div className="flex items-center gap-4 text-sm text-stone-500">
           {recipe.prepTimeMinutes && recipe.prepTimeMinutes > 0 && (
@@ -132,6 +143,18 @@ export function RecipeDetail({ recipe, open, onClose }: RecipeDetailProps) {
             </div>
           )}
         </div>
+
+        {recipe.sourceUrl && (
+          <a
+            href={recipe.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-sage-600 hover:underline"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            View source
+          </a>
+        )}
         </div>
       </DialogContent>
     </Dialog>

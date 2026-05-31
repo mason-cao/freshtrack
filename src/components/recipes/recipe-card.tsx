@@ -20,6 +20,10 @@ interface Recipe {
   prepTimeMinutes: number | null;
   cookTimeMinutes: number | null;
   servings: number | null;
+  imageUrl?: string | null;
+  cuisine?: string | null;
+  category?: string | null;
+  sourceUrl?: string | null;
   ingredients: RecipeIngredient[];
   matchingIngredients?: string[];
   matchCount?: number;
@@ -33,7 +37,8 @@ interface RecipeCardProps {
 
 export function RecipeCard({ recipe, onSelect, isUseItUp }: RecipeCardProps) {
   const totalTime = (recipe.prepTimeMinutes || 0) + (recipe.cookTimeMinutes || 0);
-  const imageUrl = getRecipeImage(recipe.name);
+  // Prefer the imported catalog's real photo; fall back to the curated mapping.
+  const imageUrl = recipe.imageUrl || getRecipeImage(recipe.name);
 
   return (
     <button

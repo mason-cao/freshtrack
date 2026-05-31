@@ -32,6 +32,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.openfoodfacts.org",
       },
+      {
+        protocol: "https",
+        hostname: "www.themealdb.com",
+      },
     ],
   },
   async headers() {
