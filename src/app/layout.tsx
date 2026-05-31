@@ -28,6 +28,11 @@ export const metadata: Metadata = {
     "use it up recipes",
     "grocery tracker",
     "save money on groceries",
+    "barcode scanner app",
+    "grocery barcode scanner",
+    "scan food expiration date",
+    "recipe search by ingredient",
+    "what can I make with what I have",
   ],
   alternates: {
     canonical: "/",
@@ -117,7 +122,9 @@ const structuredData = [
     },
     featureList: [
       "Track pantry items with per-item freshness dates",
+      "Barcode scanning to add groceries in seconds, prefilled from Open Food Facts",
       "Recipe suggestions matched to ingredients about to expire",
+      "Recipe Dive: searchable recipe catalog ranked by your expiring ingredients",
       "Money saved and waste rate tracking over time",
       "Works as an installable home-screen app, no app store",
     ],

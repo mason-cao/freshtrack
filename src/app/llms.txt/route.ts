@@ -27,8 +27,10 @@ FreshTrack is a web-based pantry management app for households. It helps familie
 
 ## Core features
 
+- Barcode scanning: scan a grocery barcode with the phone camera to add an item in seconds. Prefills the name, category, and a suggested freshness date from the open Open Food Facts database. Works across browsers (native Barcode Detection API with a ZXing fallback), and the barcode number can always be entered by hand. The suggested expiration is a starting point the user can adjust.
 - Freshness dashboard: items sorted by urgency (use today, two days left, three days left). Items the user already has, ranked by when they expire.
 - Use-it-up recipes: real recipes matched to items expiring within five days. Recipes ranked by how many expiring items they use.
+- Recipe Dive: search and filter the full recipe catalog by cuisine, category, and cook time, ranked by how many of the user's soon-to-expire ingredients each recipe uses.
 - Savings tracking: money saved month by month, waste rate trends, category breakdown showing which foods cause the most waste.
 - Streak tracking: rewards low-waste weeks without shaming.
 

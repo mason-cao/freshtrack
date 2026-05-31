@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Reveal } from "./reveal";
+import { PreviewScan } from "./preview-scan";
 import { PreviewDashboard } from "./preview-dashboard";
 import { PreviewRecipes } from "./preview-recipes";
 import { PreviewStats } from "./preview-stats";
@@ -62,15 +63,28 @@ export function LandingFeatures() {
               One small loop, every week.
             </h2>
             <p className="mt-4 text-base leading-relaxed text-stone-600 sm:text-lg">
-              See what&apos;s expiring. Cook around it. Watch the savings stack up.
-              That&apos;s the whole product.
+              Scan it in. See what&apos;s expiring. Cook around it. Watch the savings
+              stack up. That&apos;s the whole product.
             </p>
           </div>
         </Reveal>
 
         <div className="mt-16 space-y-24 lg:mt-20 lg:space-y-32">
           <FeatureBlock
-            eyebrow="01 · See"
+            eyebrow="01 · Scan"
+            title="Add groceries by scanning, not typing."
+            body="Point your phone at a barcode while you unpack. FreshTrack reads it and prefills the item — name, category, and a suggested freshness date — so adding a thing takes two taps instead of a form."
+            bullets={[
+              "Works across phones and browsers, with the camera or by typing the number.",
+              "Pulls product details from the open Open Food Facts database.",
+              "The suggested expiration is a starting point you can adjust before saving.",
+            ]}
+            preview={<PreviewScan />}
+            imageSide="left"
+          />
+
+          <FeatureBlock
+            eyebrow="02 · See"
             title="See what needs using, not a list of everything."
             body="The dashboard opens to items that are about to expire, sorted by urgency. Spinach today, yogurt tomorrow, the salmon you forgot. The rest of your pantry stays out of the way."
             bullets={[
@@ -83,20 +97,20 @@ export function LandingFeatures() {
           />
 
           <FeatureBlock
-            eyebrow="02 · Cook"
+            eyebrow="03 · Cook"
             title="Cook around what’s expiring, not what’s trending."
-            body="Recipes get matched to items expiring within five days. Concrete picks for tonight’s dinner, not abstract meal ideas. The more items a recipe uses, the higher it ranks."
+            body="The dashboard surfaces recipes matched to items expiring within five days. When you want to browse, Recipe Dive lets you search the whole catalog and filter by cuisine, category, or cook time — still ranked by how many of your expiring ingredients each one uses."
             bullets={[
               "Use-it-up matching across produce, dairy, proteins, and pantry staples.",
+              "Recipe Dive: search and filter the full catalog, sorted by best match.",
               "Real food photography, prep and cook times, serving counts.",
-              "Built-in starter recipes. Bring your own coming soon.",
             ]}
             preview={<PreviewRecipes />}
             imageSide="left"
           />
 
           <FeatureBlock
-            eyebrow="03 · Save"
+            eyebrow="04 · Save"
             title="Watch the money come back, week after week."
             body="Mark items used or wasted as they happen. The savings counter goes up. The waste rate goes down. No guilt-tripping, just the numbers, in the smallest honest detail."
             bullets={[
