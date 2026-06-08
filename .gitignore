@@ -35,11 +35,9 @@ next-env.d.ts
 # database
 /data/
 
-# tooling
-.codex/
-.claude/
-.agents/
-.stitch/designs
-.superpowers/brainstorm
-docs/session_summary.md
-docs/superpowers
+# local artifacts
+.*/
+/docs/
+PRODUCT.md
+DESIGN.md
+DESIGN.json
