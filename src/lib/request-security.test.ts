@@ -95,4 +95,10 @@ describe("isSameOriginRequest", () => {
   it("allows requests without browser origin headers", () => {
     expect(isSameOriginRequest(requestWithHeaders({}))).toBe(true);
   });
+
+  it("rejects requests without browser origin headers when required", () => {
+    expect(
+      isSameOriginRequest(requestWithHeaders({}), { requireOriginHeader: true })
+    ).toBe(false);
+  });
 });

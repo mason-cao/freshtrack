@@ -81,6 +81,27 @@ function cleanField(value: string | undefined): string | null {
   return text;
 }
 
+function cleanHttpsUrl(value: string | null): string | null {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function cleanMealDbImageUrl(value: string): string | null {
+  const url = cleanHttpsUrl(value);
+  if (!url) return null;
+
+  const { hostname } = new URL(url);
+  return hostname === "www.themealdb.com" || hostname === "themealdb.com"
+    ? url
+    : null;
+}
+
 function makeDescription(instructions: string): string {
   const text = instructions.replace(/\s+/g, " ").trim();
   if (text.length <= 160) return text;
@@ -98,7 +119,7 @@ export function parseMeal(meal: RawMeal): ParsedRecipe | null {
   const idMeal = (meal.idMeal ?? "").trim();
   const name = (meal.strMeal ?? "").trim();
   const instructions = (meal.strInstructions ?? "").trim();
-  const imageUrl = (meal.strMealThumb ?? "").trim();
+  const imageUrl = cleanMealDbImageUrl((meal.strMealThumb ?? "").trim());
   const ingredients = collectIngredients(meal);
 
   if (!idMeal || !name || !instructions || !imageUrl || ingredients.length < 2) {
@@ -113,7 +134,9 @@ export function parseMeal(meal: RawMeal): ParsedRecipe | null {
     imageUrl,
     cuisine: cleanField(meal.strArea),
     category: cleanField(meal.strCategory),
-    sourceUrl: cleanField(meal.strSource) ?? `https://www.themealdb.com/meal/${idMeal}`,
+    sourceUrl:
+      cleanHttpsUrl(cleanField(meal.strSource)) ??
+      `https://www.themealdb.com/meal/${idMeal}`,
     ingredients,
   };
 }

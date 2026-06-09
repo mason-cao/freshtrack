@@ -9,7 +9,7 @@ import { isSameOriginRequest } from "@/lib/request-security";
 // wasted item records. Active pantry items are left untouched. waste_log has no
 // FK to items, so the two deletes are independent.
 export async function DELETE(request: Request) {
-  if (!isSameOriginRequest(request)) {
+  if (!isSameOriginRequest(request, { requireOriginHeader: true })) {
     return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 });
   }
 

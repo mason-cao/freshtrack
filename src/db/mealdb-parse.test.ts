@@ -66,6 +66,19 @@ describe("parseMeal", () => {
     expect(recipe?.sourceUrl).toBe("https://www.themealdb.com/meal/52772");
   });
 
+  it("rejects meals with non-TheMealDB or non-HTTPS image URLs", () => {
+    expect(parseMeal(buildMeal({ strMealThumb: "http://www.themealdb.com/image.jpg" }))).toBeNull();
+    expect(parseMeal(buildMeal({ strMealThumb: "https://evil.test/image.jpg" }))).toBeNull();
+  });
+
+  it("ignores unsafe source URLs and falls back to TheMealDB", () => {
+    const javascriptSource = parseMeal(buildMeal({ strSource: "javascript:alert(1)" }));
+    const insecureSource = parseMeal(buildMeal({ strSource: "http://example.com/teriyaki" }));
+
+    expect(javascriptSource?.sourceUrl).toBe("https://www.themealdb.com/meal/52772");
+    expect(insecureSource?.sourceUrl).toBe("https://www.themealdb.com/meal/52772");
+  });
+
   it("treats an Unknown area as no cuisine", () => {
     expect(parseMeal(buildMeal({ strArea: "Unknown" }))?.cuisine).toBeNull();
   });

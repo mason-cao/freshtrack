@@ -16,6 +16,7 @@ const sections = [
     body: [
       "When you sign in with Google, FreshTrack receives your name, email address, and profile image URL from Google.",
       "FreshTrack also stores the pantry items, recipe records, and used or wasted item history that you add while using the app.",
+      "FreshTrack records basic product analytics, including page path, referrer, campaign parameters, browser user agent, a local visitor identifier, and your account id when you are signed in.",
     ],
   },
   {
@@ -31,6 +32,7 @@ const sections = [
     title: "Sharing And Deletion",
     body: [
       "FreshTrack does not sell your data. It does not share your pantry data with advertisers or data brokers.",
+      "FreshTrack does not sell, share, or use product analytics for advertising.",
       "To request account or pantry data deletion, email masoncao7@gmail.com from the Google account you used to sign in.",
     ],
   },

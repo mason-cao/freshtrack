@@ -18,6 +18,10 @@ describe("next security config", () => {
         { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=()" },
         { key: "X-Frame-Options", value: "DENY" },
         { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+      ])
+    );
+    expect(globalHeaders).not.toEqual(
+      expect.arrayContaining([
         expect.objectContaining({ key: "Content-Security-Policy" }),
       ])
     );

@@ -9,7 +9,7 @@ import { isSameOriginRequest } from "@/lib/request-security";
 // waste_log is intentionally left intact so the savings/waste history (Stats)
 // is preserved.
 export async function DELETE(request: Request) {
-  if (!isSameOriginRequest(request)) {
+  if (!isSameOriginRequest(request, { requireOriginHeader: true })) {
     return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 });
   }
 

@@ -20,6 +20,20 @@ function normalizedHeader(value: string | null, maxLength: number): string | nul
   return text ? text.slice(0, maxLength) : null;
 }
 
+function firstHeaderValue(value: string | null): string | null {
+  return value?.split(",")[0]?.trim() || null;
+}
+
+function analyticsRateLimitKeys(request: Request, visitorId: string): string[] {
+  const clientAddress =
+    firstHeaderValue(request.headers.get("x-forwarded-for")) ??
+    firstHeaderValue(request.headers.get("cf-connecting-ip")) ??
+    firstHeaderValue(request.headers.get("x-real-ip")) ??
+    "unknown";
+
+  return [`visitor:${visitorId}`, `client:${clientAddress}`];
+}
+
 async function readJsonBody(request: Request) {
   const contentLength = request.headers.get("content-length");
   if (contentLength && Number(contentLength) > MAX_ANALYTICS_BODY_BYTES) {
@@ -48,7 +62,7 @@ async function getOptionalUserId(): Promise<string | null> {
 }
 
 export async function POST(request: Request) {
-  if (!isSameOriginRequest(request)) {
+  if (!isSameOriginRequest(request, { requireOriginHeader: true })) {
     return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 });
   }
 
@@ -63,15 +77,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
-  const rateLimit = checkAnalyticsEventRateLimit(validation.data.visitorId);
-  if (!rateLimit.ok) {
-    return NextResponse.json(
-      { error: "Too many analytics events." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
-      }
-    );
+  for (const key of analyticsRateLimitKeys(request, validation.data.visitorId)) {
+    const rateLimit = checkAnalyticsEventRateLimit(key);
+    if (!rateLimit.ok) {
+      return NextResponse.json(
+        { error: "Too many analytics events." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+        }
+      );
+    }
   }
 
   await db.insert(analyticsEvents).values({

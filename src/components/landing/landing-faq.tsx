@@ -1,5 +1,6 @@
 import { faqs } from "@/lib/faqs";
 import { FaqAccordion } from "@/components/shared/faq-accordion";
+import { headers } from "next/headers";
 import { Reveal } from "./reveal";
 
 const faqSchema = {
@@ -15,10 +16,13 @@ const faqSchema = {
   })),
 };
 
-export function LandingFaq() {
+export async function LandingFaq() {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <section id="faq" className="relative bg-cream">
       <script
+        nonce={nonce}
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />

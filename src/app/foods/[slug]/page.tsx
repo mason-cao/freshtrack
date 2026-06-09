@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -142,12 +143,14 @@ export default async function FoodPage({ params }: PageProps) {
   const relatedFoods = getRelatedFoods(food.slug);
   const heroImage = getFoodImage(food.imageKey, "Produce");
   const structuredData = buildStructuredData(food);
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   const lowerName = food.displayName.toLowerCase();
   const lowerPlural = (food.pluralDisplayName ?? food.displayName).toLowerCase();
 
   return (
     <>
       <script
+        nonce={nonce}
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />

@@ -88,4 +88,44 @@ describe("POST /api/analytics", () => {
     expect(response.status).toBe(403);
     expect(insertValues).not.toHaveBeenCalled();
   });
+
+  it("rejects public analytics posts without browser origin headers", async () => {
+    const insertValues = vi.fn(async () => undefined);
+    dbMock.insert.mockReturnValue({ values: insertValues });
+
+    const response = await POST(
+      analyticsRequest(
+        {
+          eventName: "page_view",
+          visitorId: "missing-origin-visitor",
+          path: "/",
+        },
+        { origin: "", referer: "" }
+      )
+    );
+
+    expect(response.status).toBe(403);
+    expect(insertValues).not.toHaveBeenCalled();
+  });
+
+  it("rate limits analytics by client address even when visitor ids change", async () => {
+    const insertValues = vi.fn(async () => undefined);
+    dbMock.insert.mockReturnValue({ values: insertValues });
+
+    let response: Response | null = null;
+    for (let i = 0; i < 121; i++) {
+      response = await POST(
+        analyticsRequest(
+          {
+            eventName: "page_view",
+            visitorId: `forged-visitor-${i}`,
+            path: "/",
+          },
+          { "x-forwarded-for": "203.0.113.10" }
+        )
+      );
+    }
+
+    expect(response?.status).toBe(429);
+  });
 });

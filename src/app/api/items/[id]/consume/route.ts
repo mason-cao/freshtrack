@@ -23,7 +23,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isSameOriginRequest(request)) {
+  if (!isSameOriginRequest(request, { requireOriginHeader: true })) {
     return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 });
   }
 

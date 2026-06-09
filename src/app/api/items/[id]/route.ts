@@ -29,7 +29,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isSameOriginRequest(request)) {
+  if (!isSameOriginRequest(request, { requireOriginHeader: true })) {
     return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 });
   }
 
@@ -90,7 +90,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isSameOriginRequest(request)) {
+  if (!isSameOriginRequest(request, { requireOriginHeader: true })) {
     return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 });
   }
 

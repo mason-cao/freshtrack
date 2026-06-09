@@ -44,7 +44,14 @@ function expectedRequestOrigins(request: Request): Set<string> {
   );
 }
 
-export function isSameOriginRequest(request: Request): boolean {
+interface SameOriginRequestOptions {
+  requireOriginHeader?: boolean;
+}
+
+export function isSameOriginRequest(
+  request: Request,
+  options: SameOriginRequestOptions = {}
+): boolean {
   const expectedOrigins = expectedRequestOrigins(request);
   const origin = originFromHeader(request.headers.get("origin"));
 
@@ -57,5 +64,5 @@ export function isSameOriginRequest(request: Request): boolean {
     return expectedOrigins.has(refererOrigin);
   }
 
-  return true;
+  return !options.requireOriginHeader;
 }
