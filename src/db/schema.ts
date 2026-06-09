@@ -77,18 +77,30 @@ export const recipes = pgTable(
     sourceUrl: text("source_url"),
     externalId: text("external_id").unique(),
   },
-  (table) => [index("recipes_user_id_idx").on(table.userId)]
+  (table) => [
+    index("recipes_user_id_idx").on(table.userId),
+    index("recipes_name_idx").on(table.name),
+    index("recipes_cuisine_idx").on(table.cuisine),
+    index("recipes_category_idx").on(table.category),
+  ]
 );
 
-export const recipeIngredients = pgTable("recipe_ingredients", {
-  id: serial("id").primaryKey(),
-  recipeId: integer("recipe_id")
-    .notNull()
-    .references(() => recipes.id, { onDelete: "cascade" }),
-  ingredientName: text("ingredient_name").notNull(),
-  quantity: doublePrecision("quantity"),
-  unit: text("unit"),
-});
+export const recipeIngredients = pgTable(
+  "recipe_ingredients",
+  {
+    id: serial("id").primaryKey(),
+    recipeId: integer("recipe_id")
+      .notNull()
+      .references(() => recipes.id, { onDelete: "cascade" }),
+    ingredientName: text("ingredient_name").notNull(),
+    quantity: doublePrecision("quantity"),
+    unit: text("unit"),
+  },
+  (table) => [
+    index("recipe_ingredients_recipe_id_idx").on(table.recipeId),
+    index("recipe_ingredients_name_idx").on(table.ingredientName),
+  ]
+);
 
 export const wasteLog = pgTable(
   "waste_log",

@@ -51,6 +51,17 @@ export function normalizeIngredientName(raw: string): string {
   return tokenizeIngredientName(raw).join(" ");
 }
 
+export function ingredientSearchTokens(rawNames: string[]): string[] {
+  const tokens = new Set<string>();
+  for (const rawName of rawNames) {
+    for (const token of tokenizeIngredientName(rawName)) {
+      tokens.add(token);
+    }
+  }
+
+  return [...tokens];
+}
+
 function tokenizeIngredientName(raw: string): string[] {
   return raw
     .toLowerCase()

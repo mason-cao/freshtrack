@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { RecipeCard } from "@/components/recipes/recipe-card";
 import { RecipeDetail } from "@/components/recipes/recipe-detail";
@@ -42,6 +42,11 @@ interface DiveQuery {
   sort: "relevance" | "name";
 }
 
+interface RecipeFacets {
+  cuisines: string[];
+  categories: string[];
+}
+
 const container = {
   hidden: { opacity: 0 },
   show: {
@@ -59,15 +64,6 @@ const item = {
   },
 };
 
-function distinctValues(recipes: Recipe[], key: "cuisine" | "category"): string[] {
-  const values = new Set<string>();
-  for (const recipe of recipes) {
-    const value = recipe[key];
-    if (value) values.add(value);
-  }
-  return [...values].sort((a, b) => a.localeCompare(b));
-}
-
 export default function RecipesPage() {
   const [suggestions, setSuggestions] = useState<Recipe[]>([]);
   const [diveRecipes, setDiveRecipes] = useState<Recipe[]>([]);
@@ -77,7 +73,6 @@ export default function RecipesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const facetsLoaded = useRef(false);
 
   const [query, setQuery] = useState<DiveQuery>({
     search: "",
@@ -117,6 +112,18 @@ export default function RecipesPage() {
   }, [loadSuggestions]);
 
   useEffect(() => {
+    fetchJson<RecipeFacets>("/api/recipes/facets")
+      .then((facets) => {
+        setCuisineOptions(facets.cuisines);
+        setCategoryOptions(facets.categories);
+      })
+      .catch(() => {
+        setCuisineOptions([]);
+        setCategoryOptions([]);
+      });
+  }, []);
+
+  useEffect(() => {
     const params = new URLSearchParams();
     if (query.search) params.set("search", query.search);
     if (query.cuisine) params.set("cuisine", query.cuisine);
@@ -128,12 +135,6 @@ export default function RecipesPage() {
     fetchJson<Recipe[]>(`/api/recipes?${params.toString()}`)
       .then((data) => {
         setDiveRecipes(data);
-        // Derive filter options once, from the first (unfiltered) load.
-        if (!facetsLoaded.current) {
-          setCuisineOptions(distinctValues(data, "cuisine"));
-          setCategoryOptions(distinctValues(data, "category"));
-          facetsLoaded.current = true;
-        }
         setLoading(false);
       })
       .catch((err) => {

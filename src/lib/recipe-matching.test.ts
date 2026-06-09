@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { countExpiringMatches, normalizeIngredientName } from "./recipe-matching";
+import {
+  countExpiringMatches,
+  ingredientSearchTokens,
+  normalizeIngredientName,
+} from "./recipe-matching";
 
 describe("normalizeIngredientName", () => {
   it("strips quantities, units, fillers, and punctuation, then singularizes", () => {
@@ -42,5 +46,15 @@ describe("countExpiringMatches", () => {
       matchCount: 0,
       matchingIngredients: [],
     });
+  });
+});
+
+describe("ingredientSearchTokens", () => {
+  it("returns normalized unique tokens suitable for coarse SQL prefilters", () => {
+    expect(ingredientSearchTokens(["Fresh Tomatoes", "olive oil", "tomato slices"])).toEqual([
+      "tomato",
+      "olive",
+      "oil",
+    ]);
   });
 });

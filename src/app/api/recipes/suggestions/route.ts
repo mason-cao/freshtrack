@@ -1,69 +1,53 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { visibleRecipeWhere } from "@/db/recipe-visibility";
-import { items, recipes, recipeIngredients } from "@/db/schema";
-import { and, eq, gte, inArray, lte } from "drizzle-orm";
-import { addDaysToDateInput, toDateInputValue } from "@/lib/dates";
+import { recipes } from "@/db/schema";
+import { and, inArray } from "drizzle-orm";
 import { getCurrentUserId } from "@/lib/session";
-import { countExpiringMatches } from "@/lib/recipe-matching";
+import {
+  RECIPE_SUGGESTION_CANDIDATE_LIMIT,
+  RECIPE_SUGGESTION_LIMIT,
+} from "@/lib/recipe-results";
+import {
+  annotateRecipeMatches,
+  findIngredientCandidateRecipeIds,
+  getExpiringItemNames,
+  getIngredientsByRecipe,
+} from "../_lib";
 
 export async function GET() {
   const userId = await getCurrentUserId();
-  const todayStr = toDateInputValue();
-  const futureStr = addDaysToDateInput(5);
-
-  // Get items expiring within 5 days
-  const expiringItems = await db
-    .select()
-    .from(items)
-    .where(
-      and(
-        eq(items.userId, userId),
-        eq(items.status, "active"),
-        lte(items.expirationDate, futureStr),
-        gte(items.expirationDate, todayStr)
-      )
-    );
-
-  const expiringNames = expiringItems.map((item) => item.name);
-
-  const allRecipes = await db
-    .select()
-    .from(recipes)
-    .where(visibleRecipeWhere(userId));
-  const recipeIds = allRecipes.map((recipe) => recipe.id);
-  const allIngredients =
-    recipeIds.length > 0
-      ? await db
-          .select()
-          .from(recipeIngredients)
-          .where(inArray(recipeIngredients.recipeId, recipeIds))
-      : [];
-  const ingredientsByRecipe = new Map<number, typeof allIngredients>();
-
-  for (const ingredient of allIngredients) {
-    const current = ingredientsByRecipe.get(ingredient.recipeId) ?? [];
-    current.push(ingredient);
-    ingredientsByRecipe.set(ingredient.recipeId, current);
+  const expiringNames = await getExpiringItemNames(userId);
+  if (expiringNames.length === 0) {
+    return NextResponse.json([]);
   }
 
-  const suggestions = allRecipes
-    .map((recipe) => {
-      const ingredients = ingredientsByRecipe.get(recipe.id) ?? [];
-      const { matchCount, matchingIngredients } = countExpiringMatches(
-        ingredients.map((ing) => ing.ingredientName),
-        expiringNames
-      );
+  const recipeIds = await findIngredientCandidateRecipeIds(
+    expiringNames,
+    RECIPE_SUGGESTION_CANDIDATE_LIMIT
+  );
+  if (recipeIds.length === 0) {
+    return NextResponse.json([]);
+  }
 
-      return {
-        ...recipe,
-        ingredients,
-        matchingIngredients,
-        matchCount,
-      };
-    })
+  const candidateRecipes = await db
+    .select()
+    .from(recipes)
+    .where(and(visibleRecipeWhere(userId), inArray(recipes.id, recipeIds)))
+    .limit(RECIPE_SUGGESTION_CANDIDATE_LIMIT);
+
+  const ingredientsByRecipe = await getIngredientsByRecipe(
+    candidateRecipes.map((recipe) => recipe.id)
+  );
+
+  const suggestions = annotateRecipeMatches(
+    candidateRecipes,
+    ingredientsByRecipe,
+    expiringNames
+  )
     .filter((r) => r.matchCount > 0)
-    .sort((a, b) => b.matchCount - a.matchCount);
+    .sort((a, b) => b.matchCount - a.matchCount)
+    .slice(0, RECIPE_SUGGESTION_LIMIT);
 
   return NextResponse.json(suggestions);
 }

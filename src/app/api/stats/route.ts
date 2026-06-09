@@ -1,82 +1,26 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { wasteLog } from "@/db/schema";
-import { formatMonthLabel, monthKeyFromDateValue } from "@/lib/dates";
-import { eq } from "drizzle-orm";
+import { buildStatsSummary } from "@/lib/stats-summary";
+import { count, eq, sql } from "drizzle-orm";
 import { getCurrentUserId } from "@/lib/session";
-
-interface MonthlyData {
-  consumed: number;
-  wasted: number;
-  consumedCost: number;
-  wastedCost: number;
-}
 
 export async function GET() {
   const userId = await getCurrentUserId();
-  const allLogs = await db
-    .select()
-    .from(wasteLog)
-    .where(eq(wasteLog.userId, userId));
+  const month = sql<string>`to_char(date_trunc('month', ${wasteLog.loggedAt}), 'YYYY-MM')`;
+  const costTotal = sql<number>`coalesce(sum(${wasteLog.costEstimate}), 0)`;
 
-  // Aggregate by month
-  const monthlyMap = new Map<string, MonthlyData>();
-
-  for (const log of allLogs) {
-    const monthKey = monthKeyFromDateValue(log.loggedAt);
-    if (!monthKey) continue;
-
-    if (!monthlyMap.has(monthKey)) {
-      monthlyMap.set(monthKey, {
-        consumed: 0,
-        wasted: 0,
-        consumedCost: 0,
-        wastedCost: 0,
-      });
-    }
-
-    const data = monthlyMap.get(monthKey)!;
-    if (log.action === "consumed") {
-      data.consumed++;
-      data.consumedCost += log.costEstimate || 0;
-    } else {
-      data.wasted++;
-      data.wastedCost += log.costEstimate || 0;
-    }
-  }
-
-  // Convert to sorted array
-  const monthly = Array.from(monthlyMap.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([month, data]) => ({
+  const rows = await db
+    .select({
       month,
-      monthLabel: formatMonthLabel(month),
-      ...data,
-    }));
+      action: wasteLog.action,
+      itemCount: count(wasteLog.id),
+      costTotal,
+    })
+    .from(wasteLog)
+    .where(eq(wasteLog.userId, userId))
+    .groupBy(month, wasteLog.action)
+    .orderBy(month);
 
-  // Totals
-  const totalConsumed = allLogs.filter((l) => l.action === "consumed").length;
-  const totalWasted = allLogs.filter((l) => l.action === "wasted").length;
-  const totalConsumedCost = allLogs
-    .filter((l) => l.action === "consumed")
-    .reduce((sum, l) => sum + (l.costEstimate || 0), 0);
-  const totalWastedCost = allLogs
-    .filter((l) => l.action === "wasted")
-    .reduce((sum, l) => sum + (l.costEstimate || 0), 0);
-  const wasteRate =
-    totalConsumed + totalWasted > 0
-      ? Math.round((totalWasted / (totalConsumed + totalWasted)) * 100)
-      : 0;
-
-  return NextResponse.json({
-    monthly,
-    totals: {
-      consumed: totalConsumed,
-      wasted: totalWasted,
-      consumedCost: totalConsumedCost,
-      wastedCost: totalWastedCost,
-      wasteRate,
-      moneySaved: totalConsumedCost,
-    },
-  });
+  return NextResponse.json(buildStatsSummary(rows));
 }
