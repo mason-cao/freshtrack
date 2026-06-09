@@ -56,13 +56,23 @@ interface AddItemDialogProps {
   onItemAdded: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
 }
 
-export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange }: AddItemDialogProps) {
+type CategoryStatus = "idle" | "loading" | "ready" | "error";
+
+export function AddItemDialog({
+  onItemAdded,
+  open: controlledOpen,
+  onOpenChange,
+  showTrigger = true,
+}: AddItemDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
   const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryStatus, setCategoryStatus] = useState<CategoryStatus>("idle");
+  const [categoryError, setCategoryError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -80,10 +90,40 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
   const selectedCategory = categories.find((cat) => cat.id === Number.parseInt(categoryId, 10));
 
   useEffect(() => {
-    fetch("/api/categories")
-      .then((r) => r.json())
-      .then(setCategories);
-  }, []);
+    if (!open || categoryStatus !== "idle") return;
+
+    let cancelled = false;
+    setCategoryStatus("loading");
+    setCategoryError(null);
+
+    fetchJson<Category[]>("/api/categories")
+      .then((data) => {
+        if (cancelled) return;
+        setCategories(data);
+        setCategoryStatus("ready");
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setCategoryStatus("error");
+        setCategoryError(
+          err instanceof Error ? err.message : "Unable to load categories."
+        );
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [categoryStatus, open]);
+
+  useEffect(() => {
+    if (!categoryId || expirationDate) return;
+    const cat = categories.find((c) => c.id === Number.parseInt(categoryId, 10));
+    if (cat) setExpirationDate(addDaysToDateInput(cat.defaultShelfLifeDays));
+  }, [categories, categoryId, expirationDate]);
+
+  function retryCategories() {
+    setCategoryStatus("idle");
+  }
 
   function handleCategoryChange(value: string) {
     setCategoryId(value);
@@ -195,12 +235,14 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
 
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4" />
-          Add Item
-        </Button>
-      </DialogTrigger>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="h-4 w-4" />
+            Add Item
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{scannerOpen ? "Scan barcode" : "Add pantry item"}</DialogTitle>
@@ -258,9 +300,21 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Category</Label>
-              <Select value={categoryId} onValueChange={handleCategoryChange}>
+              <Select
+                value={categoryId}
+                onValueChange={handleCategoryChange}
+                disabled={categoryStatus === "loading" || categories.length === 0}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select..." />
+                  <SelectValue
+                    placeholder={
+                      categoryStatus === "loading"
+                        ? "Loading..."
+                        : categoryStatus === "error"
+                          ? "Unavailable"
+                          : "Select..."
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
@@ -288,6 +342,19 @@ export function AddItemDialog({ onItemAdded, open: controlledOpen, onOpenChange 
             <p className="rounded-lg bg-sage-50 px-3 py-2 text-xs text-sage-700">
               Using the usual {selectedCategory.defaultShelfLifeDays}-day window for {selectedCategory.name.toLowerCase()}.
             </p>
+          )}
+
+          {categoryStatus === "error" && (
+            <div className="flex items-center justify-between gap-3 rounded-lg bg-warm-50 px-3 py-2 text-xs text-stone-600">
+              <p>{categoryError ?? "Categories are unavailable. You can still save without one."}</p>
+              <button
+                type="button"
+                onClick={retryCategories}
+                className="shrink-0 rounded-md px-2 py-1 font-semibold text-sage-700 transition-colors hover:bg-sage-50 cursor-pointer"
+              >
+                Retry
+              </button>
+            </div>
           )}
 
           <div className="rounded-xl border border-warm-100 bg-warm-50/60">

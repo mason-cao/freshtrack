@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import {
   Card,
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { fetchJson } from "@/lib/api-client";
+import { subscribeToPantryUpdates } from "@/lib/pantry-events";
 
 interface MonthlyData {
   month: string;
@@ -141,7 +142,8 @@ export default function StatsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadStats = useCallback(() => {
+    setError(null);
     fetchJson<StatsData>("/api/stats")
       .then((data) => {
         setStats(data);
@@ -154,6 +156,11 @@ export default function StatsPage() {
         setLoading(false);
       });
   }, []);
+
+  useEffect(() => {
+    loadStats();
+    return subscribeToPantryUpdates(loadStats);
+  }, [loadStats]);
 
   if (loading) {
     return (

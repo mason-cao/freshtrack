@@ -34,6 +34,7 @@ export function Fab({ onItemAdded }: FabProps) {
         }}
         open={open}
         onOpenChange={setOpen}
+        showTrigger={false}
       />
     </>
   );
