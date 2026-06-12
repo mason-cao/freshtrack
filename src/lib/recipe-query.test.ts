@@ -15,6 +15,7 @@ describe("parseRecipeQuery", () => {
       category: "Seafood",
       maxMinutes: 30,
       sort: "name",
+      offset: 0,
     });
   });
 
@@ -25,10 +26,17 @@ describe("parseRecipeQuery", () => {
       category: null,
       maxMinutes: null,
       sort: "relevance",
+      offset: 0,
     });
     expect(parseRecipeQuery(query("maxMinutes=0&search=%20%20&sort=bogus")).maxMinutes).toBeNull();
     expect(parseRecipeQuery(query("maxMinutes=abc")).maxMinutes).toBeNull();
     expect(parseRecipeQuery(query("sort=bogus")).sort).toBe("relevance");
+  });
+
+  it("parses a non-negative result offset for progressive loading", () => {
+    expect(parseRecipeQuery(query("offset=80")).offset).toBe(80);
+    expect(parseRecipeQuery(query("offset=-1")).offset).toBe(0);
+    expect(parseRecipeQuery(query("offset=abc")).offset).toBe(0);
   });
 });
 

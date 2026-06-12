@@ -8,6 +8,7 @@ export interface RecipeQuery {
   category: string | null;
   maxMinutes: number | null;
   sort: "relevance" | "name";
+  offset: number;
 }
 
 const MAX_TEXT_LENGTH = 80;
@@ -21,6 +22,8 @@ function cleanText(value: string | null): string | null {
 export function parseRecipeQuery(params: URLSearchParams): RecipeQuery {
   const maxRaw = params.get("maxMinutes");
   const maxNumber = maxRaw ? Number.parseInt(maxRaw, 10) : Number.NaN;
+  const offsetRaw = params.get("offset");
+  const offsetNumber = offsetRaw ? Number.parseInt(offsetRaw, 10) : Number.NaN;
 
   return {
     search: cleanText(params.get("search")),
@@ -28,6 +31,7 @@ export function parseRecipeQuery(params: URLSearchParams): RecipeQuery {
     category: cleanText(params.get("category")),
     maxMinutes: Number.isInteger(maxNumber) && maxNumber > 0 ? maxNumber : null,
     sort: params.get("sort") === "name" ? "name" : "relevance",
+    offset: Number.isInteger(offsetNumber) && offsetNumber > 0 ? offsetNumber : 0,
   };
 }
 

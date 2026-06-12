@@ -41,6 +41,7 @@ interface RecipeDiveBarProps {
   sort: "relevance" | "name";
   onSortChange: (value: "relevance" | "name") => void;
   resultCount: number;
+  resultTotal: number;
 }
 
 export function RecipeDiveBar({
@@ -57,8 +58,13 @@ export function RecipeDiveBar({
   sort,
   onSortChange,
   resultCount,
+  resultTotal,
 }: RecipeDiveBarProps) {
   const [localSearch, setLocalSearch] = useState(search);
+  const resultLabel =
+    resultTotal > resultCount
+      ? `${resultCount}/${resultTotal} recipes`
+      : `${resultCount} recipes`;
 
   useEffect(() => {
     setLocalSearch(search);
@@ -95,7 +101,7 @@ export function RecipeDiveBar({
               <X className="h-3.5 w-3.5" />
             </button>
           )}
-          <span className="whitespace-nowrap text-xs text-stone-400">{resultCount} recipes</span>
+          <span className="whitespace-nowrap text-xs text-stone-400">{resultLabel}</span>
         </div>
       </div>
 

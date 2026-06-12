@@ -47,6 +47,13 @@ interface RecipeFacets {
   categories: string[];
 }
 
+interface RecipeResultsResponse {
+  recipes: Recipe[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 const container = {
   hidden: { opacity: 0 },
   show: {
@@ -71,8 +78,11 @@ export default function RecipesPage() {
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [diveOffset, setDiveOffset] = useState(0);
+  const [diveTotal, setDiveTotal] = useState(0);
 
   const [query, setQuery] = useState<DiveQuery>({
     search: "",
@@ -84,6 +94,7 @@ export default function RecipesPage() {
 
   const updateQuery = useCallback((patch: Partial<DiveQuery>) => {
     setQuery((current) => ({ ...current, ...patch }));
+    setDiveOffset(0);
   }, []);
 
   const clearFilters = useCallback(() => {
@@ -94,6 +105,7 @@ export default function RecipesPage() {
       maxMinutes: null,
       sort: current.sort,
     }));
+    setDiveOffset(0);
   }, []);
 
   const loadSuggestions = useCallback(() => {
@@ -130,24 +142,45 @@ export default function RecipesPage() {
     if (query.category) params.set("category", query.category);
     if (query.maxMinutes) params.set("maxMinutes", String(query.maxMinutes));
     params.set("sort", query.sort);
+    if (diveOffset > 0) params.set("offset", String(diveOffset));
 
     setError(null);
-    fetchJson<Recipe[]>(`/api/recipes?${params.toString()}`)
+    if (diveOffset > 0) {
+      setLoadingMore(true);
+    }
+
+    let cancelled = false;
+
+    fetchJson<RecipeResultsResponse>(`/api/recipes?${params.toString()}`)
       .then((data) => {
-        setDiveRecipes(data);
+        if (cancelled) return;
+        setDiveRecipes((current) =>
+          data.offset === 0 ? data.recipes : [...current, ...data.recipes]
+        );
+        setDiveTotal(data.total);
         setLoading(false);
       })
       .catch((err) => {
+        if (cancelled) return;
         setError(err instanceof Error ? err.message : "Unable to load recipes.");
         setLoading(false);
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setLoadingMore(false);
       });
-  }, [query, refreshKey]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [query, refreshKey, diveOffset]);
 
   const hasActiveFilters =
     query.search !== "" ||
     query.cuisine !== null ||
     query.category !== null ||
     query.maxMinutes !== null;
+  const canShowMore = diveRecipes.length < diveTotal;
 
   if (loading) {
     return (
@@ -228,23 +261,39 @@ export default function RecipesPage() {
             sort={query.sort}
             onSortChange={(value) => updateQuery({ sort: value })}
             resultCount={diveRecipes.length}
+            resultTotal={diveTotal}
           />
         </div>
 
         {diveRecipes.length > 0 ? (
-          <motion.div
-            key={`${query.search}|${query.cuisine}|${query.category}|${query.maxMinutes}|${query.sort}`}
-            variants={container}
-            initial="hidden"
-            animate="show"
-            className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 xl:gap-5"
-          >
-            {diveRecipes.map((recipe) => (
-              <motion.div key={recipe.id} variants={item}>
-                <RecipeCard recipe={recipe} onSelect={setSelectedRecipe} />
-              </motion.div>
-            ))}
-          </motion.div>
+          <div className="space-y-5">
+            <motion.div
+              key={`${query.search}|${query.cuisine}|${query.category}|${query.maxMinutes}|${query.sort}`}
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 xl:gap-5"
+            >
+              {diveRecipes.map((recipe) => (
+                <motion.div key={recipe.id} variants={item}>
+                  <RecipeCard recipe={recipe} onSelect={setSelectedRecipe} />
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {canShowMore && (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setDiveOffset(diveRecipes.length)}
+                  disabled={loadingMore}
+                  className="rounded-full border border-sage-200 bg-warm-white px-4 py-2 text-sm font-medium text-sage-700 shadow-warm-sm transition-colors duration-200 hover:bg-sage-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loadingMore ? "Loading..." : "Show more"}
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="rounded-xl border border-dashed border-warm-200 bg-warm-white/70">
             <EmptyState

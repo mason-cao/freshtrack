@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { visibleRecipeWhere } from "@/db/recipe-visibility";
 import { recipes } from "@/db/schema";
-import { and, asc, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
 import { getCurrentUserId } from "@/lib/session";
 import { parseRecipeQuery, rankRecipes } from "@/lib/recipe-query";
 import {
@@ -45,23 +45,37 @@ function recipeConditions(userId: string, query: RecipeQuery, recipeIds?: number
   return and(...conditions);
 }
 
-async function loadFallbackRecipes(userId: string, query: RecipeQuery) {
+async function countMatchingRecipes(userId: string, query: RecipeQuery) {
+  const rows = await db
+    .select({ value: count() })
+    .from(recipes)
+    .where(recipeConditions(userId, query));
+
+  return Number(rows[0]?.value ?? 0);
+}
+
+async function loadFallbackRecipes(
+  userId: string,
+  query: RecipeQuery,
+  candidateLimit: number
+) {
   return db
     .select()
     .from(recipes)
     .where(recipeConditions(userId, query))
     .orderBy(asc(recipes.name))
-    .limit(RECIPE_RESULT_LIMIT);
+    .limit(candidateLimit);
 }
 
 async function loadMatchedCandidateRecipes(
   userId: string,
   query: RecipeQuery,
-  expiringNames: string[]
+  expiringNames: string[],
+  candidateLimit: number
 ) {
   const recipeIds = await findIngredientCandidateRecipeIds(
     expiringNames,
-    RECIPE_CANDIDATE_LIMIT
+    candidateLimit
   );
   if (recipeIds.length === 0) return [];
 
@@ -69,21 +83,28 @@ async function loadMatchedCandidateRecipes(
     .select()
     .from(recipes)
     .where(recipeConditions(userId, query, recipeIds))
-    .limit(RECIPE_CANDIDATE_LIMIT);
+    .limit(candidateLimit);
 }
 
 async function loadCandidateRecipes(
   userId: string,
   query: RecipeQuery,
-  expiringNames: string[]
+  expiringNames: string[],
+  fallbackLimit: number,
+  matchedCandidateLimit: number
 ) {
   if (query.sort !== "relevance" || expiringNames.length === 0) {
-    return loadFallbackRecipes(userId, query);
+    return loadFallbackRecipes(userId, query, fallbackLimit);
   }
 
   const [matchedRecipes, fallbackRecipes] = await Promise.all([
-    loadMatchedCandidateRecipes(userId, query, expiringNames),
-    loadFallbackRecipes(userId, query),
+    loadMatchedCandidateRecipes(
+      userId,
+      query,
+      expiringNames,
+      matchedCandidateLimit
+    ),
+    loadFallbackRecipes(userId, query, fallbackLimit),
   ]);
 
   return uniqueRecipeRows(matchedRecipes, fallbackRecipes);
@@ -93,7 +114,21 @@ export async function GET(request: NextRequest) {
   const userId = await getCurrentUserId();
   const query = parseRecipeQuery(request.nextUrl.searchParams);
   const expiringNames = await getExpiringItemNames(userId);
-  const candidateRecipes = await loadCandidateRecipes(userId, query, expiringNames);
+  const resultWindowLimit = query.offset + RECIPE_RESULT_LIMIT;
+  const matchedCandidateLimit = Math.max(
+    RECIPE_CANDIDATE_LIMIT,
+    resultWindowLimit
+  );
+  const [total, candidateRecipes] = await Promise.all([
+    countMatchingRecipes(userId, query),
+    loadCandidateRecipes(
+      userId,
+      query,
+      expiringNames,
+      resultWindowLimit,
+      matchedCandidateLimit
+    ),
+  ]);
 
   const recipeIds = candidateRecipes.map((recipe) => recipe.id);
   const ingredientsByRecipe = await getIngredientsByRecipe(recipeIds);
@@ -103,5 +138,13 @@ export async function GET(request: NextRequest) {
     expiringNames
   );
 
-  return NextResponse.json(rankRecipes(annotated, query).slice(0, RECIPE_RESULT_LIMIT));
+  return NextResponse.json({
+    recipes: rankRecipes(annotated, query).slice(
+      query.offset,
+      query.offset + RECIPE_RESULT_LIMIT
+    ),
+    total,
+    limit: RECIPE_RESULT_LIMIT,
+    offset: query.offset,
+  });
 }
