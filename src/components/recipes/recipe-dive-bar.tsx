@@ -27,6 +27,13 @@ const SORT_OPTIONS: { value: "relevance" | "name"; label: string }[] = [
 // Radix Select has no null value, so a sentinel stands in for "no filter".
 const ALL = "__all__";
 
+export function shouldScheduleSearchCommit(
+  localSearch: string,
+  committedSearch: string
+) {
+  return localSearch !== committedSearch;
+}
+
 interface RecipeDiveBarProps {
   search: string;
   onSearchChange: (value: string) => void;
@@ -71,9 +78,11 @@ export function RecipeDiveBar({
   }, [search]);
 
   useEffect(() => {
+    if (!shouldScheduleSearchCommit(localSearch, search)) return;
+
     const timer = setTimeout(() => onSearchChange(localSearch), 300);
     return () => clearTimeout(timer);
-  }, [localSearch, onSearchChange]);
+  }, [localSearch, onSearchChange, search]);
 
   return (
     <div className="space-y-3">

@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { RecipeDiveBar } from "./recipe-dive-bar";
+import { RecipeDiveBar, shouldScheduleSearchCommit } from "./recipe-dive-bar";
 
 const noop = vi.fn();
 
@@ -32,5 +32,15 @@ describe("RecipeDiveBar", () => {
 
   it("keeps the compact count when all matching recipes are loaded", () => {
     expect(renderDiveBar(42)).toContain("42 recipes");
+  });
+
+  it("does not schedule a parent search update when the search text is unchanged", () => {
+    expect(shouldScheduleSearchCommit("", "")).toBe(false);
+    expect(shouldScheduleSearchCommit("pasta", "pasta")).toBe(false);
+  });
+
+  it("schedules a parent search update only after the local search text changes", () => {
+    expect(shouldScheduleSearchCommit("pasta", "")).toBe(true);
+    expect(shouldScheduleSearchCommit("", "pasta")).toBe(true);
   });
 });
