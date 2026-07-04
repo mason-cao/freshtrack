@@ -12,24 +12,10 @@ import { getFoodImage } from "@/lib/food-images";
 import { formatDate } from "@/lib/utils";
 import { FreshnessMeter } from "./freshness-meter";
 import type { PantryActionOutcome } from "@/lib/pantry-events";
-
-interface Item {
-  id: number;
-  name: string;
-  categoryId?: number | null;
-  categoryName: string | null;
-  categoryIcon?: string | null;
-  quantity: number;
-  unit: string;
-  purchaseDate?: string;
-  expirationDate: string;
-  status?: string;
-  costEstimate?: number | null;
-  estimatedCost?: number | null;
-}
+import type { PantryItem } from "@/lib/pantry";
 
 interface ItemTableProps {
-  items: Item[];
+  items: PantryItem[];
   onAction: (outcome?: PantryActionOutcome) => void;
   filter: string;
 }
@@ -118,6 +104,7 @@ export function ItemTable({ items, onAction, filter }: ItemTableProps) {
                     itemId={item.id}
                     itemName={item.name}
                     onAction={onAction}
+                    item={item}
                   />
                 </td>
               </tr>

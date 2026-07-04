@@ -15,24 +15,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PackageSearch, SearchX, Trash2 } from "lucide-react";
-
-interface Item {
-  id: number;
-  name: string;
-  categoryIcon: string | null;
-  categoryName: string | null;
-  quantity: number;
-  unit: string;
-  purchaseDate: string;
-  createdAt: string;
-  expirationDate: string;
-  estimatedCost: number | null;
-}
+import type { PantryItem } from "@/lib/pantry";
 
 const FIRST_FIVE_ITEMS_EVENT_KEY = "freshtrack:analytics:first-5-items-sent";
 
 export default function PantryPage() {
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<PantryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -41,7 +29,7 @@ export default function PantryPage() {
 
   const loadItems = useCallback(() => {
     setError(null);
-    fetchJson<Item[]>("/api/items")
+    fetchJson<PantryItem[]>("/api/items")
       .then((data) => {
         setItems(data);
         setLoading(false);

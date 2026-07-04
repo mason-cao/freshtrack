@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { CheckCircle, Trash2 } from "lucide-react";
+import { CheckCircle, Pencil, Trash2 } from "lucide-react";
 import { getFreshnessStatus, freshnessColor, getExpiryLabel } from "@/lib/freshness";
 import { getFoodImage } from "@/lib/food-images";
 import { Badge } from "@/components/ui/badge";
@@ -16,22 +16,17 @@ import {
 } from "@/lib/pantry-events";
 import { FreshnessMeter } from "./freshness-meter";
 import { trackAnalyticsEvent } from "@/lib/analytics-client";
+import { EditItemDialog } from "./edit-item-dialog";
+import type { PantryItem } from "@/lib/pantry";
 
 interface ItemCardProps {
-  item: {
-    id: number;
-    name: string;
-    categoryName: string | null;
-    categoryIcon?: string | null;
-    quantity: number;
-    unit: string;
-    expirationDate: string;
-  };
+  item: PantryItem;
   onAction: (outcome?: PantryActionOutcome) => void;
 }
 
 export function ItemCard({ item, onAction }: ItemCardProps) {
   const [dismissed, setDismissed] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState<"consume" | "waste" | null>(null);
   const x = useMotionValue(0);
   const usedOpacity = useTransform(x, [0, 80], [0, 1]);
@@ -142,12 +137,12 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
               </Badge>
             </div>
 
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="mt-3 flex gap-2">
               <button
                 type="button"
                 onClick={() => handleOutcome("consume")}
                 disabled={!!saving}
-                className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-sage-200 bg-sage-50 text-xs font-semibold text-sage-700 transition-colors duration-200 hover:bg-sage-100 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-sage-200 bg-sage-50 text-xs font-semibold text-sage-700 transition-colors duration-200 hover:bg-sage-100 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
               >
                 <CheckCircle className="h-3.5 w-3.5" />
                 {saving === "consume" ? "Saving" : "Used"}
@@ -156,13 +151,28 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
                 type="button"
                 onClick={() => handleOutcome("waste")}
                 disabled={!!saving}
-                className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-terracotta-100 bg-terracotta-50 text-xs font-semibold text-terracotta-600 transition-colors duration-200 hover:bg-terracotta-100 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-terracotta-100 bg-terracotta-50 text-xs font-semibold text-terracotta-600 transition-colors duration-200 hover:bg-terracotta-100 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 {saving === "waste" ? "Saving" : "Wasted"}
               </button>
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                disabled={!!saving}
+                aria-label={`Edit ${item.name}`}
+                className="inline-flex h-8 w-9 shrink-0 items-center justify-center rounded-lg border border-warm-100 bg-warm-white text-stone-400 transition-colors duration-200 hover:bg-warm-50 hover:text-stone-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
             </div>
           </motion.div>
+          <EditItemDialog
+            item={item}
+            open={editing}
+            onOpenChange={setEditing}
+            onSaved={() => onAction()}
+          />
           {error && (
             <p className="mt-1 px-2 text-xs text-terracotta-600">{error}</p>
           )}

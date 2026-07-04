@@ -23,6 +23,7 @@ import { addDaysToDateInput, toDateInputValue } from "@/lib/dates";
 import { trackAnalyticsEvent } from "@/lib/analytics-client";
 import { fetchJson } from "@/lib/api-client";
 import { BarcodeScanner } from "@/components/pantry/barcode-scanner";
+import { PANTRY_UNITS } from "@/lib/pantry";
 import type { ProductLookupResult } from "@/app/api/products/[barcode]/route";
 
 // Open Food Facts reports metric/imperial units; map the ones that fit the
@@ -397,13 +398,11 @@ export function AddItemDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {["count", "lbs", "oz", "cups", "bag", "box", "container", "carton", "bunch", "loaf", "cans"].map(
-                      (u) => (
-                        <SelectItem key={u} value={u}>
-                          {u}
-                        </SelectItem>
-                      )
-                    )}
+                    {PANTRY_UNITS.map((u) => (
+                      <SelectItem key={u} value={u}>
+                        {u}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

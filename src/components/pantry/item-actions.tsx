@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, Trash2, X } from "lucide-react";
+import { Check, Pencil, Trash2, X } from "lucide-react";
 import { fetchJson } from "@/lib/api-client";
 import {
   notifyPantryActionCompleted,
@@ -10,16 +10,21 @@ import {
   type PantryCompletionAction,
 } from "@/lib/pantry-events";
 import { trackAnalyticsEvent } from "@/lib/analytics-client";
+import { EditItemDialog } from "./edit-item-dialog";
+import type { PantryItem } from "@/lib/pantry";
 
 interface ItemActionsProps {
   itemId: number;
   itemName: string;
   onAction: (outcome?: PantryActionOutcome) => void;
+  /** When the full row is available, an Edit button opens the edit dialog. */
+  item?: PantryItem;
 }
 
-export function ItemActions({ itemId, itemName, onAction }: ItemActionsProps) {
+export function ItemActions({ itemId, itemName, onAction, item }: ItemActionsProps) {
   const [confirming, setConfirming] = useState<"consume" | "waste" | null>(null);
   const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleAction(action: PantryCompletionAction) {
@@ -99,6 +104,25 @@ export function ItemActions({ itemId, itemName, onAction }: ItemActionsProps) {
         <Trash2 className="h-3 w-3 mr-1" />
         Wasted
       </Button>
+      {item && (
+        <>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setEditing(true)}
+            aria-label={`Edit ${itemName}`}
+            className="h-8 w-8 p-0 text-stone-400 hover:text-stone-700"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <EditItemDialog
+            item={item}
+            open={editing}
+            onOpenChange={setEditing}
+            onSaved={() => onAction()}
+          />
+        </>
+      )}
     </div>
   );
 }
