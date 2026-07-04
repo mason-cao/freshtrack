@@ -88,6 +88,7 @@ export function SearchFilterBar({
         <input
           type="text"
           placeholder="Search items..."
+          aria-label="Search pantry items"
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
           className="w-full rounded-xl border-0 bg-warm-white py-2.5 pl-10 pr-20 text-sm text-stone-900 shadow-warm-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-sage-500/40"

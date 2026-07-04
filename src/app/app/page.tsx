@@ -14,18 +14,17 @@ import { ChefHat, ArrowRight, Clock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { getRecipeHeroImage } from "@/lib/food-images";
-
-interface Item {
-  id: number;
-  name: string;
-  categoryIcon: string | null;
-  categoryName: string | null;
-  quantity: number;
-  unit: string;
-  expirationDate: string;
-}
+import { toDateInputValue } from "@/lib/dates";
+import type { PantryItem } from "@/lib/pantry";
 
 interface Stats {
+  monthly: Array<{
+    month: string;
+    monthLabel: string;
+    consumed: number;
+    wasted: number;
+    consumedCost: number;
+  }>;
   totals: {
     consumed: number;
     wasted: number;
@@ -41,11 +40,12 @@ interface RecipeSuggestion {
   description: string;
   prepTimeMinutes: number;
   cookTimeMinutes: number;
+  imageUrl: string | null;
   matchingIngredients: string[];
 }
 
 export default function DashboardPage() {
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<PantryItem[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [recipe, setRecipe] = useState<RecipeSuggestion | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,7 +54,7 @@ export default function DashboardPage() {
   const loadData = useCallback(() => {
     setError(null);
     Promise.all([
-      fetchJson<Item[]>("/api/items"),
+      fetchJson<PantryItem[]>("/api/items"),
       fetchJson<Stats>("/api/stats"),
       fetchJson<RecipeSuggestion[]>("/api/recipes/suggestions"),
     ]).then(([itemsData, statsData, recipesData]) => {
@@ -95,6 +95,26 @@ export default function DashboardPage() {
     return days >= 0 && days <= 5;
   }).length;
 
+  // Scope the hero ledger to the current month; fall back to all-time totals
+  // until this month has any logged activity.
+  const currentMonthKey = toDateInputValue().slice(0, 7);
+  const currentMonth = stats?.monthly.find((m) => m.month === currentMonthKey);
+  const heroLedger = currentMonth
+    ? {
+        used: currentMonth.consumed,
+        wasted: currentMonth.wasted,
+        saved: Math.round(currentMonth.consumedCost),
+        periodLabel: `This month · ${currentMonth.monthLabel}`,
+        periodPhrase: "this month",
+      }
+    : {
+        used: stats?.totals.consumed ?? 0,
+        wasted: stats?.totals.wasted ?? 0,
+        saved: Math.round(stats?.totals.moneySaved ?? 0),
+        periodLabel: "All-time ledger",
+        periodPhrase: "so far",
+      };
+
   return (
     <div className="space-y-6 xl:space-y-0 xl:grid xl:grid-cols-12 xl:gap-6">
       {/* Greeting + Streak */}
@@ -114,16 +134,18 @@ export default function DashboardPage() {
               : `Tracking ${items.length} item${items.length !== 1 ? "s" : ""} in your pantry`}
           </p>
         </div>
-        <StreakBadge days={stats?.totals.consumed ?? 0} />
+        <StreakBadge usedCount={stats?.totals.consumed ?? 0} />
       </motion.div>
 
-      {/* Weekly Summary Hero */}
+      {/* Ledger Hero */}
       {stats && (
         <div className="xl:col-span-12">
           <WeeklyHero
-            used={stats.totals.consumed}
-            wasted={stats.totals.wasted}
-            saved={Math.round(stats.totals.moneySaved)}
+            used={heroLedger.used}
+            wasted={heroLedger.wasted}
+            saved={heroLedger.saved}
+            periodLabel={heroLedger.periodLabel}
+            periodPhrase={heroLedger.periodPhrase}
           />
         </div>
       )}
@@ -154,7 +176,7 @@ export default function DashboardPage() {
               {/* Image banner — desktop */}
               <div className="hidden xl:block relative h-52 2xl:h-60 overflow-hidden bg-warm-50">
                 <Image
-                  src={getRecipeHeroImage(recipe.name)}
+                  src={recipe.imageUrl || getRecipeHeroImage(recipe.name)}
                   alt={recipe.name}
                   fill
                   className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"

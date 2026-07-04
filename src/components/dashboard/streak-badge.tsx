@@ -5,22 +5,23 @@ import { useEffect } from "react";
 import { Flame } from "lucide-react";
 
 interface StreakBadgeProps {
-  days: number;
+  /** Total items marked used (rescued from waste). */
+  usedCount: number;
 }
 
-export function StreakBadge({ days }: StreakBadgeProps) {
+export function StreakBadge({ usedCount }: StreakBadgeProps) {
   const count = useMotionValue(0);
   const rounded = useTransform(count, (v) => Math.round(v));
 
   useEffect(() => {
-    const controls = animate(count, days, {
+    const controls = animate(count, usedCount, {
       duration: 0.8,
       ease: [0.25, 0.46, 0.45, 0.94],
     });
     return controls.stop;
-  }, [count, days]);
+  }, [count, usedCount]);
 
-  if (days <= 0) return null;
+  if (usedCount <= 0) return null;
 
   return (
     <motion.div
@@ -31,7 +32,7 @@ export function StreakBadge({ days }: StreakBadgeProps) {
     >
       <Flame className="h-3.5 w-3.5 text-amber-500" />
       <span className="text-xs font-semibold text-sage-700">
-        <motion.span>{rounded}</motion.span>-day streak
+        <motion.span>{rounded}</motion.span>&nbsp;saved from waste
       </span>
     </motion.div>
   );

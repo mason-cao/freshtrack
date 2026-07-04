@@ -79,6 +79,7 @@ export default function RecipesPage() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [diveOffset, setDiveOffset] = useState(0);
@@ -117,8 +118,11 @@ export default function RecipesPage() {
   useEffect(() => {
     loadSuggestions();
     // Expiring items affect both suggestions and Dive relevance — refresh both.
+    // Reset paging too: refetching with a stale offset would append rows the
+    // list already shows.
     return subscribeToPantryUpdates(() => {
       loadSuggestions();
+      setDiveOffset(0);
       setRefreshKey((key) => key + 1);
     });
   }, [loadSuggestions]);
@@ -147,6 +151,8 @@ export default function RecipesPage() {
     setError(null);
     if (diveOffset > 0) {
       setLoadingMore(true);
+    } else {
+      setSearching(true);
     }
 
     let cancelled = false;
@@ -168,6 +174,7 @@ export default function RecipesPage() {
       .finally(() => {
         if (cancelled) return;
         setLoadingMore(false);
+        setSearching(false);
       });
 
     return () => {
@@ -266,13 +273,15 @@ export default function RecipesPage() {
         </div>
 
         {diveRecipes.length > 0 ? (
-          <div className="space-y-5">
+          <div className="space-y-5" aria-busy={searching}>
             <motion.div
               key={`${query.search}|${query.cuisine}|${query.category}|${query.maxMinutes}|${query.sort}`}
               variants={container}
               initial="hidden"
               animate="show"
-              className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 xl:gap-5"
+              className={`grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 xl:gap-5 transition-opacity duration-200 ${
+                searching ? "pointer-events-none opacity-50" : ""
+              }`}
             >
               {diveRecipes.map((recipe) => (
                 <motion.div key={recipe.id} variants={item}>

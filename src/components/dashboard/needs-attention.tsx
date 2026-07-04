@@ -10,19 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { ItemActions } from "@/components/pantry/item-actions";
 import { FreshnessMeter } from "@/components/pantry/freshness-meter";
 import type { PantryActionOutcome } from "@/lib/pantry-events";
-
-interface Item {
-  id: number;
-  name: string;
-  categoryIcon: string | null;
-  categoryName: string | null;
-  quantity: number;
-  unit: string;
-  expirationDate: string;
-}
+import type { PantryItem } from "@/lib/pantry";
 
 interface NeedsAttentionProps {
-  items: Item[];
+  items: PantryItem[];
   onAction: (outcome?: PantryActionOutcome) => void;
 }
 
@@ -110,7 +101,7 @@ export function NeedsAttention({ items, onAction }: NeedsAttentionProps) {
                   <Badge className={`${colors.badge} max-w-[118px] text-center text-[10px] leading-tight`}>
                     {getExpiryLabel(item.expirationDate)}
                   </Badge>
-                  <ItemActions itemId={item.id} itemName={item.name} onAction={onAction} />
+                  <ItemActions itemId={item.id} itemName={item.name} onAction={onAction} item={item} />
                 </div>
               </div>
             </motion.div>

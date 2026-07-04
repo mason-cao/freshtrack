@@ -24,18 +24,10 @@ interface WeeklyHeroProps {
   used: number;
   wasted: number;
   saved: number;
-}
-
-function getWeekRange(): string {
-  const now = new Date();
-  const dayOfWeek = now.getDay();
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - dayOfWeek);
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  const fmt = (d: Date) =>
-    d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  return `${fmt(weekStart)} – ${fmt(weekEnd)}`;
+  /** Eyebrow label describing the period the numbers cover. */
+  periodLabel: string;
+  /** Inline phrase for the summary sentence, e.g. "this month". */
+  periodPhrase: string;
 }
 
 // Inline SVG turbulence, base64-ish encoded. Higher contrast than the
@@ -68,7 +60,7 @@ function Stat({
   );
 }
 
-export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
+export function WeeklyHero({ used, wasted, saved, periodLabel, periodPhrase }: WeeklyHeroProps) {
   const total = used + wasted;
   const useRate = total > 0 ? Math.round((used / total) * 100) : 0;
   const heroImage = getDashboardHeroImage();
@@ -149,9 +141,7 @@ export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
       {/* Content */}
       <div className="relative flex min-h-[330px] flex-col justify-between gap-8 p-7 sm:min-h-[360px] sm:p-9 xl:min-h-[420px] xl:p-11">
         <div className="max-w-lg">
-          <p className="eyebrow text-warm-white/80">
-            Weekly ledger · {getWeekRange()}
-          </p>
+          <p className="eyebrow text-warm-white/80">{periodLabel}</p>
 
           <div className="mt-6 flex items-end gap-2.5">
             <motion.span
@@ -167,8 +157,8 @@ export function WeeklyHero({ used, wasted, saved }: WeeklyHeroProps) {
 
           <p className="mt-3 max-w-md text-base leading-7 text-warm-white/90 xl:text-lg xl:leading-8 [text-shadow:0_1px_12px_rgba(16,28,16,0.5)]">
             {total > 0
-              ? "of what you logged this week became meals, not waste."
-              : "Mark items used or wasted to start your weekly ledger."}
+              ? `of what you logged ${periodPhrase} became meals, not waste.`
+              : "Mark items used or wasted to start your ledger."}
           </p>
         </div>
 
