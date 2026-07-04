@@ -52,6 +52,14 @@ export default auth((req) => {
   }
 
   if (!req.auth) {
+    // API clients need a machine-readable 401; redirecting them to the login
+    // page hands fetch() an HTML document it can't parse.
+    if (pathname.startsWith("/api/")) {
+      return responseWithCsp(
+        NextResponse.json({ error: "Authentication required." }, { status: 401 }),
+        csp
+      );
+    }
     const loginUrl = new URL("/login", req.url);
     return responseWithCsp(NextResponse.redirect(loginUrl), csp);
   }
@@ -60,5 +68,11 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)",
+    // The pattern above skips any path containing a dot (static files), which
+    // would also let dotted API paths (e.g. /api/products/12.34) bypass auth.
+    // Match all of /api explicitly so every API request is authenticated.
+    "/api/:path*",
+  ],
 };

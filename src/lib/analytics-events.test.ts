@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ANALYTICS_EVENT_RATE_LIMIT,
+  MAX_ANALYTICS_RATE_LIMIT_BUCKETS,
   checkAnalyticsEventRateLimit,
   validateAnalyticsEventPayload,
 } from "./analytics-events";
@@ -85,5 +86,26 @@ describe("analytics event validation", () => {
     });
 
     expect(checkAnalyticsEventRateLimit(key, now + 60_001).ok).toBe(true);
+  });
+
+  it("keeps the bucket map bounded when flooded with unique keys", () => {
+    const now = Date.UTC(2026, 4, 27, 12, 0, 0);
+
+    for (let i = 0; i < MAX_ANALYTICS_RATE_LIMIT_BUCKETS + 500; i++) {
+      expect(checkAnalyticsEventRateLimit(`flood-${i}`, now).ok).toBe(true);
+    }
+
+    // A brand-new key an hour later must still be accepted, and stale flood
+    // buckets must have been evicted rather than accumulating forever.
+    const later = now + 60 * 60 * 1000;
+    expect(checkAnalyticsEventRateLimit("post-flood-visitor", later).ok).toBe(true);
+
+    const globalBuckets = (
+      globalThis as unknown as {
+        freshtrackAnalyticsEventBuckets?: Map<string, number[]>;
+      }
+    ).freshtrackAnalyticsEventBuckets;
+    expect(globalBuckets).toBeDefined();
+    expect(globalBuckets!.size).toBeLessThanOrEqual(MAX_ANALYTICS_RATE_LIMIT_BUCKETS);
   });
 });

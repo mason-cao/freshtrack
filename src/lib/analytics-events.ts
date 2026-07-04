@@ -7,6 +7,8 @@ export const analyticsEventNames = [
   "item_consumed",
   "item_wasted",
   "item_restored",
+  "item_edited",
+  "item_deleted",
   "barcode_scanned",
   "barcode_lookup_hit",
   "barcode_lookup_miss",
@@ -17,6 +19,9 @@ export const analyticsEventNames = [
 
 export const ANALYTICS_EVENT_RATE_LIMIT = 120;
 export const ANALYTICS_EVENT_RATE_LIMIT_WINDOW_MS = 60_000;
+// Rate-limit keys include caller-supplied visitor ids, so the bucket map must
+// be bounded or an attacker can grow it without limit.
+export const MAX_ANALYTICS_RATE_LIMIT_BUCKETS = 10_000;
 
 const MAX_VISITOR_ID_LENGTH = 128;
 const MAX_PATH_LENGTH = 500;
@@ -142,11 +147,41 @@ export function validateAnalyticsEventPayload(payload: unknown): ValidationResul
   };
 }
 
+function evictStaleAnalyticsBuckets(windowStart: number) {
+  for (const [key, timestamps] of analyticsEventBuckets) {
+    const newest = timestamps[timestamps.length - 1];
+    if (newest === undefined || newest <= windowStart) {
+      analyticsEventBuckets.delete(key);
+    }
+  }
+
+  // Still over the cap after dropping expired buckets: evict the oldest
+  // insertions so memory stays bounded even under a flood of fresh keys.
+  if (analyticsEventBuckets.size >= MAX_ANALYTICS_RATE_LIMIT_BUCKETS) {
+    const excess =
+      analyticsEventBuckets.size - MAX_ANALYTICS_RATE_LIMIT_BUCKETS + 1;
+    let removed = 0;
+    for (const key of analyticsEventBuckets.keys()) {
+      analyticsEventBuckets.delete(key);
+      removed += 1;
+      if (removed >= excess) break;
+    }
+  }
+}
+
 export function checkAnalyticsEventRateLimit(
   key: string,
   now = Date.now()
 ): RateLimitResult {
   const windowStart = now - ANALYTICS_EVENT_RATE_LIMIT_WINDOW_MS;
+
+  if (
+    !analyticsEventBuckets.has(key) &&
+    analyticsEventBuckets.size >= MAX_ANALYTICS_RATE_LIMIT_BUCKETS
+  ) {
+    evictStaleAnalyticsBuckets(windowStart);
+  }
+
   const timestamps = (analyticsEventBuckets.get(key) ?? []).filter(
     (timestamp) => timestamp > windowStart
   );
