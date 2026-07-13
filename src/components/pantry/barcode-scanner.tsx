@@ -1,15 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BrowserMultiFormatOneDReader } from "@zxing/browser";
-import { motion } from "framer-motion";
-import confetti from "canvas-confetti";
+import { motion, useReducedMotion } from "framer-motion";
 import { Flashlight, FlashlightOff, Keyboard, Loader2, ScanLine, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Controls handle returned by ZXing's continuous decode; typed structurally so
 // we don't depend on the interface's export name.
-type ZxingControls = Awaited<ReturnType<BrowserMultiFormatOneDReader["decodeFromStream"]>>;
+type ZxingControls = { stop: () => void };
 
 // The torch (flashlight) capability isn't in the standard DOM types yet.
 interface TorchCapabilities extends MediaTrackCapabilities {
@@ -57,6 +55,7 @@ interface BarcodeScannerProps {
 }
 
 export function BarcodeScanner({ onDetected, onCancel }: BarcodeScannerProps) {
+  const reduceMotion = useReducedMotion();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const zxingControlsRef = useRef<ZxingControls | null>(null);
@@ -109,16 +108,23 @@ export function BarcodeScanner({ onDetected, onCancel }: BarcodeScannerProps) {
 
       detectedRef.current = true;
       stop();
-      navigator.vibrate?.(60);
-      void confetti({
-        particleCount: 36,
-        spread: 55,
-        origin: { x: 0.5, y: 0.45 },
-        colors: ["#527a52", "#b8cdb8", "#d97706"],
-      });
+      if (!reduceMotion) {
+        navigator.vibrate?.(60);
+        void import("canvas-confetti")
+          .then(({ default: confetti }) =>
+            confetti({
+              particleCount: 36,
+              spread: 55,
+              origin: { x: 0.5, y: 0.45 },
+              colors: ["#527a52", "#b8cdb8", "#d97706"],
+              disableForReducedMotion: true,
+            })
+          )
+          .catch(() => undefined);
+      }
       onDetectedRef.current(digits);
     },
-    [stop]
+    [reduceMotion, stop]
   );
 
   const startNativeLoop = useCallback(
@@ -149,6 +155,9 @@ export function BarcodeScanner({ onDetected, onCancel }: BarcodeScannerProps) {
 
   const startZxing = useCallback(
     async (stream: MediaStream, video: HTMLVideoElement) => {
+      // Most Chromium browsers use the native detector. Load ZXing only for
+      // browsers that actually need the fallback (notably Safari/Firefox).
+      const { BrowserMultiFormatOneDReader } = await import("@zxing/browser");
       const reader = new BrowserMultiFormatOneDReader();
       zxingControlsRef.current = await reader.decodeFromStream(stream, video, (result) => {
         if (result) handleDetected(result.getText());
@@ -257,11 +266,17 @@ export function BarcodeScanner({ onDetected, onCancel }: BarcodeScannerProps) {
           className="absolute inset-0 flex flex-col justify-center gap-4 bg-stone-900 px-6 text-white"
         >
           <div className="space-y-1">
-            <p className="text-sm font-semibold">Enter barcode number</p>
+            <label htmlFor="manual-barcode" className="text-sm font-semibold">
+              Enter barcode number
+            </label>
             <p className="text-xs text-white/60">Type the digits printed beneath the barcode.</p>
           </div>
           <input
+            id="manual-barcode"
             inputMode="numeric"
+            autoComplete="off"
+            pattern="[0-9 ]{8,20}"
+            maxLength={20}
             autoFocus
             value={manualValue}
             onChange={(event) => {
@@ -271,7 +286,7 @@ export function BarcodeScanner({ onDetected, onCancel }: BarcodeScannerProps) {
             placeholder="e.g. 0123456789012"
             className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-sage-400 focus:outline-none"
           />
-          {manualError && <p className="text-xs text-terracotta-300">{manualError}</p>}
+          {manualError && <p role="alert" className="text-xs text-terracotta-300">{manualError}</p>}
           <div className="flex gap-2">
             <Button type="submit" size="sm" className="flex-1">
               Look up
@@ -306,8 +321,12 @@ export function BarcodeScanner({ onDetected, onCancel }: BarcodeScannerProps) {
                   <motion.div
                     className="absolute inset-x-2 h-0.5 rounded-full bg-sage-400 shadow-[0_0_12px_2px_rgba(125,166,127,0.8)]"
                     initial={{ top: "8%" }}
-                    animate={{ top: ["8%", "92%", "8%"] }}
-                    transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                    animate={reduceMotion ? { top: "50%" } : { top: ["8%", "92%", "8%"] }}
+                    transition={
+                      reduceMotion
+                        ? { duration: 0 }
+                        : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
+                    }
                   />
                 </div>
               </div>
@@ -334,14 +353,14 @@ export function BarcodeScanner({ onDetected, onCancel }: BarcodeScannerProps) {
           )}
 
           {status === "starting" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-stone-900 text-white/80">
+            <div role="status" className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-stone-900 text-white/80">
               <Loader2 className="h-6 w-6 animate-spin" />
               <p className="text-sm">Starting the camera…</p>
             </div>
           )}
 
           {status === "error" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-stone-900 px-6 text-center text-white/90">
+            <div role="alert" className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-stone-900 px-6 text-center text-white/90">
               <p className="text-sm leading-relaxed">{errorMessage}</p>
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <Button size="sm" onClick={openManual}>

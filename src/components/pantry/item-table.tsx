@@ -61,7 +61,7 @@ export function ItemTable({ items, onAction, filter }: ItemTableProps) {
                     <div className={`h-9 w-9 rounded-lg shrink-0 overflow-hidden border-2 bg-warm-50 ${colors.border}`}>
                       <Image
                         src={getFoodImage(item.name, item.categoryName)}
-                        alt={item.name}
+                        alt=""
                         width={36}
                         height={36}
                         className="h-full w-full object-cover"

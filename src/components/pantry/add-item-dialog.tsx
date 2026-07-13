@@ -195,7 +195,7 @@ export function AddItemDialog({
     setError(null);
 
     try {
-      const response = await fetch("/api/items", {
+      await fetchJson("/api/items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -208,11 +208,6 @@ export function AddItemDialog({
           costEstimate: costEstimate ? parseFloat(costEstimate) : null,
         }),
       });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => null);
-        throw new Error(data?.error ?? "Unable to add item.");
-      }
 
       trackAnalyticsEvent("item_added");
 
@@ -270,7 +265,7 @@ export function AddItemDialog({
           </Button>
 
           {lookupPending && (
-            <p className="flex items-center gap-2 rounded-lg bg-sage-50 px-3 py-2 text-xs text-sage-700">
+            <p role="status" className="flex items-center gap-2 rounded-lg bg-sage-50 px-3 py-2 text-xs text-sage-700">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
               Looking up product…
             </p>
@@ -291,6 +286,7 @@ export function AddItemDialog({
             <Label htmlFor="name">Item name *</Label>
             <Input
               id="name"
+              maxLength={80}
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Greek Yogurt"
@@ -300,13 +296,13 @@ export function AddItemDialog({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label htmlFor="add-category">Category</Label>
               <Select
                 value={categoryId}
                 onValueChange={handleCategoryChange}
                 disabled={categoryStatus === "loading" || categories.length === 0}
               >
-                <SelectTrigger>
+                <SelectTrigger id="add-category">
                   <SelectValue
                     placeholder={
                       categoryStatus === "loading"
@@ -362,6 +358,7 @@ export function AddItemDialog({
             <button
               type="button"
               aria-expanded={detailsOpen}
+              aria-controls="add-item-details"
               onClick={() => setDetailsOpen((value) => !value)}
               className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left cursor-pointer"
             >
@@ -379,7 +376,7 @@ export function AddItemDialog({
               />
             </button>
 
-            <div className={detailsOpen ? "grid gap-3 border-t border-warm-100 p-3 sm:grid-cols-2" : "hidden"}>
+            <div id="add-item-details" className={detailsOpen ? "grid gap-3 border-t border-warm-100 p-3 sm:grid-cols-2" : "hidden"}>
               <div className="space-y-2">
                 <Label htmlFor="quantity">Quantity</Label>
                 <Input
@@ -387,6 +384,7 @@ export function AddItemDialog({
                   type="number"
                   step="0.1"
                   min="0.1"
+                  max="1000000"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                 />
@@ -394,7 +392,7 @@ export function AddItemDialog({
               <div className="space-y-2">
                 <Label htmlFor="unit">Unit</Label>
                 <Select value={unit} onValueChange={setUnit}>
-                  <SelectTrigger>
+                  <SelectTrigger id="unit">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -422,6 +420,7 @@ export function AddItemDialog({
                   type="number"
                   step="0.01"
                   min="0"
+                  max="1000000"
                   value={costEstimate}
                   onChange={(e) => setCostEstimate(e.target.value)}
                   placeholder="0.00"
@@ -431,7 +430,7 @@ export function AddItemDialog({
           </div>
 
           {error && (
-            <p className="rounded-lg bg-terracotta-50 px-3 py-2 text-sm text-terracotta-600">
+            <p role="alert" className="rounded-lg bg-terracotta-50 px-3 py-2 text-sm text-terracotta-600">
               {error}
             </p>
           )}

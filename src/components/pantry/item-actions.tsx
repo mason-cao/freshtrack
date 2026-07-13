@@ -58,6 +58,7 @@ export function ItemActions({ itemId, itemName, onAction, item }: ItemActionsPro
             onClick={() => handleAction(confirming)}
             disabled={loading}
             className="h-7 px-2 text-xs"
+            aria-label={`${confirming === "waste" ? "Confirm wasting" : "Confirm using"} ${itemName}`}
           >
             <Check className="h-3 w-3" />
           </Button>
@@ -69,11 +70,12 @@ export function ItemActions({ itemId, itemName, onAction, item }: ItemActionsPro
               setError(null);
             }}
             className="h-7 px-2 text-xs"
+            aria-label={`Cancel action for ${itemName}`}
           >
             <X className="h-3 w-3" />
           </Button>
         </div>
-        {error && <span className="text-xs text-terracotta-600">{error}</span>}
+        {error && <span role="alert" className="text-xs text-terracotta-600">{error}</span>}
       </div>
     );
   }

@@ -23,7 +23,19 @@ interface CategoryBreakdownProps {
 
 export function CategoryBreakdown({ data }: CategoryBreakdownProps) {
   return (
-    <div className="h-[300px] min-w-0 xl:h-[420px] 2xl:h-[500px]">
+    <figure>
+    <figcaption className="sr-only">
+      Monthly consumed and wasted value.
+      <ul>
+        {data.map((month) => (
+          <li key={month.monthLabel}>
+            {month.monthLabel}: {formatCurrency(month.consumedCost)} consumed,
+            {" "}{formatCurrency(month.wastedCost)} wasted.
+          </li>
+        ))}
+      </ul>
+    </figcaption>
+    <div aria-hidden="true" className="h-[300px] min-w-0 xl:h-[420px] 2xl:h-[500px]">
       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         <BarChart
           data={data}
@@ -71,5 +83,6 @@ export function CategoryBreakdown({ data }: CategoryBreakdownProps) {
         </BarChart>
       </ResponsiveContainer>
     </div>
+    </figure>
   );
 }

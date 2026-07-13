@@ -52,7 +52,7 @@ export function RecipeCard({ recipe, onSelect, isUseItUp }: RecipeCardProps) {
       <div className="relative h-36 xl:h-40 overflow-hidden bg-warm-50">
         <Image
           src={imageUrl}
-          alt={recipe.name}
+          alt=""
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
@@ -83,9 +83,9 @@ export function RecipeCard({ recipe, onSelect, isUseItUp }: RecipeCardProps) {
 
       {/* Content */}
       <div className="p-4">
-        <h3 className="font-semibold text-stone-900 text-sm xl:text-base line-clamp-1">
+        <span className="block font-semibold text-stone-900 text-sm xl:text-base line-clamp-1">
           {recipe.name}
-        </h3>
+        </span>
         {(recipe.cuisine || recipe.category) && (
           <div className="mt-1.5 flex flex-wrap gap-1">
             {recipe.cuisine && (

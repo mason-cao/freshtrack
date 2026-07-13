@@ -43,6 +43,7 @@ export function InstallPrompt() {
   const [ready, setReady] = useState(false);
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOSDevice, setIsIOSDevice] = useState(false);
+  const [installError, setInstallError] = useState<string | null>(null);
 
   useEffect(() => {
     if (hasDismissedInstallPrompt() || isStandalone()) {
@@ -65,13 +66,18 @@ export function InstallPrompt() {
 
   async function handleInstall() {
     if (!installEvent) return;
-    await installEvent.prompt();
-    const choice = await installEvent.userChoice;
-    trackAnalyticsEvent(
-      choice.outcome === "accepted" ? "pwa_install_accepted" : "pwa_install_prompt_dismissed"
-    );
-    setInstallEvent(null);
-    dismiss({ track: false });
+    setInstallError(null);
+    try {
+      await installEvent.prompt();
+      const choice = await installEvent.userChoice;
+      trackAnalyticsEvent(
+        choice.outcome === "accepted" ? "pwa_install_accepted" : "pwa_install_prompt_dismissed"
+      );
+      setInstallEvent(null);
+      dismiss({ track: false });
+    } catch {
+      setInstallError("Installation could not start. Use your browser menu to install FreshTrack.");
+    }
   }
 
   function dismiss({ track = true }: { track?: boolean } = {}) {
@@ -120,6 +126,11 @@ export function InstallPrompt() {
                 Not now
               </Button>
             </div>
+            {installError && (
+              <p role="alert" className="mt-2 text-xs text-terracotta-700">
+                {installError}
+              </p>
+            )}
           </div>
           <button
             type="button"

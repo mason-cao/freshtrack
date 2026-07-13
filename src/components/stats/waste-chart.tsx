@@ -26,7 +26,18 @@ interface WasteChartProps {
 
 export function WasteChart({ data }: WasteChartProps) {
   return (
-    <div className="h-[300px] min-w-0 xl:h-[420px] 2xl:h-[500px]">
+    <figure>
+    <figcaption className="sr-only">
+      Monthly consumed and wasted item counts.
+      <ul>
+        {data.map((month) => (
+          <li key={month.month}>
+            {month.monthLabel}: {month.consumed} consumed, {month.wasted} wasted.
+          </li>
+        ))}
+      </ul>
+    </figcaption>
+    <div aria-hidden="true" className="h-[300px] min-w-0 xl:h-[420px] 2xl:h-[500px]">
       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         <BarChart
           data={data}
@@ -73,5 +84,6 @@ export function WasteChart({ data }: WasteChartProps) {
         </BarChart>
       </ResponsiveContainer>
     </div>
+    </figure>
   );
 }

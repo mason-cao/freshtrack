@@ -67,7 +67,7 @@ export function ConfirmDialog({
         </DialogHeader>
 
         {error && (
-          <p className="rounded-lg bg-terracotta-50 px-3 py-2 text-sm text-terracotta-600">
+          <p role="alert" className="rounded-lg bg-terracotta-50 px-3 py-2 text-sm text-terracotta-600">
             {error}
           </p>
         )}

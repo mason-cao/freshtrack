@@ -43,6 +43,8 @@ const NO_CATEGORY = "__none__";
 export function EditItemDialog({ item, open, onOpenChange, onSaved }: EditItemDialogProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoaded, setCategoriesLoaded] = useState(false);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [categoryRetryKey, setCategoryRetryKey] = useState(0);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -76,15 +78,18 @@ export function EditItemDialog({ item, open, onOpenChange, onSaved }: EditItemDi
 
   useEffect(() => {
     if (!open || categoriesLoaded) return;
+    setCategoryError(null);
     fetchJson<Category[]>("/api/categories")
       .then((data) => {
         setCategories(data);
         setCategoriesLoaded(true);
       })
-      .catch(() => {
-        // The select stays disabled; everything else remains editable.
+      .catch((err) => {
+        setCategoryError(
+          err instanceof Error ? err.message : "Unable to load categories."
+        );
       });
-  }, [open, categoriesLoaded]);
+  }, [open, categoriesLoaded, categoryRetryKey]);
 
   function buildPatch(): Record<string, unknown> {
     const patch: Record<string, unknown> = {};
@@ -169,6 +174,7 @@ export function EditItemDialog({ item, open, onOpenChange, onSaved }: EditItemDi
             <Label htmlFor="edit-name">Item name *</Label>
             <Input
               id="edit-name"
+              maxLength={80}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -177,14 +183,22 @@ export function EditItemDialog({ item, open, onOpenChange, onSaved }: EditItemDi
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label htmlFor="edit-category">Category</Label>
               <Select
                 value={categoryId}
                 onValueChange={setCategoryId}
                 disabled={!categoriesLoaded}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder={categoriesLoaded ? "Select..." : "Loading..."} />
+                <SelectTrigger id="edit-category">
+                  <SelectValue
+                    placeholder={
+                      categoryError
+                        ? "Unavailable"
+                        : categoriesLoaded
+                          ? "Select..."
+                          : "Loading..."
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NO_CATEGORY}>No category</SelectItem>
@@ -214,7 +228,8 @@ export function EditItemDialog({ item, open, onOpenChange, onSaved }: EditItemDi
                 id="edit-quantity"
                 type="number"
                 step="0.1"
-                min="0.1"
+                  min="0.1"
+                  max="1000000"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
               />
@@ -222,8 +237,8 @@ export function EditItemDialog({ item, open, onOpenChange, onSaved }: EditItemDi
 
             <div className="space-y-2">
               <Label htmlFor="edit-unit">Unit</Label>
-              <Select value={unit} onValueChange={setUnit}>
-                <SelectTrigger>
+                <Select value={unit} onValueChange={setUnit}>
+                <SelectTrigger id="edit-unit">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -252,7 +267,8 @@ export function EditItemDialog({ item, open, onOpenChange, onSaved }: EditItemDi
                 id="edit-cost"
                 type="number"
                 step="0.01"
-                min="0"
+                  min="0"
+                  max="1000000"
                 value={costEstimate}
                 onChange={(e) => setCostEstimate(e.target.value)}
                 placeholder="0.00"
@@ -260,8 +276,24 @@ export function EditItemDialog({ item, open, onOpenChange, onSaved }: EditItemDi
             </div>
           </div>
 
+          {categoryError && (
+            <div role="alert" className="flex items-center justify-between gap-3 rounded-lg bg-warm-50 px-3 py-2 text-xs text-stone-600">
+              <p>{categoryError} You can still edit the other fields.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setCategoryError(null);
+                  setCategoryRetryKey((key) => key + 1);
+                }}
+                className="shrink-0 rounded-md px-2 py-1 font-semibold text-sage-700 hover:bg-sage-50"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
           {error && (
-            <p className="rounded-lg bg-terracotta-50 px-3 py-2 text-sm text-terracotta-600">
+            <p role="alert" className="rounded-lg bg-terracotta-50 px-3 py-2 text-sm text-terracotta-600">
               {error}
             </p>
           )}

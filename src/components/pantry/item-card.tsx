@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useMotionValue, useReducedMotion, useTransform, AnimatePresence } from "framer-motion";
 import { CheckCircle, Pencil, Trash2 } from "lucide-react";
 import { getFreshnessStatus, freshnessColor, getExpiryLabel } from "@/lib/freshness";
 import { getFoodImage } from "@/lib/food-images";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-import confetti from "canvas-confetti";
 import { fetchJson } from "@/lib/api-client";
 import {
   notifyPantryActionCompleted,
@@ -25,6 +24,7 @@ interface ItemCardProps {
 }
 
 export function ItemCard({ item, onAction }: ItemCardProps) {
+  const reduceMotion = useReducedMotion();
   const [dismissed, setDismissed] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState<"consume" | "waste" | null>(null);
@@ -49,13 +49,18 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
       trackAnalyticsEvent(action === "consume" ? "item_consumed" : "item_wasted");
       setDismissed(true);
       const outcome = { itemId: item.id, itemName: item.name, action };
-      if (action === "consume") {
-        confetti({
-          particleCount: 30,
-          spread: 50,
-          origin: { x: 0.7, y: 0.6 },
-          colors: ["#527a52", "#b8cdb8", "#d97706"],
-        });
+      if (action === "consume" && !reduceMotion) {
+        void import("canvas-confetti")
+          .then(({ default: confetti }) =>
+            confetti({
+              particleCount: 30,
+              spread: 50,
+              origin: { x: 0.7, y: 0.6 },
+              colors: ["#527a52", "#b8cdb8", "#d97706"],
+              disableForReducedMotion: true,
+            })
+          )
+          .catch(() => undefined);
       }
       notifyPantryActionCompleted(outcome);
       onAction(outcome);
@@ -114,7 +119,7 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
           >
             <div className="flex items-center gap-3">
               <div className={`h-11 w-11 rounded-lg shrink-0 overflow-hidden border-2 bg-warm-50 ${colors.border}`}>
-                <Image src={imageUrl} alt={item.name} width={44} height={44} className="h-full w-full object-cover" />
+                <Image src={imageUrl} alt="" width={44} height={44} className="h-full w-full object-cover" />
               </div>
 
               <div className="flex-1 min-w-0 pr-1">
@@ -174,7 +179,7 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
             onSaved={() => onAction()}
           />
           {error && (
-            <p className="mt-1 px-2 text-xs text-terracotta-600">{error}</p>
+            <p role="alert" className="mt-1 px-2 text-xs text-terracotta-600">{error}</p>
           )}
         </motion.div>
       )}

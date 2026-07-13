@@ -2,7 +2,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function PantrySkeleton() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" role="status" aria-label="Loading pantry">
+      <span className="sr-only">Loading pantry</span>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

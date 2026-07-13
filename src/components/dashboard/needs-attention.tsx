@@ -76,7 +76,7 @@ export function NeedsAttention({ items, onAction }: NeedsAttentionProps) {
                   <div className={`h-11 w-11 rounded-lg shrink-0 overflow-hidden border-2 bg-warm-50 ${colors.border}`}>
                     <Image
                       src={imageUrl}
-                      alt={item.name}
+                      alt=""
                       width={44}
                       height={44}
                       className="h-full w-full object-cover"

@@ -111,7 +111,9 @@ export function RecipeDiveBar({
               <X className="h-3.5 w-3.5" />
             </button>
           )}
-          <span className="whitespace-nowrap text-xs text-stone-400">{resultLabel}</span>
+          <span aria-live="polite" className="whitespace-nowrap text-xs text-stone-400">
+            {resultLabel}
+          </span>
         </div>
       </div>
 
@@ -122,7 +124,7 @@ export function RecipeDiveBar({
             value={cuisine ?? ALL}
             onValueChange={(value) => onCuisineChange(value === ALL ? null : value)}
           >
-            <SelectTrigger className="h-8 w-[150px] text-xs">
+            <SelectTrigger aria-label="Filter by cuisine" className="h-8 w-[150px] text-xs">
               <SelectValue placeholder="All cuisines" />
             </SelectTrigger>
             <SelectContent>
@@ -141,7 +143,7 @@ export function RecipeDiveBar({
             value={category ?? ALL}
             onValueChange={(value) => onCategoryChange(value === ALL ? null : value)}
           >
-            <SelectTrigger className="h-8 w-[150px] text-xs">
+            <SelectTrigger aria-label="Filter by category" className="h-8 w-[150px] text-xs">
               <SelectValue placeholder="All categories" />
             </SelectTrigger>
             <SelectContent>
@@ -156,7 +158,7 @@ export function RecipeDiveBar({
         )}
 
         {/* Max-time pills */}
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5" role="group" aria-label="Filter by total time">
           {TIME_OPTIONS.map((option) => {
             const active = maxMinutes === option.value;
             return (
@@ -186,7 +188,7 @@ export function RecipeDiveBar({
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
           <SlidersHorizontal className="h-3.5 w-3.5 text-stone-400" />
           <Select value={sort} onValueChange={(value) => onSortChange(value as "relevance" | "name")}>
-            <SelectTrigger className="h-8 w-[130px] border-0 bg-transparent text-xs shadow-none">
+            <SelectTrigger aria-label="Sort recipes" className="h-8 w-[130px] border-0 bg-transparent text-xs shadow-none">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
