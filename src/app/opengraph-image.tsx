@@ -82,7 +82,7 @@ export default function OpenGraphImage() {
             }}
           >
             A free pantry tracker that shows what&apos;s about to go bad, suggests recipes to use it up,
-            and tells you how much you&apos;ve saved.
+            and tracks the estimated value you&apos;ve saved.
           </div>
         </div>
 

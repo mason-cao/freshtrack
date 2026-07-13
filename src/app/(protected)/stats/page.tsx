@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, useMotionValue, useReducedMotion, useTransform, animate } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -20,6 +20,7 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { fetchJson } from "@/lib/api-client";
 import { subscribeToPantryUpdates } from "@/lib/pantry-events";
+import { ErrorState, LoadingState } from "@/components/ui/async-state";
 
 interface MonthlyData {
   month: string;
@@ -68,6 +69,7 @@ function AnimatedNumber({
   prefix?: string;
   suffix?: string;
 }) {
+  const reduceMotion = useReducedMotion();
   const count = useMotionValue(0);
   const rounded = useTransform(
     count,
@@ -75,12 +77,16 @@ function AnimatedNumber({
   );
 
   useEffect(() => {
+    if (reduceMotion) {
+      count.set(value);
+      return;
+    }
     const controls = animate(count, value, {
       duration: 1.4,
       ease: [0.16, 1, 0.3, 1],
     });
     return controls.stop;
-  }, [count, value]);
+  }, [count, reduceMotion, value]);
 
   return <motion.span>{rounded}</motion.span>;
 }
@@ -97,7 +103,7 @@ function WasteRateRing({ rate }: { rate: number }) {
 
   return (
     <div className="relative h-40 w-40 shrink-0 sm:h-44 sm:w-44 xl:h-48 xl:w-48">
-      <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
+      <svg aria-hidden="true" focusable="false" className="h-full w-full -rotate-90" viewBox="0 0 100 100">
         <circle
           cx="50"
           cy="50"
@@ -163,19 +169,11 @@ export default function StatsPage() {
   }, [loadStats]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-sage-200 border-t-sage-600" />
-      </div>
-    );
+    return <LoadingState label="Loading statistics" />;
   }
 
   if (error) {
-    return (
-      <div className="rounded-xl bg-terracotta-50 p-4 text-sm text-terracotta-600">
-        {error}
-      </div>
-    );
+    return <ErrorState message={error} onRetry={loadStats} />;
   }
 
   if (!stats) {
@@ -216,7 +214,9 @@ export default function StatsPage() {
         className="relative overflow-hidden rounded-3xl border border-warm-100 bg-warm-white p-6 shadow-warm sm:p-8 xl:p-10"
       >
         <h1 className="eyebrow text-stone-500">
-          Statistics · last {stats.monthly.length || 6} months
+          Statistics · {stats.monthly.length > 0
+            ? `${stats.monthly.length} active month${stats.monthly.length === 1 ? "" : "s"}`
+            : "no activity yet"}
         </h1>
 
         <div className="mt-6 grid items-start gap-6 lg:grid-cols-[1.3fr_auto] lg:gap-10">

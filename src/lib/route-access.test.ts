@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPublicPath } from "./route-access";
+import { isPublicPath, isStaticPublicPath } from "./route-access";
 
 describe("isPublicPath", () => {
   it("allows public marketing, auth, and legal routes", () => {
@@ -20,5 +20,19 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/pantry")).toBe(false);
     expect(isPublicPath("/api/items")).toBe(false);
     expect(isPublicPath("/api/analytics/export")).toBe(false);
+  });
+});
+
+describe("isStaticPublicPath", () => {
+  it("identifies cacheable content routes", () => {
+    expect(isStaticPublicPath("/")).toBe(true);
+    expect(isStaticPublicPath("/privacy")).toBe(true);
+    expect(isStaticPublicPath("/foods/avocado")).toBe(true);
+  });
+
+  it("excludes auth, app, and API routes", () => {
+    expect(isStaticPublicPath("/login")).toBe(false);
+    expect(isStaticPublicPath("/app")).toBe(false);
+    expect(isStaticPublicPath("/api/analytics")).toBe(false);
   });
 });

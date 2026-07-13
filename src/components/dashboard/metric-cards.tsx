@@ -7,6 +7,7 @@ interface MetricCardsProps {
   items: Array<{ categoryName: string | null }>;
   useRate: number;
   expiringCount: number;
+  hasHistory: boolean;
 }
 
 const enterCell = {
@@ -26,8 +27,8 @@ const container = {
   },
 };
 
-function getUseRateQualifier(rate: number, total: number) {
-  if (total === 0) return "Early days";
+function getUseRateQualifier(rate: number, hasHistory: boolean) {
+  if (!hasHistory) return "Early days";
   if (rate >= 85) return "Strong habit";
   if (rate >= 65) return "Holding steady";
   return "Room to improve";
@@ -39,7 +40,7 @@ function getExpiringQualifier(count: number) {
   return "Plan a use-it-up meal";
 }
 
-export function MetricCards({ items, useRate, expiringCount }: MetricCardsProps) {
+export function MetricCards({ items, useRate, expiringCount, hasHistory }: MetricCardsProps) {
   const totalItems = items.length;
 
   const topCategories = useMemo(() => {
@@ -53,7 +54,7 @@ export function MetricCards({ items, useRate, expiringCount }: MetricCardsProps)
       .slice(0, 3);
   }, [items]);
 
-  const useQualifier = getUseRateQualifier(useRate, totalItems);
+  const useQualifier = getUseRateQualifier(useRate, hasHistory);
   const expiringQualifier = getExpiringQualifier(expiringCount);
   const expiringTone =
     expiringCount === 0
@@ -109,14 +110,14 @@ export function MetricCards({ items, useRate, expiringCount }: MetricCardsProps)
           <div className="mt-4 border-t border-warm-100 pt-3">
             <div className="h-1.5 overflow-hidden rounded-full bg-warm-50">
               <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(100, Math.max(0, useRate))}%` }}
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: Math.min(100, Math.max(0, useRate)) / 100 }}
                 transition={{
                   duration: 1.1,
                   ease: [0.16, 1, 0.3, 1],
                   delay: 0.4,
                 }}
-                className="h-full rounded-full bg-sage-500"
+                className="h-full origin-left rounded-full bg-sage-500"
               />
             </div>
             <p className="mt-2.5 text-[13px] font-medium text-sage-700">
@@ -145,7 +146,7 @@ export function MetricCards({ items, useRate, expiringCount }: MetricCardsProps)
               {expiringQualifier}
             </p>
             <p className="mt-1 text-xs text-stone-500">
-              Jump to the pantry list below to act.
+              Open Pantry to act on the list.
             </p>
           </div>
         </motion.div>

@@ -5,9 +5,10 @@ import { Database, Leaf, Mail, ShieldCheck, Trash2 } from "lucide-react";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "FreshTrack privacy policy for account and pantry data.",
+  alternates: { canonical: "/privacy" },
 };
 
-const updatedAt = "May 6, 2026";
+const updatedAt = "July 12, 2026";
 
 const sections = [
   {
@@ -15,8 +16,8 @@ const sections = [
     title: "What FreshTrack Collects",
     body: [
       "When you sign in with Google, FreshTrack receives your name, email address, and profile image URL from Google.",
-      "FreshTrack also stores the pantry items, recipe records, and used or wasted item history that you add while using the app.",
-      "FreshTrack records basic product analytics, including page path, referrer, campaign parameters, browser user agent, a local visitor identifier, and your account id when you are signed in.",
+      "FreshTrack also stores the pantry items and used or wasted item history that you add while using the app. The recipe catalog itself is shared product content, not a record you create.",
+      "FreshTrack records basic product analytics, including the page path without its query string, the referring site and path without its query string, campaign parameters, browser user agent, a local visitor identifier, and your account id when you are signed in.",
     ],
   },
   {
@@ -25,6 +26,8 @@ const sections = [
     body: [
       "FreshTrack stores account and pantry data in Railway Postgres. The app runs on Railway.",
       "FreshTrack uses Google only for authentication. It does not request access to Gmail, Drive, Calendar, or other Google data.",
+      "FreshTrack uses Google Fonts for typefaces and may load product or recipe images sourced from Unsplash, Open Food Facts, or TheMealDB. Those providers receive ordinary web-request information when their resources are requested.",
+      "When you scan or enter a barcode, FreshTrack sends that barcode to Open Food Facts and, if needed, UPCitemdb to look for product details.",
     ],
   },
   {
@@ -32,7 +35,8 @@ const sections = [
     title: "Sharing And Deletion",
     body: [
       "FreshTrack does not sell your data. It does not share your pantry data with advertisers or data brokers.",
-      "FreshTrack does not sell, share, or use product analytics for advertising.",
+      "FreshTrack does not provide product analytics to advertisers or data brokers and does not use those analytics for advertising.",
+      "Product analytics are removed through a rolling cleanup after approximately 12 months. Account and pantry records remain while your account is in use or until you request deletion.",
       "To request account or pantry data deletion, email masoncao7@gmail.com from the Google account you used to sign in.",
     ],
   },
@@ -48,7 +52,7 @@ const sections = [
 
 export default function PrivacyPage() {
   return (
-    <main className="bg-cream px-4 py-10 sm:px-6 lg:px-8">
+    <main id="main-content" className="bg-cream px-4 py-10 sm:px-6 lg:px-8">
       <article className="mx-auto max-w-3xl">
         <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-sage-700">
           <Leaf className="h-4 w-4" />

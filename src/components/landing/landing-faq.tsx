@@ -1,6 +1,6 @@
 import { faqs } from "@/lib/faqs";
 import { FaqAccordion } from "@/components/shared/faq-accordion";
-import { headers } from "next/headers";
+import { serializeJsonLd } from "@/lib/structured-data";
 import { Reveal } from "./reveal";
 
 const faqSchema = {
@@ -16,15 +16,12 @@ const faqSchema = {
   })),
 };
 
-export async function LandingFaq() {
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
-
+export function LandingFaq() {
   return (
     <section id="faq" className="relative bg-cream">
       <script
-        nonce={nonce}
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqSchema) }}
       />
 
       <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-28">

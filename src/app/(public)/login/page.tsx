@@ -4,6 +4,12 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { BarChart3, Clock3, Leaf, ShieldCheck, UtensilsCrossed } from "lucide-react";
 import { getFoodImage } from "@/lib/food-images";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Sign in",
+  robots: { index: false, follow: false, nocache: true },
+};
 
 export default async function LoginPage() {
   const session = await auth();
@@ -12,7 +18,7 @@ export default async function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-cream px-4 py-6 sm:px-6 lg:px-8">
+    <main id="main-content" className="min-h-screen bg-cream px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto grid min-h-[calc(100vh-3rem)] w-full max-w-6xl items-center gap-6 lg:grid-cols-[1.05fr_0.95fr]">
         <section className="overflow-hidden rounded-2xl border border-warm-100 bg-warm-white shadow-warm">
           <div className="relative h-44 overflow-hidden bg-warm-50 sm:h-56">

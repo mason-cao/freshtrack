@@ -1,6 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { AppShell } from "@/components/layout/app-shell";
-import { headers } from "next/headers";
 import "./globals.css";
 
 const siteUrl =
@@ -35,9 +33,6 @@ export const metadata: Metadata = {
     "recipe search by ingredient",
     "what can I make with what I have",
   ],
-  alternates: {
-    canonical: "/",
-  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -89,53 +84,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-const structuredData = [
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "FreshTrack",
-    url: siteUrl,
-    logo: `${siteUrl}/icon-512.png`,
-    description:
-      "FreshTrack helps busy households reduce food waste, save money, and use what they already have.",
-  },
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "FreshTrack",
-    url: siteUrl,
-    inLanguage: "en-US",
-  },
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: "FreshTrack",
-    applicationCategory: "LifestyleApplication",
-    applicationSubCategory: "Kitchen & Food Management",
-    operatingSystem: "Web, iOS (PWA), Android (PWA)",
-    url: siteUrl,
-    description: defaultDescription,
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
-    },
-    featureList: [
-      "Track pantry items with per-item freshness dates",
-      "Barcode scanning to add groceries in seconds, prefilled from Open Food Facts",
-      "Recipe suggestions matched to ingredients about to expire",
-      "Recipe Dive: searchable recipe catalog ranked by your expiring ingredients",
-      "Money saved and waste rate tracking over time",
-      "Works as an installable home-screen app, no app store",
-    ],
-    isAccessibleForFree: true,
-  },
-];
-
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -145,14 +94,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
           rel="stylesheet"
         />
-        <script
-          nonce={nonce}
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-        />
       </head>
       <body className="bg-cream font-sans text-stone-900 antialiased">
-        <AppShell>{children}</AppShell>
+        {children}
       </body>
     </html>
   );

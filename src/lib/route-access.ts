@@ -15,3 +15,12 @@ export function isPublicPath(pathname: string): boolean {
     pathname.startsWith("/api/auth/")
   );
 }
+
+const STATIC_PUBLIC_PATHS = ["/privacy", "/terms", "/foods"];
+
+export function isStaticPublicPath(pathname: string): boolean {
+  if (pathname === "/") return true;
+  return STATIC_PUBLIC_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`)
+  );
+}

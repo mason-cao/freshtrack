@@ -1,8 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
-
-vi.mock("@/auth", () => ({
-  auth: vi.fn(),
-}));
+import { describe, expect, it } from "vitest";
 
 import { buildFoodMetadataTitle } from "./page";
 

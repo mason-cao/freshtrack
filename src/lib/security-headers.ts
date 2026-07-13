@@ -1,5 +1,6 @@
 interface ContentSecurityPolicyOptions {
-  nonce: string;
+  nonce?: string;
+  allowInlineScripts?: boolean;
   isProduction?: boolean;
 }
 
@@ -11,17 +12,33 @@ function directive(name: string, values: string[]) {
 
 export function buildContentSecurityPolicy({
   nonce,
+  allowInlineScripts = false,
   isProduction = process.env.NODE_ENV === "production",
 }: ContentSecurityPolicyOptions): string {
-  if (!NONCE_PATTERN.test(nonce)) {
+  if (nonce && !NONCE_PATTERN.test(nonce)) {
     throw new Error("CSP nonce contains invalid characters.");
   }
 
-  const scriptSrc = ["'self'", `'nonce-${nonce}'`];
-  const styleSrc = ["'self'", "https://fonts.googleapis.com", `'nonce-${nonce}'`];
+  if (!nonce && !allowInlineScripts) {
+    throw new Error("CSP requires a nonce unless inline scripts are allowed.");
+  }
+
+  const scriptSrc = ["'self'"];
+  const styleSrc = ["'self'", "https://fonts.googleapis.com"];
+
+  if (nonce) {
+    scriptSrc.push(`'nonce-${nonce}'`, "'strict-dynamic'");
+    styleSrc.push(`'nonce-${nonce}'`);
+  }
+
+  if (allowInlineScripts) {
+    scriptSrc.push("'unsafe-inline'");
+    styleSrc.push("'unsafe-inline'");
+  }
 
   if (!isProduction) {
-    scriptSrc.push("'unsafe-eval'", "'unsafe-inline'");
+    scriptSrc.push("'unsafe-eval'");
+    if (!scriptSrc.includes("'unsafe-inline'")) scriptSrc.push("'unsafe-inline'");
   }
 
   return [

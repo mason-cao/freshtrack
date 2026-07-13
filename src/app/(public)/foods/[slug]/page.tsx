@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { headers } from "next/headers";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -11,7 +10,6 @@ import {
   ChefHat,
   AlertTriangle,
 } from "lucide-react";
-import { auth } from "@/auth";
 import {
   foods,
   getFoodBySlug,
@@ -24,6 +22,7 @@ import { LandingNav } from "@/components/landing/landing-nav";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Reveal } from "@/components/landing/reveal";
 import { FaqAccordion } from "@/components/shared/faq-accordion";
+import { serializeJsonLd } from "@/lib/structured-data";
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
@@ -134,27 +133,23 @@ export default async function FoodPage({ params }: PageProps) {
   const food = getFoodBySlug(slug);
   if (!food) notFound();
 
-  const session = await auth();
-  const isAuthenticated = Boolean(session?.user);
-  const ctaHref = isAuthenticated ? "/app" : "/login";
-  const ctaLabel = isAuthenticated ? "Open your kitchen" : "Sign in with Google";
+  const ctaHref = "/login";
+  const ctaLabel = "Sign in with Google";
 
   const matchedRecipes = getMatchedRecipes(food);
   const relatedFoods = getRelatedFoods(food.slug);
   const heroImage = getFoodImage(food.imageKey, "Produce");
   const structuredData = buildStructuredData(food);
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
   const lowerName = food.displayName.toLowerCase();
   const lowerPlural = (food.pluralDisplayName ?? food.displayName).toLowerCase();
 
   return (
     <>
       <script
-        nonce={nonce}
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
       />
-      <LandingNav isAuthenticated={isAuthenticated} />
+      <LandingNav isAuthenticated={false} />
 
       <main id="main-content">
         <article>
@@ -204,6 +199,15 @@ export default async function FoodPage({ params }: PageProps) {
                   <p className="mt-5 max-w-xl text-base leading-relaxed text-stone-600 sm:text-lg">
                     {food.intro}
                   </p>
+                  <div className="mt-5 flex max-w-xl items-start gap-2 rounded-xl border border-amber-100 bg-amber-50 px-3 py-3 text-xs leading-5 text-stone-700" role="note">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden="true" />
+                    <p>
+                      Food-safety guidance assumes proper handling, a refrigerator at
+                      40°F or below, and a freezer at 0°F. Harmful bacteria cannot
+                      always be seen, smelled, or tasted; follow recalls and discard
+                      food that was stored outside safe time or temperature limits.
+                    </p>
+                  </div>
 
                   <dl className="mt-8 grid gap-3 sm:grid-cols-3">
                     {food.quickStats.counter && (
@@ -519,14 +523,14 @@ export default async function FoodPage({ params }: PageProps) {
             <div className="relative mx-auto max-w-4xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
               <Reveal>
                 <div className="max-w-2xl">
-                  <p className="inline-flex items-center gap-2 rounded-full bg-warm-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sage-50 ring-1 ring-warm-white/20">
+                  <p className="inline-flex items-center gap-2 rounded-full bg-warm-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-warm-white ring-1 ring-warm-white/20">
                     <Leaf className="h-3.5 w-3.5" />
                     A kitchen ledger
                   </p>
                   <h2 className="mt-5 text-3xl font-bold leading-tight tracking-tight text-warm-white sm:text-4xl">
                     Stop wasting {lowerName}.
                   </h2>
-                  <p className="mt-5 text-base leading-relaxed text-sage-50/90 sm:text-lg">
+                  <p className="mt-5 text-base leading-relaxed text-warm-white sm:text-lg">
                     FreshTrack is a free pantry tracker that surfaces items
                     before they expire, ranks recipes by what you already have,
                     and tracks money saved over time. Built for busy households,

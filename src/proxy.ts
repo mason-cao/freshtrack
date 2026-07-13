@@ -1,8 +1,9 @@
 import NextAuth from "next-auth";
+import type { NextAuthRequest } from "next-auth";
 import { authConfig } from "@/auth.config";
-import { isPublicPath } from "@/lib/route-access";
+import { isPublicPath, isStaticPublicPath } from "@/lib/route-access";
 import { buildContentSecurityPolicy } from "@/lib/security-headers";
-import type { NextRequest } from "next/server";
+import type { NextFetchEvent, NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 const { auth } = NextAuth(authConfig);
@@ -38,14 +39,11 @@ function responseWithCsp(response: NextResponse, csp: string) {
   return response;
 }
 
-export default auth((req) => {
+const authenticatedProxy = auth((req: NextAuthRequest, _event: NextFetchEvent) => {
+  void _event;
   const { pathname } = req.nextUrl;
   const nonce = generateNonce();
   const csp = buildContentSecurityPolicy({ nonce });
-
-  if (isPublicPath(pathname)) {
-    return nextResponseWithCsp(req, nonce, csp);
-  }
 
   if (DEV_BYPASS) {
     return nextResponseWithCsp(req, nonce, csp);
@@ -66,6 +64,27 @@ export default auth((req) => {
 
   return nextResponseWithCsp(req, nonce, csp);
 });
+
+export default function proxy(request: NextRequest, event: NextFetchEvent) {
+  const { pathname } = request.nextUrl;
+
+  // Public routes do not need Auth.js middleware. Keeping them outside the
+  // wrapper avoids session parsing and auth cookies on anonymous page views.
+  if (isPublicPath(pathname)) {
+    if (isStaticPublicPath(pathname)) {
+      const csp = buildContentSecurityPolicy({ allowInlineScripts: true });
+      const response = NextResponse.next();
+      response.headers.set("Content-Security-Policy", csp);
+      return response;
+    }
+
+    const nonce = generateNonce();
+    const csp = buildContentSecurityPolicy({ nonce });
+    return nextResponseWithCsp(request, nonce, csp);
+  }
+
+  return authenticatedProxy(request, event);
+}
 
 export const config = {
   matcher: [

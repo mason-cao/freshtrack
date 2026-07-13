@@ -16,6 +16,7 @@ import Image from "next/image";
 import { getRecipeHeroImage } from "@/lib/food-images";
 import { toDateInputValue } from "@/lib/dates";
 import type { PantryItem } from "@/lib/pantry";
+import { ErrorState } from "@/components/ui/async-state";
 
 interface Stats {
   monthly: Array<{
@@ -78,11 +79,7 @@ export default function DashboardPage() {
   }
 
   if (error) {
-    return (
-      <div className="rounded-xl bg-terracotta-50 p-4 text-sm text-terracotta-600">
-        {error}
-      </div>
-    );
+    return <ErrorState message={error} onRetry={loadData} />;
   }
 
   const expiringSoon = items.filter((i) => {
@@ -117,7 +114,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 xl:space-y-0 xl:grid xl:grid-cols-12 xl:gap-6">
-      {/* Greeting + Streak */}
+      {/* Greeting + saved-item count */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -157,6 +154,9 @@ export default function DashboardPage() {
           items={items}
           useRate={stats ? 100 - stats.totals.wasteRate : 0}
           expiringCount={expiringCount}
+          hasHistory={Boolean(
+            stats && stats.totals.consumed + stats.totals.wasted > 0
+          )}
         />
 
         {/* Needs Attention */}
@@ -177,7 +177,7 @@ export default function DashboardPage() {
               <div className="hidden xl:block relative h-52 2xl:h-60 overflow-hidden bg-warm-50">
                 <Image
                   src={recipe.imageUrl || getRecipeHeroImage(recipe.name)}
-                  alt={recipe.name}
+                  alt=""
                   fill
                   className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
                   sizes="(min-width: 1280px) 38vw, 33vw"

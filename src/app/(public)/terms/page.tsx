@@ -5,9 +5,10 @@ import { AlertTriangle, FileText, Leaf, Mail, ShieldCheck } from "lucide-react";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description: "FreshTrack terms of service.",
+  alternates: { canonical: "/terms" },
 };
 
-const updatedAt = "May 6, 2026";
+const updatedAt = "July 12, 2026";
 
 const sections = [
   {
@@ -31,7 +32,7 @@ const sections = [
     title: "Accounts And Data",
     body: [
       "FreshTrack uses Google sign-in. Do not use another person's Google account or attempt to access another user's pantry data.",
-      "FreshTrack may delete inactive accounts and associated pantry data after 12 months without sign-in activity.",
+      "Account and pantry data remain associated with your sign-in unless you request deletion or the service is discontinued. See the Privacy Policy for deletion instructions.",
     ],
   },
   {
@@ -46,7 +47,7 @@ const sections = [
 
 export default function TermsPage() {
   return (
-    <main className="bg-cream px-4 py-10 sm:px-6 lg:px-8">
+    <main id="main-content" className="bg-cream px-4 py-10 sm:px-6 lg:px-8">
       <article className="mx-auto max-w-3xl">
         <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-sage-700">
           <Leaf className="h-4 w-4" />

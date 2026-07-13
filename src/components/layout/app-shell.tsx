@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -40,13 +40,6 @@ const navItems = [
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const isPublicPage =
-    pathname === "/" ||
-    pathname === "/login" ||
-    pathname === "/privacy" ||
-    pathname === "/terms" ||
-    pathname === "/foods" ||
-    pathname.startsWith("/foods/");
   const [signingOut, setSigningOut] = useState(false);
 
   function handleSignOut() {
@@ -63,24 +56,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const eraseHistoryDescription =
     "This permanently clears your Stats history — your used, wasted, and saved totals and trends — and removes your consumed and wasted item records. Your active pantry and sign-in are kept. This can't be undone.";
 
-  if (isPublicPage) {
-    // Landing and food pages render their own footer; legal pages get the shared FooterLegal.
-    const showFooterLegal =
-      pathname !== "/" &&
-      pathname !== "/foods" &&
-      !pathname.startsWith("/foods/");
-    return (
-      <div className="min-h-screen bg-cream">
-        <AnalyticsTracker isPublicPage={isPublicPage} />
-        {children}
-        {showFooterLegal && <FooterLegal />}
-      </div>
-    );
-  }
-
   return (
+    <MotionConfig reducedMotion="user">
     <div className="min-h-screen bg-cream">
-      <AnalyticsTracker isPublicPage={isPublicPage} />
+      <AnalyticsTracker isPublicPage={false} />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-warm-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-sage-700 focus:shadow-warm-lg"
@@ -117,6 +96,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
                 className="relative flex flex-col xl:flex-row items-center gap-1 xl:gap-3 py-2 px-1 xl:px-3 xl:py-2.5"
               >
                 {isActive && (
@@ -160,6 +140,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           trigger={
             <button
               type="button"
+              aria-label="Erase history"
               className="mx-2 mt-4 flex items-center justify-center gap-1 rounded-xl px-2 py-2 text-stone-400 transition-colors duration-200 hover:bg-terracotta-50 hover:text-terracotta-600 xl:mx-3 xl:justify-start xl:gap-3 xl:px-3 xl:py-2.5 cursor-pointer"
             >
               <Eraser className="h-5 w-5" />
@@ -175,6 +156,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <button
           type="button"
+          aria-label={signingOut ? "Signing out" : "Sign out"}
           onClick={handleSignOut}
           disabled={signingOut}
           className="mx-2 mt-1 flex items-center justify-center gap-1 rounded-xl px-2 py-2 text-stone-400 transition-colors duration-200 hover:bg-warm-50 hover:text-stone-700 disabled:cursor-not-allowed disabled:opacity-60 xl:mx-3 xl:justify-start xl:gap-3 xl:px-3 xl:py-2.5 cursor-pointer"
@@ -191,7 +173,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="fixed bottom-0 left-0 right-0 z-40 border-t border-warm-100 bg-warm-white pb-[env(safe-area-inset-bottom)] md:hidden"
         aria-label="Primary"
       >
-        <div className="flex items-center justify-around h-14">
+        <div className="flex h-16 items-center justify-around">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -203,7 +185,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className="relative flex flex-col items-center gap-0.5 px-3 py-1 min-w-[64px]"
+                aria-current={isActive ? "page" : undefined}
+                className="relative flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-2 py-1"
               >
                 {isActive && (
                   <motion.div
@@ -238,33 +221,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
-          <ConfirmDialog
-            trigger={
-              <button
-                type="button"
-                className="relative flex min-w-0 flex-col items-center gap-0.5 px-2 py-1 text-stone-400 transition-colors duration-200 hover:text-terracotta-600 cursor-pointer"
-              >
-                <Eraser className="h-5 w-5" />
-                <span className="text-[10px] font-medium">Erase</span>
-              </button>
-            }
-            title="Erase account history?"
-            description={eraseHistoryDescription}
-            confirmLabel="Erase history"
-            pendingLabel="Erasing…"
-            onConfirm={handleEraseHistory}
-          />
-          <button
-            type="button"
-            onClick={handleSignOut}
-            disabled={signingOut}
-            className="relative flex min-w-0 flex-col items-center gap-0.5 px-2 py-1 text-stone-400 transition-colors duration-200 hover:text-stone-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
-          >
-            <LogOut className="h-5 w-5" />
-            <span className="text-[10px] font-medium">
-              {signingOut ? "Leaving" : "Sign out"}
-            </span>
-          </button>
         </div>
       </nav>
 
@@ -292,10 +248,49 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <div className="mx-auto max-w-5xl xl:max-w-none px-4 py-6 pb-24 sm:px-6 md:px-8 xl:px-12 2xl:px-20 md:pb-8">
           {children}
+          <section
+            className="mt-10 rounded-xl border border-warm-100 bg-warm-white p-4 shadow-warm-sm md:hidden"
+            aria-labelledby="mobile-account-actions"
+          >
+            <h2
+              id="mobile-account-actions"
+              className="text-sm font-semibold text-stone-900"
+            >
+              Account actions
+            </h2>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <ConfirmDialog
+                trigger={
+                  <button
+                    type="button"
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-terracotta-100 px-3 text-sm font-medium text-terracotta-700 hover:bg-terracotta-50"
+                  >
+                    <Eraser className="h-4 w-4" aria-hidden="true" />
+                    Erase history
+                  </button>
+                }
+                title="Erase account history?"
+                description={eraseHistoryDescription}
+                confirmLabel="Erase history"
+                pendingLabel="Erasing…"
+                onConfirm={handleEraseHistory}
+              />
+              <button
+                type="button"
+                onClick={handleSignOut}
+                disabled={signingOut}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-warm-200 px-3 text-sm font-medium text-stone-700 hover:bg-warm-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <LogOut className="h-4 w-4" aria-hidden="true" />
+                {signingOut ? "Signing out" : "Sign out"}
+              </button>
+            </div>
+          </section>
           <FooterLegal className="mt-10 border-t border-warm-100 px-0 pb-0 md:px-0" />
         </div>
       </main>
     </div>
+    </MotionConfig>
   );
 }
 
@@ -363,7 +358,7 @@ function PantryUndoToast({ onRestored }: { onRestored: () => void }) {
               <p className="mt-0.5 text-xs text-stone-500">
                 Undo will restore it to your active pantry.
               </p>
-              {error && <p className="mt-1 text-xs text-terracotta-600">{error}</p>}
+              {error && <p role="alert" className="mt-1 text-xs text-terracotta-600">{error}</p>}
             </div>
             <div className="flex shrink-0 items-center gap-1">
               <button

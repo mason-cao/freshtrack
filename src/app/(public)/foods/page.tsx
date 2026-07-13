@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ChevronRight, Leaf } from "lucide-react";
-import { auth } from "@/auth";
 import { foods, type FoodCategory, type FoodPageData } from "@/lib/foods";
 import { getFoodImage } from "@/lib/food-images";
 import { LandingNav } from "@/components/landing/landing-nav";
@@ -36,7 +35,7 @@ const categoryBlurbs: Record<FoodCategory, string> = {
   produce: "Fresh produce wilts the fastest. The right paper towel, the right drawer, and the right neighbors can double shelf life.",
   dairy: "Dairy is more durable than the sell-by date suggests, but only if the temperature stays cold and stable.",
   meat: "Raw poultry has the shortest fridge window of common proteins. The food safety rules are mostly about timing and handling.",
-  seafood: "Fresh fish has a tight window. Smell is the clearest signal, and the freezer is the right answer for anything you cannot cook tonight.",
+  seafood: "Fresh fish has a tight window. Time and temperature matter more than appearance, and the freezer is the right answer when you cannot cook it promptly.",
   bakery: "Bread storage is counterintuitive. The fridge actually accelerates staling, and visible mold means the whole loaf goes.",
   grains: "Cooked grains carry food safety considerations most people miss. Cool fast, refrigerate fast, reheat hot.",
 };
@@ -68,18 +67,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function FoodsIndexPage() {
-  const session = await auth();
-  const isAuthenticated = Boolean(session?.user);
-  const ctaHref = isAuthenticated ? "/app" : "/login";
-  const ctaLabel = isAuthenticated ? "Open your kitchen" : "Sign in with Google";
+export default function FoodsIndexPage() {
+  const ctaHref = "/login";
+  const ctaLabel = "Sign in with Google";
 
   const groups = groupByCategory(foods);
   const activeCategories = categoryOrder.filter((cat) => groups.has(cat));
 
   return (
     <>
-      <LandingNav isAuthenticated={isAuthenticated} />
+      <LandingNav isAuthenticated={false} />
 
       <main id="main-content">
         {/* HERO */}
@@ -253,17 +250,17 @@ export default async function FoodsIndexPage() {
           <div className="relative mx-auto max-w-4xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
             <Reveal>
               <div className="max-w-2xl">
-                <p className="inline-flex items-center gap-2 rounded-full bg-warm-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sage-50 ring-1 ring-warm-white/20">
+                <p className="inline-flex items-center gap-2 rounded-full bg-warm-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-warm-white ring-1 ring-warm-white/20">
                   <Leaf className="h-3.5 w-3.5" />
                   The whole pitch
                 </p>
                 <h2 className="mt-5 text-3xl font-bold leading-tight tracking-tight text-warm-white sm:text-4xl">
                   Track these foods in your actual kitchen.
                 </h2>
-                <p className="mt-5 text-base leading-relaxed text-sage-50/90 sm:text-lg">
+                <p className="mt-5 text-base leading-relaxed text-warm-white sm:text-lg">
                   FreshTrack surfaces items before they expire, suggests recipes
                   that use what is about to go off, and tracks money saved over
-                  time. Free forever.
+                  time. Free to use.
                 </p>
                 <Link
                   href={ctaHref}

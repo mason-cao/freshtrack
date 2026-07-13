@@ -9,6 +9,7 @@ import { BookOpen, Compass, Sparkles } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { fetchJson } from "@/lib/api-client";
 import { subscribeToPantryUpdates } from "@/lib/pantry-events";
+import { ErrorState, LoadingState } from "@/components/ui/async-state";
 
 interface RecipeIngredient {
   id: number;
@@ -190,18 +191,18 @@ export default function RecipesPage() {
   const canShowMore = diveRecipes.length < diveTotal;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-sage-200 border-t-sage-600" />
-      </div>
-    );
+    return <LoadingState label="Loading recipes" />;
   }
 
   if (error) {
     return (
-      <div className="rounded-xl bg-terracotta-50 p-4 text-sm text-terracotta-600">
-        {error}
-      </div>
+      <ErrorState
+        message={error}
+        onRetry={() => {
+          setDiveOffset(0);
+          setRefreshKey((key) => key + 1);
+        }}
+      />
     );
   }
 

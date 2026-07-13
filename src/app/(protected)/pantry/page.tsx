@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PackageSearch, SearchX, Trash2 } from "lucide-react";
 import type { PantryItem } from "@/lib/pantry";
+import { ErrorState } from "@/components/ui/async-state";
 
 const FIRST_FIVE_ITEMS_EVENT_KEY = "freshtrack:analytics:first-5-items-sent";
 
@@ -126,11 +127,7 @@ export default function PantryPage() {
   }
 
   if (error) {
-    return (
-      <div className="rounded-xl bg-terracotta-50 p-4 text-sm text-terracotta-600">
-        {error}
-      </div>
-    );
+    return <ErrorState message={error} onRetry={loadItems} />;
   }
 
   return (
