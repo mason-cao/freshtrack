@@ -8,20 +8,22 @@ FreshTrack is a pantry management dashboard that helps you track food freshness,
 
 ## The Problem
 
-About 30-40% of food purchased by US households is wasted, costing the average family roughly $1,500/year. The root cause: people forget what's in their pantry. Items expire unnoticed, meals are not planned around what needs using first, and there is no feedback loop showing how much waste actually occurs.
+USDA estimates that 30–40% of the U.S. food supply goes uneaten. EPA's 2025 estimate puts the annual cost at about $2,913 for a household of four. One preventable cause is simple: food is forgotten until it is no longer usable. FreshTrack focuses on that narrow household feedback loop.
 
-This habit does not just drain your wallet. It actively hurts the planet. Food waste drives climate change, causing roughly 8% of global greenhouse emissions. When we throw away food, we also waste the water, land, and energy used to grow it. That organic waste then rots in landfills and releases methane, a greenhouse gas far more potent than carbon dioxide. Because families lack a feedback loop showing how much waste actually occurs, this costly cycle continues completely unnoticed.
+Food loss and waste also account for an estimated 8–10% of global greenhouse-gas emissions. EPA estimates that food waste is responsible for 58% of fugitive methane emissions from U.S. municipal solid-waste landfills. Throwing food away also discards the water, land, and energy used to produce it.
+
+Sources: [USDA food-waste FAQ](https://www.usda.gov/node/27287), [EPA consumer cost estimate](https://www.epa.gov/land-research/estimating-cost-food-waste-american-consumers), [EPA food-waste basics](https://www.epa.gov/sustainable-management-food/sustainable-management-food-basics), and [EPA landfill methane research](https://www.epa.gov/land-research/quantifying-methane-emissions-landfilled-food-waste).
 
 ## Features
 
 - **Freshness Dashboard** - Overview of active pantry items, urgency metrics, and the next recipe to try
 - **Expiration Alerts** - Prominent warnings for items expiring within 2 days
 - **Pantry Management** - Add, search, filter, sort, and track inventory by quantity, unit, purchase date, expiration date, and estimated cost
-- **Barcode Scanning** - Scan a product barcode to prefill name, category, and expiration via Open Food Facts; works cross-browser (native Barcode Detection API with a ZXing fallback) and always offers manual entry
+- **Barcode Scanning** - Scan a product barcode to look up supported product details through Open Food Facts (with a UPCitemdb name fallback), then review the category-based freshness suggestion; manual entry remains available
 - **Recipe Suggestions** - "Use It Up" recipes that match ingredients expiring within 5 days
 - **Recipe Dive** - Search and filter a catalog of recipes (imported from TheMealDB), ranked by how many of your expiring ingredients each one uses
 - **Consume/Waste Logging** - Mark items as used or wasted, log outcomes, and undo recent actions
-- **Statistics & Charts** - Monthly trends, waste rates, category breakdowns, and money saved estimates
+- **Statistics & Charts** - Monthly consumed-versus-wasted trends, waste rates, and estimated saved-versus-wasted value
 - **Google Sign-In** - Auth.js-powered Google OAuth gate for the application
 
 ## Current Scope Notes
@@ -53,7 +55,7 @@ This habit does not just drain your wallet. It actively hurts the planet. Food w
 
 ### Prerequisites
 
-- Node.js 20.9+ and npm
+- Node.js 22.x and npm
 - PostgreSQL, either local or Railway-hosted
 - Google OAuth credentials for local sign-in
 
@@ -79,6 +81,9 @@ AUTH_SECRET=<generate with: openssl rand -base64 32>
 AUTH_URL=http://localhost:3000
 GOOGLE_CLIENT_ID=<google-oauth-client-id>
 GOOGLE_CLIENT_SECRET=<google-oauth-client-secret>
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+# Optional: total Postgres connections per app process (default 5, maximum 20)
+DATABASE_POOL_MAX=5
 ```
 
 For Google OAuth local development, add these callback settings to a Google OAuth web client:
@@ -135,17 +140,19 @@ See `.env.example` for the full template. Required in production:
 - `AUTH_SECRET` - generate with `openssl rand -base64 32`
 - `AUTH_URL` - deployed origin, for example `https://freshtrack.up.railway.app`
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google Cloud OAuth credentials
+- `NEXT_PUBLIC_SITE_URL` - canonical public origin used for metadata and same-origin checks
+- `DATABASE_POOL_MAX` - optional per-process Postgres pool cap; defaults to `5` and is capped at `20`
 
 ### Deploy Steps
 
 1. Create a Railway project linked to this repo.
 2. Add a Railway Postgres service.
 3. Add the production environment variables in the Railway app service.
-4. Run migrations against production: `DATABASE_URL=... npm run db:migrate`
+4. Take or confirm a restorable database backup, then run migrations against production: `DATABASE_URL=... npm run db:migrate`
 5. Seed global categories: `DATABASE_URL=... npm run db:seed:categories`
 6. Seed global starter recipes: `DATABASE_URL=... npm run db:seed:recipes`
 7. Import the recipe catalog: `DATABASE_URL=... npm run db:import:recipes`
-8. Deploy the app service from Railway.
+8. Deploy the app service from Railway and verify `/`, `/login`, authentication, pantry mutations, recipe search, stats, and the security headers before directing traffic to it.
 9. Configure Google OAuth with:
    - Authorized origin: your Railway public app URL
    - Redirect URI: `<your Railway public app URL>/api/auth/callback/google`
@@ -184,12 +191,9 @@ ALLOW_DESTRUCTIVE_SEED=1 npm run db:seed
 ```text
 src/
 ├── app/              # Next.js App Router pages & API routes
-│   ├── api/          # REST API endpoints and Auth.js route handler
-│   ├── login/        # Google sign-in page
-│   ├── pantry/       # Pantry management page
-│   ├── recipes/      # Recipe suggestions page
-│   ├── stats/        # Statistics & charts page
-│   └── page.tsx      # Dashboard
+│   ├── (public)/     # Cacheable marketing/guides/legal pages plus sign-in
+│   ├── (protected)/  # Authenticated dashboard, pantry, recipes, and stats
+│   └── api/          # REST API endpoints and Auth.js route handler
 ├── components/       # React components
 │   ├── ui/           # Base UI components
 │   ├── dashboard/    # Dashboard-specific components

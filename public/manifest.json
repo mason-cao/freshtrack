@@ -2,12 +2,15 @@
   "name": "FreshTrack",
   "short_name": "FreshTrack",
   "description": "Track pantry freshness, reduce food waste, and save money.",
+  "id": "/",
+  "lang": "en-US",
+  "dir": "ltr",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#fefcf3",
   "theme_color": "#527a52",
-  "orientation": "portrait",
+  "categories": ["food", "lifestyle", "productivity"],
   "icons": [
     {
       "src": "/icon.svg",

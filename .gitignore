@@ -37,6 +37,8 @@ next-env.d.ts
 
 # local artifacts
 .*/
+!/.github/
+!/.github/**
 /docs/
 PRODUCT.md
 DESIGN.md
