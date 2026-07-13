@@ -37,6 +37,13 @@ describe("parseRecipeQuery", () => {
     expect(parseRecipeQuery(query("offset=80")).offset).toBe(80);
     expect(parseRecipeQuery(query("offset=-1")).offset).toBe(0);
     expect(parseRecipeQuery(query("offset=abc")).offset).toBe(0);
+    expect(parseRecipeQuery(query("offset=1e9")).offset).toBe(0);
+    expect(parseRecipeQuery(query("offset=999999999")).offset).toBe(2_000);
+  });
+
+  it("caps maximum cooking time to one day", () => {
+    expect(parseRecipeQuery(query("maxMinutes=999999")).maxMinutes).toBe(1_440);
+    expect(parseRecipeQuery(query("maxMinutes=12minutes")).maxMinutes).toBeNull();
   });
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveDatabaseUrl } from "./config";
+import { resolveDatabasePoolMax, resolveDatabaseUrl } from "./config";
 
 describe("resolveDatabaseUrl", () => {
   it("uses DATABASE_URL when it is provided", () => {
@@ -21,5 +21,15 @@ describe("resolveDatabaseUrl", () => {
     expect(() => resolveDatabaseUrl({ NODE_ENV: "production" })).toThrow(
       "DATABASE_URL is required"
     );
+  });
+});
+
+describe("resolveDatabasePoolMax", () => {
+  it("defaults to five connections and caps configured pools", () => {
+    expect(resolveDatabasePoolMax({})).toBe(5);
+    expect(resolveDatabasePoolMax({ DATABASE_POOL_MAX: "12" })).toBe(12);
+    expect(resolveDatabasePoolMax({ DATABASE_POOL_MAX: "200" })).toBe(20);
+    expect(resolveDatabasePoolMax({ DATABASE_POOL_MAX: "invalid" })).toBe(5);
+    expect(resolveDatabasePoolMax({ DATABASE_POOL_MAX: "0" })).toBe(5);
   });
 });

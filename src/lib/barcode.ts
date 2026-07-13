@@ -28,6 +28,10 @@ const NOT_FOUND: NormalizedProduct = {
   categoryTags: [],
 };
 
+const MAX_PRODUCT_TEXT_LENGTH = 80;
+const MAX_CATEGORY_TAGS = 50;
+const MAX_PRODUCT_QUANTITY = 1_000_000;
+
 /**
  * Accept only plausible retail barcodes: digits, 8–14 long. Covers EAN-8,
  * UPC-E (expanded), UPC-A (12), EAN-13 (13) and GTIN-14. Rejecting everything
@@ -52,19 +56,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 // Name fallback chain, most-specific first. The English name reads best for our
 // (English) audience; generic/abbreviated names rescue sparse OFF entries.
 function readProductName(product: Record<string, unknown>): string | null {
-  return (
+  const name =
     readString(product.product_name_en) ??
     readString(product.product_name) ??
     readString(product.generic_name) ??
-    readString(product.abbreviated_product_name)
-  );
+    readString(product.abbreviated_product_name);
+  return name?.slice(0, MAX_PRODUCT_TEXT_LENGTH) ?? null;
 }
 
 // OFF stores brands as a comma-separated list; the first is the primary brand.
 function readBrand(product: Record<string, unknown>): string | null {
   const brands = readString(product.brands);
   if (!brands) return null;
-  return readString(brands.split(",")[0]);
+  return readString(brands.split(",")[0])?.slice(0, MAX_PRODUCT_TEXT_LENGTH) ?? null;
 }
 
 function readImageUrl(product: Record<string, unknown>): string | null {
@@ -102,16 +106,27 @@ function readCategoryTags(product: Record<string, unknown>): string[] {
     const normalized = normalizeTag(value);
     if (normalized) seen.add(normalized);
   }
-  return [...seen];
+  return [...seen].slice(0, MAX_CATEGORY_TAGS);
 }
 
 function toPositiveNumber(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+  if (
+    typeof value === "number" &&
+    Number.isFinite(value) &&
+    value > 0 &&
+    value <= MAX_PRODUCT_QUANTITY
+  ) {
     return value;
   }
   if (typeof value === "string") {
     const parsed = Number.parseFloat(value.replace(",", "."));
-    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    if (
+      Number.isFinite(parsed) &&
+      parsed > 0 &&
+      parsed <= MAX_PRODUCT_QUANTITY
+    ) {
+      return parsed;
+    }
   }
   return null;
 }

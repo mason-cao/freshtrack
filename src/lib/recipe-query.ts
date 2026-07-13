@@ -12,6 +12,8 @@ export interface RecipeQuery {
 }
 
 const MAX_TEXT_LENGTH = 80;
+export const MAX_RECIPE_QUERY_MINUTES = 24 * 60;
+export const MAX_RECIPE_QUERY_OFFSET = 2_000;
 
 function cleanText(value: string | null): string | null {
   if (!value) return null;
@@ -21,17 +23,24 @@ function cleanText(value: string | null): string | null {
 
 export function parseRecipeQuery(params: URLSearchParams): RecipeQuery {
   const maxRaw = params.get("maxMinutes");
-  const maxNumber = maxRaw ? Number.parseInt(maxRaw, 10) : Number.NaN;
   const offsetRaw = params.get("offset");
-  const offsetNumber = offsetRaw ? Number.parseInt(offsetRaw, 10) : Number.NaN;
+  const maxNumber = maxRaw && /^\d+$/.test(maxRaw) ? Number(maxRaw) : Number.NaN;
+  const offsetNumber =
+    offsetRaw && /^\d+$/.test(offsetRaw) ? Number(offsetRaw) : Number.NaN;
 
   return {
     search: cleanText(params.get("search")),
     cuisine: cleanText(params.get("cuisine")),
     category: cleanText(params.get("category")),
-    maxMinutes: Number.isInteger(maxNumber) && maxNumber > 0 ? maxNumber : null,
+    maxMinutes:
+      Number.isSafeInteger(maxNumber) && maxNumber > 0
+        ? Math.min(maxNumber, MAX_RECIPE_QUERY_MINUTES)
+        : null,
     sort: params.get("sort") === "name" ? "name" : "relevance",
-    offset: Number.isInteger(offsetNumber) && offsetNumber > 0 ? offsetNumber : 0,
+    offset:
+      Number.isSafeInteger(offsetNumber) && offsetNumber > 0
+        ? Math.min(offsetNumber, MAX_RECIPE_QUERY_OFFSET)
+        : 0,
   };
 }
 

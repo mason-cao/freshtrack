@@ -5,6 +5,8 @@
 
 export const PRODUCT_LOOKUP_RATE_LIMIT = 30;
 export const PRODUCT_LOOKUP_RATE_LIMIT_WINDOW_MS = 60_000;
+export const MAX_PRODUCT_LOOKUP_RATE_LIMIT_BUCKETS = 10_000;
+export const MAX_PRODUCT_NAME_LENGTH = 80;
 
 type RateLimitResult = { ok: true } | { ok: false; retryAfterSeconds: number };
 
@@ -17,11 +19,37 @@ const productLookupBuckets =
 
 globalForProductLookup.freshtrackProductLookupBuckets = productLookupBuckets;
 
+function evictStaleProductLookupBuckets(windowStart: number) {
+  for (const [key, timestamps] of productLookupBuckets) {
+    const newest = timestamps[timestamps.length - 1];
+    if (newest === undefined || newest <= windowStart) {
+      productLookupBuckets.delete(key);
+    }
+  }
+
+  if (productLookupBuckets.size >= MAX_PRODUCT_LOOKUP_RATE_LIMIT_BUCKETS) {
+    const excess =
+      productLookupBuckets.size - MAX_PRODUCT_LOOKUP_RATE_LIMIT_BUCKETS + 1;
+    let removed = 0;
+    for (const key of productLookupBuckets.keys()) {
+      productLookupBuckets.delete(key);
+      removed += 1;
+      if (removed >= excess) break;
+    }
+  }
+}
+
 export function checkProductLookupRateLimit(
   userId: string,
   now = Date.now()
 ): RateLimitResult {
   const windowStart = now - PRODUCT_LOOKUP_RATE_LIMIT_WINDOW_MS;
+  if (
+    !productLookupBuckets.has(userId) &&
+    productLookupBuckets.size >= MAX_PRODUCT_LOOKUP_RATE_LIMIT_BUCKETS
+  ) {
+    evictStaleProductLookupBuckets(windowStart);
+  }
   const timestamps = (productLookupBuckets.get(userId) ?? []).filter(
     (timestamp) => timestamp > windowStart
   );
@@ -57,5 +85,5 @@ export function parseUpcItemDbName(payload: unknown): string | null {
   if (!isRecord(first)) return null;
 
   const title = typeof first.title === "string" ? first.title.trim() : "";
-  return title.length > 0 ? title : null;
+  return title.length > 0 ? title.slice(0, MAX_PRODUCT_NAME_LENGTH) : null;
 }

@@ -3,6 +3,7 @@ import {
   buildAnalyticsPayload,
   extractUtmAttribution,
   mergeAttribution,
+  stripUrlDetails,
   trackAnalyticsEvent,
 } from "./analytics-client";
 
@@ -62,6 +63,13 @@ describe("analytics client attribution", () => {
       utmContent: null,
       utmTerm: null,
     });
+  });
+
+  it("removes query strings and fragments from referrers", () => {
+    expect(
+      stripUrlDetails("https://www.reddit.com/r/SideProject/?token=secret#reply")
+    ).toBe("https://www.reddit.com/r/SideProject/");
+    expect(stripUrlDetails("not a url")).toBeNull();
   });
 
   it("does not throw when browser storage is unavailable", () => {

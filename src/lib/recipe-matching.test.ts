@@ -14,6 +14,7 @@ describe("normalizeIngredientName", () => {
     expect(normalizeIngredientName("Strawberries")).toBe("strawberry");
     expect(normalizeIngredientName("Salt to taste")).toBe("salt");
     expect(normalizeIngredientName("Chicken (boneless)")).toBe("chicken");
+    expect(normalizeIngredientName("Crème brûlée")).toBe("crème brûlée");
   });
 });
 
@@ -30,6 +31,11 @@ describe("countExpiringMatches", () => {
   it("treats plural and descriptor variants as the same ingredient", () => {
     expect(countExpiringMatches(["Fresh Spinach"], ["Baby Spinach"]).matchCount).toBe(1);
     expect(countExpiringMatches(["Whole Milk"], ["milk"]).matchCount).toBe(1);
+  });
+
+  it("preserves and matches non-ASCII ingredient names", () => {
+    expect(countExpiringMatches(["jalapeño peppers"], ["jalapeño"]).matchCount).toBe(1);
+    expect(countExpiringMatches(["青梗菜"], ["青梗菜"]).matchCount).toBe(1);
   });
 
   it("does not match substrings of unrelated words", () => {

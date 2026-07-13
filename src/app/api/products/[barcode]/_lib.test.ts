@@ -37,4 +37,10 @@ describe("parseUpcItemDbName", () => {
     expect(parseUpcItemDbName(null)).toBeNull();
     expect(parseUpcItemDbName("nope")).toBeNull();
   });
+
+  it("caps upstream product names to the item-name limit", () => {
+    expect(parseUpcItemDbName({ items: [{ title: "x".repeat(100) }] })).toBe(
+      "x".repeat(80)
+    );
+  });
 });

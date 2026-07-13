@@ -100,6 +100,17 @@ export function buildAnalyticsPayload({
   };
 }
 
+export function stripUrlDetails(value: string | null): string | null {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+    return `${url.origin}${url.pathname}`;
+  } catch {
+    return null;
+  }
+}
+
 function createVisitorId(): string {
   return typeof window !== "undefined" &&
     typeof window.crypto?.randomUUID === "function"
@@ -142,8 +153,8 @@ export function trackAnalyticsEvent(eventName: AnalyticsEventName) {
   const payload = buildAnalyticsPayload({
     eventName,
     visitorId: getOrCreateVisitorId(),
-    path: `${window.location.pathname}${window.location.search}`,
-    referrer: document.referrer || null,
+    path: window.location.pathname,
+    referrer: stripUrlDetails(document.referrer),
     attribution: currentAttribution(),
   });
 

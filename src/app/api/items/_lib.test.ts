@@ -62,6 +62,24 @@ describe("item API security limits", () => {
     });
   });
 
+  it("rejects numeric values that would poison aggregates", () => {
+    const basePayload = {
+      name: "Greek yogurt",
+      expirationDate: "2026-05-20",
+    };
+
+    expect(
+      validateCreateItemPayload({ ...basePayload, quantity: 1_000_001 })
+    ).toEqual({
+      ok: false,
+      error: "Quantity must be greater than zero and no more than 1,000,000.",
+    });
+    expect(validatePatchItemPayload({ costEstimate: 1_000_001 })).toEqual({
+      ok: false,
+      error: "Cost estimate must be between zero and 1,000,000.",
+    });
+  });
+
   it("detects oversized JSON requests from the content-length header", () => {
     expect(
       isRequestBodyTooLarge(
@@ -92,6 +110,7 @@ describe("item API security limits", () => {
     const result = await readJsonRequestBody(
       new Request("https://freshtrack.test/api/items", {
         method: "POST",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ notes: "x".repeat(9000) }),
       })
     );
@@ -107,6 +126,7 @@ describe("item API security limits", () => {
     const result = await readJsonRequestBody(
       new Request("https://freshtrack.test/api/items", {
         method: "POST",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ name: "Greek yogurt" }),
       })
     );
@@ -114,6 +134,21 @@ describe("item API security limits", () => {
     expect(result).toEqual({
       ok: true,
       body: { name: "Greek yogurt" },
+    });
+  });
+
+  it("rejects JSON bodies without a JSON content type", async () => {
+    const result = await readJsonRequestBody(
+      new Request("https://freshtrack.test/api/items", {
+        method: "POST",
+        body: "{}",
+      })
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      status: 415,
+      error: "Content-Type must be application/json.",
     });
   });
 

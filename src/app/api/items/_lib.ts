@@ -1,6 +1,11 @@
 import { db } from "@/db";
 import { categories, items, wasteLog } from "@/db/schema";
 import { isDateInputValue, toDateInputValue } from "@/lib/dates";
+import {
+  isRequestBodyOverLimit,
+  readLimitedJsonBody,
+  type LimitedJsonBodyResult,
+} from "@/lib/request-body";
 import { and, count, desc, eq } from "drizzle-orm";
 
 export const itemStatuses = ["active", "consumed", "wasted"] as const;
@@ -9,8 +14,11 @@ export const MAX_ITEM_UNIT_LENGTH = 24;
 export const MAX_ITEM_NOTES_LENGTH = 500;
 export const MAX_ITEM_REQUEST_BODY_BYTES = 8 * 1024;
 export const MAX_ITEMS_PER_USER = 500;
+export const MAX_ITEM_QUANTITY = 1_000_000;
+export const MAX_ITEM_COST_ESTIMATE = 1_000_000;
 export const ITEM_MUTATION_RATE_LIMIT = 60;
 export const ITEM_MUTATION_RATE_LIMIT_WINDOW_MS = 60_000;
+export const MAX_ITEM_MUTATION_RATE_LIMIT_BUCKETS = 10_000;
 
 export type ItemStatus = (typeof itemStatuses)[number];
 export type ItemAction = Extract<ItemStatus, "consumed" | "wasted">;
@@ -36,10 +44,6 @@ type RateLimitResult =
   | { ok: true }
   | { ok: false; retryAfterSeconds: number };
 
-type JsonBodyResult =
-  | { ok: true; body: unknown }
-  | { ok: false; status: 400 | 413; error: string };
-
 const globalForItemSecurity = globalThis as unknown as {
   freshtrackItemMutationBuckets?: Map<string, number[]>;
 };
@@ -61,14 +65,20 @@ function isEmptyInput(value: unknown) {
   return value === null || value === undefined || value === "";
 }
 
-function positiveNumber(value: unknown) {
+function positiveNumber(value: unknown, maximum = Number.POSITIVE_INFINITY) {
   const numberValue = Number(value);
-  return Number.isFinite(numberValue) && numberValue > 0 ? numberValue : null;
+  return Number.isFinite(numberValue) && numberValue > 0 && numberValue <= maximum
+    ? numberValue
+    : null;
 }
 
-function nonNegativeNumber(value: unknown) {
+function nonNegativeNumber(value: unknown, maximum = Number.POSITIVE_INFINITY) {
   const numberValue = Number(value);
-  return Number.isFinite(numberValue) && numberValue >= 0 ? numberValue : null;
+  return Number.isFinite(numberValue) &&
+    numberValue >= 0 &&
+    numberValue <= maximum
+    ? numberValue
+    : null;
 }
 
 function positiveInteger(value: unknown) {
@@ -105,49 +115,34 @@ export async function categoryExists(categoryId: number): Promise<boolean> {
 }
 
 export function isRequestBodyTooLarge(request: Request): boolean {
-  const contentLength = request.headers.get("content-length");
-  if (!contentLength) return false;
-
-  const byteLength = Number(contentLength);
-  return Number.isFinite(byteLength) && byteLength > MAX_ITEM_REQUEST_BODY_BYTES;
+  return isRequestBodyOverLimit(request, MAX_ITEM_REQUEST_BODY_BYTES);
 }
 
 export async function readJsonRequestBody(
   request: Request
-): Promise<JsonBodyResult> {
-  if (isRequestBodyTooLarge(request)) {
-    return { ok: false, status: 413, error: "Request body is too large." };
-  }
+): Promise<LimitedJsonBodyResult> {
+  return readLimitedJsonBody(request, MAX_ITEM_REQUEST_BODY_BYTES, {
+    requireJsonContentType: true,
+  });
+}
 
-  const reader = request.body?.getReader();
-  if (!reader) {
-    return { ok: false, status: 400, error: "Invalid JSON body." };
-  }
-
-  const decoder = new TextDecoder();
-  let byteLength = 0;
-  let text = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (!value) continue;
-
-    byteLength += value.byteLength;
-    if (byteLength > MAX_ITEM_REQUEST_BODY_BYTES) {
-      await reader.cancel().catch(() => undefined);
-      return { ok: false, status: 413, error: "Request body is too large." };
+function evictStaleItemMutationBuckets(windowStart: number) {
+  for (const [key, timestamps] of itemMutationBuckets) {
+    const newest = timestamps[timestamps.length - 1];
+    if (newest === undefined || newest <= windowStart) {
+      itemMutationBuckets.delete(key);
     }
-
-    text += decoder.decode(value, { stream: true });
   }
 
-  text += decoder.decode();
-
-  try {
-    return { ok: true, body: JSON.parse(text) };
-  } catch {
-    return { ok: false, status: 400, error: "Invalid JSON body." };
+  if (itemMutationBuckets.size >= MAX_ITEM_MUTATION_RATE_LIMIT_BUCKETS) {
+    const excess =
+      itemMutationBuckets.size - MAX_ITEM_MUTATION_RATE_LIMIT_BUCKETS + 1;
+    let removed = 0;
+    for (const key of itemMutationBuckets.keys()) {
+      itemMutationBuckets.delete(key);
+      removed += 1;
+      if (removed >= excess) break;
+    }
   }
 }
 
@@ -156,6 +151,12 @@ export function checkItemMutationRateLimit(
   now = Date.now()
 ): RateLimitResult {
   const windowStart = now - ITEM_MUTATION_RATE_LIMIT_WINDOW_MS;
+  if (
+    !itemMutationBuckets.has(userId) &&
+    itemMutationBuckets.size >= MAX_ITEM_MUTATION_RATE_LIMIT_BUCKETS
+  ) {
+    evictStaleItemMutationBuckets(windowStart);
+  }
   const timestamps = (itemMutationBuckets.get(userId) ?? []).filter(
     (timestamp) => timestamp > windowStart
   );
@@ -179,7 +180,7 @@ export async function hasReachedItemLimit(userId: string): Promise<boolean> {
   const [row] = await db
     .select({ value: count() })
     .from(items)
-    .where(eq(items.userId, userId));
+    .where(and(eq(items.userId, userId), eq(items.status, "active")));
   return Number(row?.value ?? 0) >= MAX_ITEMS_PER_USER;
 }
 
@@ -219,9 +220,12 @@ export function validateCreateItemPayload(
   const quantity =
     payload.quantity === undefined || payload.quantity === ""
       ? 1
-      : positiveNumber(payload.quantity);
+      : positiveNumber(payload.quantity, MAX_ITEM_QUANTITY);
   if (quantity === null) {
-    return { ok: false, error: "Quantity must be greater than zero." };
+    return {
+      ok: false,
+      error: `Quantity must be greater than zero and no more than ${MAX_ITEM_QUANTITY.toLocaleString("en-US")}.`,
+    };
   }
 
   const unit = normalizedText(payload.unit) || "count";
@@ -238,9 +242,12 @@ export function validateCreateItemPayload(
 
   const costEstimate = isEmptyInput(payload.costEstimate)
     ? null
-    : nonNegativeNumber(payload.costEstimate);
+    : nonNegativeNumber(payload.costEstimate, MAX_ITEM_COST_ESTIMATE);
   if (costEstimate === null && !isEmptyInput(payload.costEstimate)) {
-    return { ok: false, error: "Cost estimate must be zero or greater." };
+    return {
+      ok: false,
+      error: `Cost estimate must be between zero and ${MAX_ITEM_COST_ESTIMATE.toLocaleString("en-US")}.`,
+    };
   }
 
   const notes = normalizedText(payload.notes) || null;
@@ -302,9 +309,12 @@ export function validatePatchItemPayload(
   }
 
   if (isPresent(payload, "quantity")) {
-    const quantity = positiveNumber(payload.quantity);
+    const quantity = positiveNumber(payload.quantity, MAX_ITEM_QUANTITY);
     if (quantity === null) {
-      return { ok: false, error: "Quantity must be greater than zero." };
+      return {
+        ok: false,
+        error: `Quantity must be greater than zero and no more than ${MAX_ITEM_QUANTITY.toLocaleString("en-US")}.`,
+      };
     }
     data.quantity = quantity;
   }
@@ -343,9 +353,15 @@ export function validatePatchItemPayload(
     if (payload.costEstimate === null || payload.costEstimate === "") {
       data.costEstimate = null;
     } else {
-      const costEstimate = nonNegativeNumber(payload.costEstimate);
+      const costEstimate = nonNegativeNumber(
+        payload.costEstimate,
+        MAX_ITEM_COST_ESTIMATE
+      );
       if (costEstimate === null) {
-        return { ok: false, error: "Cost estimate must be zero or greater." };
+        return {
+          ok: false,
+          error: `Cost estimate must be between zero and ${MAX_ITEM_COST_ESTIMATE.toLocaleString("en-US")}.`,
+        };
       }
       data.costEstimate = costEstimate;
     }

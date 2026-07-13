@@ -3,6 +3,7 @@ import { getCurrentUserId } from "@/lib/session";
 import { normalizeOpenFoodFactsProduct, sanitizeBarcode } from "@/lib/barcode";
 import { mapCategoryTagsToCategoryId } from "@/lib/barcode-category";
 import { checkProductLookupRateLimit, parseUpcItemDbName } from "./_lib";
+import { readLimitedJsonBody } from "@/lib/request-body";
 
 /** Shape returned to the add-item form; `found: false` is always recoverable. */
 export interface ProductLookupResult {
@@ -43,6 +44,12 @@ const OFF_FIELDS = [
   "product_quantity_unit",
   "image_front_url",
 ].join(",");
+const MAX_UPSTREAM_BODY_BYTES = 256 * 1024;
+
+async function readUpstreamJson(response: Response): Promise<unknown> {
+  const result = await readLimitedJsonBody(response, MAX_UPSTREAM_BODY_BYTES);
+  return result.ok ? result.body : null;
+}
 
 async function lookupOpenFoodFacts(barcode: string): Promise<ProductLookupResult> {
   const url = `https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=${OFF_FIELDS}`;
@@ -61,7 +68,7 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ProductLookupResult
 
   if (!response.ok) return NOT_FOUND;
 
-  const payload = await response.json().catch(() => null);
+  const payload = await readUpstreamJson(response);
   const normalized = normalizeOpenFoodFactsProduct(payload);
   if (!normalized.found) return NOT_FOUND;
 
@@ -91,7 +98,7 @@ async function lookupUpcItemDb(barcode: string): Promise<ProductLookupResult> {
     });
     if (!response.ok) return NOT_FOUND;
 
-    const name = parseUpcItemDbName(await response.json().catch(() => null));
+    const name = parseUpcItemDbName(await readUpstreamJson(response));
     if (!name) return NOT_FOUND;
 
     return { ...NOT_FOUND, found: true, name };

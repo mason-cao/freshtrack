@@ -32,7 +32,7 @@ describe("isSameOriginRequest", () => {
     ).toBe(true);
   });
 
-  it("allows matching public host headers when the runtime URL is internal", () => {
+  it("does not trust client-controlled host headers when the runtime URL is internal", () => {
     expect(
       isSameOriginRequest(
         proxiedRequestWithHeaders({
@@ -41,10 +41,10 @@ describe("isSameOriginRequest", () => {
           "x-forwarded-proto": "https",
         })
       )
-    ).toBe(true);
+    ).toBe(false);
   });
 
-  it("allows matching forwarded host headers when the host header is internal", () => {
+  it("does not trust client-controlled forwarded host headers", () => {
     expect(
       isSameOriginRequest(
         proxiedRequestWithHeaders({
@@ -54,7 +54,7 @@ describe("isSameOriginRequest", () => {
           "x-forwarded-proto": "https",
         })
       )
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("allows the configured public site origin", () => {
@@ -73,6 +73,19 @@ describe("isSameOriginRequest", () => {
   it("rejects requests with a different origin", () => {
     expect(
       isSameOriginRequest(requestWithHeaders({ origin: "https://evil.test" }))
+    ).toBe(false);
+  });
+
+  it("does not let a matching request URL override configured origins", () => {
+    process.env.NEXT_PUBLIC_SITE_URL = "https://freshtrack.up.railway.app";
+
+    expect(
+      isSameOriginRequest(
+        new Request("https://evil.test/api/items", {
+          method: "POST",
+          headers: { origin: "https://evil.test" },
+        })
+      )
     ).toBe(false);
   });
 

@@ -105,6 +105,22 @@ describe("normalizeOpenFoodFactsProduct", () => {
     });
     expect(result.imageUrl).toBeNull();
   });
+
+  it("caps untrusted upstream text and quantity fields", () => {
+    const result = normalizeOpenFoodFactsProduct({
+      status: 1,
+      product: {
+        product_name: "x".repeat(200),
+        brands: "y".repeat(200),
+        product_quantity: 1_000_001,
+        product_quantity_unit: "g",
+      },
+    });
+
+    expect(result.name).toBe("x".repeat(80));
+    expect(result.brand).toBe("y".repeat(80));
+    expect(result.quantity).toBeNull();
+  });
 });
 
 describe("parseProductQuantity", () => {

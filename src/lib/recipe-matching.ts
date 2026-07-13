@@ -66,7 +66,8 @@ function tokenizeIngredientName(raw: string): string[] {
   return raw
     .toLowerCase()
     .replace(/\([^)]*\)/g, " ") // drop parentheticals like "(boneless)"
-    .replace(/[^a-z\s]/g, " ") // drop digits, fractions, punctuation
+    .normalize("NFKC")
+    .replace(/[^\p{L}\p{M}\s]/gu, " ") // keep letters/diacritics across languages
     .split(/\s+/)
     .filter((word) => word.length > 1 && !UNIT_WORDS.has(word) && !FILLER_WORDS.has(word))
     .map(singularize);

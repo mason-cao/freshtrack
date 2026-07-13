@@ -10,18 +10,24 @@ import { eq } from "drizzle-orm";
 import { closeDb, db } from "./index";
 import * as schema from "./schema";
 import { parseMeal, type ParsedRecipe, type RawMeal } from "./mealdb-parse";
+import { readLimitedJsonBody } from "../lib/request-body";
 
 const SEARCH_URL = "https://www.themealdb.com/api/json/v1/1/search.php?f=";
 const USER_AGENT = "FreshTrack/1.0 (https://freshtrack.up.railway.app)";
 const LETTERS = "abcdefghijklmnopqrstuvwxyz".split("");
+const MAX_MEALDB_RESPONSE_BYTES = 2 * 1024 * 1024;
 
 async function fetchMealsForLetter(letter: string): Promise<RawMeal[]> {
   try {
     const response = await fetch(`${SEARCH_URL}${letter}`, {
       headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
+      signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) return [];
-    const data = (await response.json().catch(() => null)) as { meals?: RawMeal[] | null } | null;
+    const result = await readLimitedJsonBody(response, MAX_MEALDB_RESPONSE_BYTES);
+    const data = (result.ok ? result.body : null) as {
+      meals?: RawMeal[] | null;
+    } | null;
     return Array.isArray(data?.meals) ? data.meals : [];
   } catch {
     return [];
@@ -29,47 +35,52 @@ async function fetchMealsForLetter(letter: string): Promise<RawMeal[]> {
 }
 
 async function upsertRecipe(parsed: ParsedRecipe): Promise<void> {
-  const [row] = await db
-    .insert(schema.recipes)
-    .values({
-      userId: null,
-      name: parsed.name,
-      description: parsed.description,
-      instructions: parsed.instructions,
-      prepTimeMinutes: null,
-      cookTimeMinutes: null,
-      servings: null,
-      imageUrl: parsed.imageUrl,
-      cuisine: parsed.cuisine,
-      category: parsed.category,
-      sourceUrl: parsed.sourceUrl,
-      externalId: parsed.externalId,
-    })
-    .onConflictDoUpdate({
-      target: schema.recipes.externalId,
-      set: {
+  await db.transaction(async (tx) => {
+    const [row] = await tx
+      .insert(schema.recipes)
+      .values({
         userId: null,
         name: parsed.name,
         description: parsed.description,
         instructions: parsed.instructions,
+        prepTimeMinutes: null,
+        cookTimeMinutes: null,
+        servings: null,
         imageUrl: parsed.imageUrl,
         cuisine: parsed.cuisine,
         category: parsed.category,
         sourceUrl: parsed.sourceUrl,
-      },
-    })
-    .returning({ id: schema.recipes.id });
+        externalId: parsed.externalId,
+      })
+      .onConflictDoUpdate({
+        target: schema.recipes.externalId,
+        set: {
+          userId: null,
+          name: parsed.name,
+          description: parsed.description,
+          instructions: parsed.instructions,
+          imageUrl: parsed.imageUrl,
+          cuisine: parsed.cuisine,
+          category: parsed.category,
+          sourceUrl: parsed.sourceUrl,
+        },
+      })
+      .returning({ id: schema.recipes.id });
 
-  // Replace this recipe's ingredient rows so re-imports stay in sync.
-  await db.delete(schema.recipeIngredients).where(eq(schema.recipeIngredients.recipeId, row.id));
-  await db.insert(schema.recipeIngredients).values(
-    parsed.ingredients.map((ingredient) => ({
-      recipeId: row.id,
-      ingredientName: ingredient.ingredientName,
-      quantity: ingredient.quantity,
-      unit: ingredient.unit,
-    }))
-  );
+    // Replace ingredients atomically so an interrupted import cannot leave a
+    // recipe without its ingredient rows.
+    await tx
+      .delete(schema.recipeIngredients)
+      .where(eq(schema.recipeIngredients.recipeId, row.id));
+    await tx.insert(schema.recipeIngredients).values(
+      parsed.ingredients.map((ingredient) => ({
+        recipeId: row.id,
+        ingredientName: ingredient.ingredientName,
+        quantity: ingredient.quantity,
+        unit: ingredient.unit,
+      }))
+    );
+  });
 }
 
 async function main() {

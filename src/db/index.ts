@@ -1,6 +1,6 @@
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { resolveDatabaseUrl } from "./config";
+import { resolveDatabasePoolMax, resolveDatabaseUrl } from "./config";
 import * as schema from "./schema";
 
 const globalForDb = globalThis as unknown as {
@@ -11,11 +11,13 @@ export const sqlClient =
   globalForDb.freshtrackSqlClient ??
   postgres(resolveDatabaseUrl(), {
     prepare: false,
+    max: resolveDatabasePoolMax(),
+    idle_timeout: 20,
+    connect_timeout: 10,
+    max_lifetime: 30 * 60,
   });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.freshtrackSqlClient = sqlClient;
-}
+globalForDb.freshtrackSqlClient = sqlClient;
 
 export const db = drizzle(sqlClient, { schema });
 

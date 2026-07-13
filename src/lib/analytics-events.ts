@@ -84,6 +84,41 @@ function isAnalyticsEventName(value: string): value is AnalyticsEventName {
   return analyticsEventNames.includes(value as AnalyticsEventName);
 }
 
+function normalizedPath(value: unknown): { ok: true; value: string } | { ok: false; error: string } {
+  const path = normalizedText(value) || "/";
+  if (path.length > MAX_PATH_LENGTH) {
+    return { ok: false, error: `Path must be ${MAX_PATH_LENGTH} characters or fewer.` };
+  }
+
+  try {
+    const base = new URL("https://freshtrack.invalid");
+    const url = new URL(path, base);
+    if (url.origin !== base.origin || !path.startsWith("/")) {
+      return { ok: false, error: "Path must be a same-site path." };
+    }
+    return { ok: true, value: url.pathname };
+  } catch {
+    return { ok: false, error: "Path must be a same-site path." };
+  }
+}
+
+function normalizedReferrer(
+  value: unknown
+): { ok: true; value: string | null } | { ok: false; error: string } {
+  const result = optionalText(value, "Referrer", MAX_REFERRER_LENGTH);
+  if (!result.ok || result.value === null) return result;
+
+  try {
+    const url = new URL(result.value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return { ok: false, error: "Referrer must be a valid web URL." };
+    }
+    return { ok: true, value: `${url.origin}${url.pathname}` };
+  } catch {
+    return { ok: false, error: "Referrer must be a valid web URL." };
+  }
+}
+
 export function validateAnalyticsEventPayload(payload: unknown): ValidationResult {
   if (!isRecord(payload)) {
     return { ok: false, error: "Expected a JSON object." };
@@ -105,15 +140,10 @@ export function validateAnalyticsEventPayload(payload: unknown): ValidationResul
     };
   }
 
-  const path = normalizedText(payload.path) || "/";
-  if (!path.startsWith("/")) {
-    return { ok: false, error: "Path must be a same-site path." };
-  }
-  if (path.length > MAX_PATH_LENGTH) {
-    return { ok: false, error: `Path must be ${MAX_PATH_LENGTH} characters or fewer.` };
-  }
+  const path = normalizedPath(payload.path);
+  if (!path.ok) return { ok: false, error: path.error };
 
-  const referrer = optionalText(payload.referrer, "Referrer", MAX_REFERRER_LENGTH);
+  const referrer = normalizedReferrer(payload.referrer);
   if (!referrer.ok) return { ok: false, error: referrer.error };
 
   const utmSource = optionalText(payload.utmSource, "UTM source", MAX_UTM_LENGTH);
@@ -136,7 +166,7 @@ export function validateAnalyticsEventPayload(payload: unknown): ValidationResul
     data: {
       eventName,
       visitorId,
-      path,
+      path: path.value,
       referrer: referrer.value,
       utmSource: utmSource.value,
       utmMedium: utmMedium.value,

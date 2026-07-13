@@ -12,7 +12,7 @@ describe("analytics event validation", () => {
       eventName: "page_view",
       visitorId: " visitor-123 ",
       path: "/?utm_source=reddit&utm_campaign=launch",
-      referrer: "https://www.reddit.com/r/SideProject/",
+      referrer: "https://www.reddit.com/r/SideProject/?share=secret#comment",
       utmSource: " reddit ",
       utmMedium: "community",
       utmCampaign: "launch",
@@ -25,7 +25,7 @@ describe("analytics event validation", () => {
       data: {
         eventName: "page_view",
         visitorId: "visitor-123",
-        path: "/?utm_source=reddit&utm_campaign=launch",
+        path: "/",
         referrer: "https://www.reddit.com/r/SideProject/",
         utmSource: "reddit",
         utmMedium: "community",
@@ -70,6 +70,25 @@ describe("analytics event validation", () => {
       ok: false,
       error: "Path must be 500 characters or fewer.",
     });
+  });
+
+  it("rejects protocol-relative paths and malformed referrers", () => {
+    expect(
+      validateAnalyticsEventPayload({
+        eventName: "page_view",
+        visitorId: "visitor-123",
+        path: "//evil.test/path",
+      })
+    ).toEqual({ ok: false, error: "Path must be a same-site path." });
+
+    expect(
+      validateAnalyticsEventPayload({
+        eventName: "page_view",
+        visitorId: "visitor-123",
+        path: "/",
+        referrer: "not a URL",
+      })
+    ).toEqual({ ok: false, error: "Referrer must be a valid web URL." });
   });
 
   it("limits analytics writes per visitor within a fixed window", () => {

@@ -45,7 +45,7 @@ describe("POST /api/analytics", () => {
         eventName: "page_view",
         visitorId: "route-test-visitor",
         path: "/?utm_source=reddit",
-        referrer: "https://www.reddit.com/r/SideProject/",
+        referrer: "https://www.reddit.com/r/SideProject/?share=secret",
         utmSource: "reddit",
         utmMedium: "community",
         utmCampaign: "launch",
@@ -58,7 +58,7 @@ describe("POST /api/analytics", () => {
       expect.objectContaining({
         eventName: "page_view",
         visitorId: "route-test-visitor",
-        path: "/?utm_source=reddit",
+        path: "/",
         referrer: "https://www.reddit.com/r/SideProject/",
         utmSource: "reddit",
         utmMedium: "community",

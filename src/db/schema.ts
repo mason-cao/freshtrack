@@ -55,6 +55,11 @@ export const items = pgTable(
     index("items_user_id_idx").on(table.userId),
     index("items_user_status_idx").on(table.userId, table.status),
     index("items_user_expiration_idx").on(table.userId, table.expirationDate),
+    index("items_user_status_expiration_idx").on(
+      table.userId,
+      table.status,
+      table.expirationDate
+    ),
   ]
 );
 
@@ -122,6 +127,12 @@ export const wasteLog = pgTable(
   (table) => [
     index("waste_log_user_id_idx").on(table.userId),
     index("waste_log_user_logged_at_idx").on(table.userId, table.loggedAt),
+    index("waste_log_restore_idx").on(
+      table.userId,
+      table.itemId,
+      table.action,
+      table.loggedAt
+    ),
   ]
 );
 
@@ -176,16 +187,21 @@ export const accounts = pgTable(
   },
   (account) => [
     primaryKey({ columns: [account.provider, account.providerAccountId] }),
+    index("accounts_user_id_idx").on(account.userId),
   ]
 );
 
-export const sessions = pgTable("sessions", {
-  sessionToken: text("session_token").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  expires: timestamp("expires", { mode: "date" }).notNull(),
-});
+export const sessions = pgTable(
+  "sessions",
+  {
+    sessionToken: text("session_token").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
+  },
+  (session) => [index("sessions_user_id_idx").on(session.userId)]
+);
 
 export const verificationTokens = pgTable(
   "verification_tokens",
