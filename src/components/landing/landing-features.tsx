@@ -73,11 +73,12 @@ export function LandingFeatures() {
           <FeatureBlock
             eyebrow="01 · Scan"
             title="Add groceries by scanning, not typing."
-            body="Point your phone at a barcode while you unpack. FreshTrack reads it and prefills the item — name, category, and a suggested freshness date — so adding a thing takes two taps instead of a form."
+            body="Point your phone at a barcode while you unpack. When a supported product is found, FreshTrack can prefill its name and category, then suggest a freshness date for you to review."
             bullets={[
               "Works across phones and browsers, with the camera or by typing the number.",
-              "Pulls product details from the open Open Food Facts database.",
-              "The suggested expiration is a starting point you can adjust before saving.",
+              "Looks up product details in Open Food Facts, with a name-only fallback.",
+              "Manual entry stays available when a barcode is missing or unknown.",
+              "Suggested dates are a starting point you can adjust before saving.",
             ]}
             preview={<PreviewScan />}
             imageSide="left"
@@ -115,8 +116,8 @@ export function LandingFeatures() {
             body="Mark items used or wasted as they happen. The savings counter goes up. The waste rate goes down. No guilt-tripping, just the numbers, in the smallest honest detail."
             bullets={[
               "Money saved this month, plus a clean monthly trend.",
-              "Per-category breakdown: which foods are dragging you down.",
-              "Streak tracking that rewards low-waste weeks without shaming the rest.",
+              "Monthly used-versus-wasted outcomes and estimated value.",
+              "Use rate, waste rate, and month-over-month comparisons.",
             ]}
             preview={<PreviewStats />}
             imageSide="right"

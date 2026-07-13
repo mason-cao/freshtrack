@@ -43,7 +43,7 @@ export function LandingHero({ isAuthenticated }: LandingHeroProps) {
           <div className="max-w-2xl">
             <motion.p
               {...stagger(0)}
-              className="inline-flex items-center gap-2 rounded-full bg-warm-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sage-50 backdrop-blur-sm ring-1 ring-warm-white/20"
+              className="inline-flex items-center gap-2 rounded-full bg-warm-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-warm-white backdrop-blur-sm ring-1 ring-warm-white/20"
             >
               <Leaf className="h-3.5 w-3.5" />
               A kitchen ledger
@@ -58,10 +58,10 @@ export function LandingHero({ isAuthenticated }: LandingHeroProps) {
 
             <motion.p
               {...stagger(2)}
-              className="mt-5 max-w-xl text-base leading-relaxed text-sage-50/90 sm:text-lg"
+              className="mt-5 max-w-xl text-base leading-relaxed text-warm-white sm:text-lg"
             >
               FreshTrack is a free pantry tracker that shows what&apos;s about to expire,
-              suggests recipes to use it up, and tells you how much you&apos;ve saved.
+              suggests recipes to use it up, and tracks the estimated value you&apos;ve saved.
               Built for busy households, not factory inventory.
             </motion.p>
 
@@ -86,11 +86,11 @@ export function LandingHero({ isAuthenticated }: LandingHeroProps) {
 
             <motion.ul
               {...stagger(4)}
-              className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-sage-50/80"
+              className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-warm-white"
             >
               <li className="inline-flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-warm-white/70" aria-hidden />
-                Free forever
+                Free to use
               </li>
               <li className="inline-flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-warm-white/70" aria-hidden />

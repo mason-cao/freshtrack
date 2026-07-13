@@ -68,7 +68,7 @@ export function PreviewStats() {
           })}
         </div>
         <p className="mt-3 text-xs text-stone-500">
-          Pounds of food wasted, month over month.
+          Items marked wasted, month over month.
         </p>
       </div>
 

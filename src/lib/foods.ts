@@ -378,7 +378,7 @@ const moreFoods: FoodPageData[] = [
     faqs: [
       {
         q: "Can you eat broccoli that is starting to turn yellow?",
-        a: "Mild yellowing is a sign of aging, not spoilage. The florets are still safe to eat but taste slightly bitter and lose nutritional value. Use them in soup or stir fry where the flavor is masked, or compost if they are mostly yellow.",
+        a: "Mild yellowing is usually a quality change rather than proof of spoilage. If the broccoli stayed refrigerated and has no mold, slime, or off odor, use it promptly in soup or stir fry. Color alone cannot establish food safety.",
       },
       {
         q: "Why does my broccoli smell bad?",
@@ -473,7 +473,7 @@ const moreFoods: FoodPageData[] = [
       },
       {
         q: "Is it safe to eat lettuce past the use-by date?",
-        a: "Use-by dates on lettuce are quality dates, not safety dates. If the leaves look, smell, and feel fine (no slime, no sour smell), they are safe regardless of the printed date.",
+        a: "A printed date is not a pathogen test, and appearance cannot prove safety. Follow the package instructions, keep pre-cut lettuce at 40°F or below, observe recall notices, and discard it if storage history is uncertain or the leaves are slimy, moldy, or smell off.",
       },
     ],
     recipeMatchIngredients: ["lettuce"],
@@ -585,14 +585,14 @@ const moreFoods: FoodPageData[] = [
     category: "produce",
     h1: "How long do strawberries last? And how to stop them from molding overnight.",
     intro:
-      "Strawberries spoil fastest of any common fruit. One moldy berry can take down a whole pint in 24 hours. A quick vinegar rinse and the right container can almost double their shelf life.",
+      "Strawberries are highly perishable. Keeping them cold, dry, and protected from bruising gives them the best chance of lasting through the week.",
     metaDescription:
-      "How long strawberries last in the fridge and freezer, how to prevent mold, and the vinegar rinse that extends shelf life by days.",
+      "How long strawberries last in the fridge and freezer, how to reduce moisture and bruising, signs of spoilage, and safe washing guidance.",
     imageKey: "strawberry",
     imageAlt: "Ripe strawberries in a basket",
     quickStats: {
       counter: "1-2 days",
-      fridge: "5-7 days (unwashed)",
+      fridge: "3-7 days (unwashed)",
       freezer: "6-8 months",
     },
     shelfLife: [
@@ -607,20 +607,14 @@ const moreFoods: FoodPageData[] = [
         note: "Cull any moldy berries daily.",
       },
       {
-        condition: "Fridge, after a vinegar rinse and dry",
-        duration: "7-10 days",
-        note: "The rinse kills mold spores on the surface.",
-      },
-      {
         condition: "Freezer, washed, dried, single layer then bagged",
         duration: "6-8 months",
         note: "Use directly in smoothies or thaw for compote.",
       },
     ],
     storageTips: [
-      "Do not wash strawberries until you are ready to eat them, unless you do the vinegar rinse described next. Moisture invites mold.",
-      "For longer storage, soak strawberries in a mix of one part white vinegar to three parts water for five minutes. Drain, rinse with cold water, dry thoroughly on paper towels, and store. The vinegar kills surface mold spores without affecting flavor.",
-      "Store the dried berries in a single layer on paper towels inside a breathable container. Stacking them creates pressure points where mold takes hold first.",
+      "Keep strawberries dry until you are ready to eat them. Before eating, rinse them gently under plain running water and dry with a clean cloth or paper towel; FDA does not recommend soap or produce wash.",
+      "Store berries in a single layer when practical, in a clean container that does not trap condensation. Stacking creates pressure points where bruising and mold begin.",
       "Inspect daily and remove any berry that shows mold, soft spots, or weeping liquid. Mold spreads to neighboring berries within hours.",
       "To freeze, hull the berries, slice or leave whole, freeze in a single layer on a tray, then transfer to a bag once solid. This prevents them from clumping.",
     ],
@@ -634,7 +628,7 @@ const moreFoods: FoodPageData[] = [
     faqs: [
       {
         q: "Should you wash strawberries before storing them?",
-        a: "Plain water makes them mold faster. A diluted white vinegar rinse (one part vinegar to three parts water, five minutes, dry thoroughly) actually extends shelf life by killing surface mold spores.",
+        a: "Wait until just before eating when possible. Rinse under plain running water, then dry with a clean cloth or paper towel. FDA says soap and commercial produce wash are unnecessary.",
       },
       {
         q: "If one strawberry has mold, are the rest safe to eat?",
@@ -646,7 +640,7 @@ const moreFoods: FoodPageData[] = [
       },
       {
         q: "Why do my strawberries go bad so fast?",
-        a: "Three main reasons: ambient mold spores on the surface, soft skin that bruises in transit, and condensation in plastic containers. The vinegar rinse plus a paper-towel-lined breathable container fixes all three.",
+        a: "Soft skin bruises easily, and condensation encourages rapid deterioration. Keep the berries cold and dry, remove damaged fruit, and avoid crushing them under multiple layers.",
       },
     ],
     recipeMatchIngredients: ["strawberry", "strawberries", "berries", "berry"],
@@ -668,7 +662,7 @@ const moreFoods: FoodPageData[] = [
     category: "seafood",
     h1: "How long does salmon last? And how to tell the difference between fresh and fading.",
     intro:
-      "Raw salmon has a short window. Two days in the fridge is the safe upper bound, and the visible signs of spoilage are subtle enough that smell is your best guide.",
+      "Raw salmon has a short refrigerated window. Timing, temperature, and proper cooking matter for safety; odor and appearance can reveal spoilage but cannot prove that fish is pathogen-free.",
     metaDescription:
       "How long raw and cooked salmon last in the fridge and freezer, food safety guidelines, signs of spoilage, and recipes that use it up.",
     imageKey: "salmon",
@@ -710,7 +704,8 @@ const moreFoods: FoodPageData[] = [
       "If the original packaging is intact, leave it. Otherwise, wrap tightly in plastic wrap or parchment, then in foil, and place on a plate to catch any liquid.",
       "Cook salmon within two days of purchase. If you cannot, freeze it within the first 24 hours, when quality is highest.",
       "Always thaw frozen salmon in the fridge overnight, never on the counter. Counter thawing puts the outer layer in the bacterial growth zone while the inside is still frozen.",
-      "Cool cooked salmon to room temperature within an hour before refrigerating. Tightly sealed in a shallow container, it keeps three to four days.",
+      "Refrigerate cooked salmon in a shallow, covered container within two hours (one hour above 90°F). Do not wait for it to reach room temperature. Use within three to four days.",
+      "Cook most seafood to 145°F as measured with a food thermometer.",
     ],
     spoilageSigns: [
       "Strong fishy, ammonia, or sour smell (fresh salmon smells faintly of the ocean, never sharp).",
@@ -722,11 +717,11 @@ const moreFoods: FoodPageData[] = [
     faqs: [
       {
         q: "How can you tell if raw salmon has gone bad?",
-        a: "Smell is the clearest signal. Fresh salmon smells faintly of the ocean. Bad salmon smells sharp, ammonia-like, or sour. Visually, look for gray patches and a slimy surface. If anything seems off, do not taste-test, just discard.",
+        a: "Sharp, sour, rancid, fishy, or ammonia odors and a slimy surface are spoilage warnings, so discard the fish. But harmful bacteria cannot always be seen or smelled: also follow the one-to-two-day refrigerated window, keep the fish at 40°F or below, and cook it to 145°F.",
       },
       {
         q: "Can you eat salmon past the use-by date?",
-        a: "Use-by dates on raw fish are tighter than on most foods because seafood spoils quickly. If the salmon smells and looks fresh on the use-by date, it is generally safe to cook that day, but should not be held longer. When in doubt, freeze it instead.",
+        a: "Do not use odor or appearance to override unsafe time or temperature. Follow package instructions and the one-to-two-day refrigerated storage window; freeze the fish earlier if you will not cook it in time.",
       },
       {
         q: "Can you refreeze salmon after thawing?",
@@ -798,7 +793,8 @@ const moreFoods: FoodPageData[] = [
       "Store raw chicken on the bottom shelf of the fridge to prevent any drips from contaminating other foods. Keep it in a sealed bag or container on a plate.",
       "Use raw chicken within two days of purchase. If you cannot, freeze it within the first 24 hours for best quality on thaw.",
       "Thaw frozen chicken in the fridge (overnight), in cold water (change every 30 minutes), or in the microwave. Never thaw on the counter, where the outer layer enters the bacterial growth zone.",
-      "Cool cooked chicken to room temperature within an hour before refrigerating. Store in shallow containers so it cools through evenly.",
+      "Refrigerate cooked chicken in shallow containers within two hours (one hour above 90°F). Do not wait for it to reach room temperature.",
+      "Cook chicken to 165°F as measured in the thickest part with a food thermometer.",
       "Use separate cutting boards or wash thoroughly between raw chicken and any other food, especially produce that will not be cooked.",
     ],
     spoilageSigns: [
@@ -815,7 +811,7 @@ const moreFoods: FoodPageData[] = [
       },
       {
         q: "How can you tell if raw chicken has gone bad?",
-        a: "Smell is the clearest signal. Fresh chicken has almost no smell. Bad chicken smells sour, sulfurous, or ammonia-like. Sliminess and color changes (gray, green, dull) confirm it. When in doubt, throw it out.",
+        a: "Sour odors, slime, or unusual color are reasons to discard chicken, but pathogens cannot always be seen or smelled. Use or freeze raw chicken within one to two refrigerated days, avoid cross-contamination, and cook it to 165°F.",
       },
       {
         q: "How long does cooked chicken last in the fridge?",
@@ -844,9 +840,9 @@ const moreFoods: FoodPageData[] = [
     displayName: "Egg",
     pluralDisplayName: "Eggs",
     category: "dairy",
-    h1: "How long do eggs last? And the float test that beats the printed date.",
+    h1: "How long do eggs last? And what the float test can actually tell you.",
     intro:
-      "Refrigerated eggs last weeks longer than the carton date suggests. The float test takes ten seconds and tells you exactly where each egg sits on the freshness curve.",
+      "Properly refrigerated eggs can last three to five weeks from purchase. A float test reflects the size of the egg's air cell and therefore age or quality; USDA says a floating egg may still be safe.",
     metaDescription:
       "How long eggs last in the fridge and freezer, how to do the float test, why eggs go in the fridge shelf not the door, and how to freeze eggs for later.",
     imageKey: "eggs",
@@ -879,8 +875,8 @@ const moreFoods: FoodPageData[] = [
       },
       {
         condition: "Freezer, in the shell",
-        duration: "Not safe",
-        note: "Shells crack from expansion and the eggs become contaminated.",
+        duration: "Not recommended",
+        note: "Shells can crack as the contents expand. Freeze beaten eggs out of the shell.",
       },
     ],
     storageTips: [
@@ -891,7 +887,7 @@ const moreFoods: FoodPageData[] = [
       "Hard-boiled eggs keep in the fridge for one week, peeled or unpeeled. Store peeled hard-boiled eggs in water if you want to keep them moist.",
     ],
     spoilageSigns: [
-      "Float test: in a bowl of water, fresh eggs sink and lie flat, week-old eggs stand on end, bad eggs float.",
+      "A floating egg has a larger air cell and is older or lower quality, but floating alone does not establish that it is unsafe.",
       "Sulfur, rotten, or strong off smell when you crack the egg.",
       "Pink, green, or iridescent yolks or whites indicate bacterial contamination.",
       "Cracks, leaks, or sticky residue on the shell.",
@@ -900,11 +896,11 @@ const moreFoods: FoodPageData[] = [
     faqs: [
       {
         q: "How does the float test work?",
-        a: "Fill a bowl with cold water and place the egg inside. Fresh eggs sink and lie flat on the bottom. Eggs about 2-3 weeks old sink but stand on end. Bad eggs float to the surface and should be discarded. As eggs age, the air pocket inside grows, making them more buoyant.",
+        a: "As an egg ages, its air cell grows and makes it more buoyant. A floating egg is older and lower quality, but USDA says it may still be safe. Crack it into a separate bowl and discard it for an off odor or unusual appearance; the float test is not a pathogen test.",
       },
       {
         q: "Can you eat eggs past the printed date?",
-        a: "Usually yes. The USDA confirms refrigerated eggs are safe for 3-5 weeks past purchase, often well beyond the printed date. Use the float test to verify before cracking.",
+        a: "USDA's refrigerated storage guidance is three to five weeks from purchase. A printed quality date or float test does not replace proper refrigeration and thorough cooking; discard cracked eggs and eggs with an off odor or unusual appearance.",
       },
       {
         q: "Why shouldn't eggs go in the fridge door?",
@@ -982,13 +978,13 @@ const moreFoods: FoodPageData[] = [
       "Sour smell when you open the container or pour a glass.",
       "Lumps, clumps, or thickened texture when poured.",
       "Yellow tinge or visible curdling.",
-      "Sour or off taste even if it smells fine (taste with a sip; do not drink a glass).",
+      "Do not taste questionable milk to decide whether it is safe.",
       "Slimy texture or mold near the cap or rim.",
     ],
     faqs: [
       {
         q: "Is milk safe past the sell-by date?",
-        a: "Usually yes. Sell-by dates are for retailers, not consumers. Most milk stays fresh 5-7 days past sell-by if continuously refrigerated below 40°F. Trust the smell test over the printed date.",
+        a: "A sell-by date is primarily for store inventory, but it does not guarantee safety. Keep milk at 40°F or below, follow the storage window and package guidance, and discard it for curdling, mold, or an off odor. Do not taste questionable milk as a test.",
       },
       {
         q: "Can you freeze milk?",
@@ -1000,7 +996,7 @@ const moreFoods: FoodPageData[] = [
       },
       {
         q: "Can you drink milk that has gone slightly sour?",
-        a: "Slightly soured milk that smells off should not be consumed straight, but it can still be used in baking (it acts like buttermilk in pancakes, biscuits, and cakes). If it has visible mold or lumps, discard entirely.",
+        a: "No. If milk has developed an off odor, curdling, slime, or mold, discard it rather than drinking it or using it in baking. Cooking is not a reliable way to reverse unsafe storage or spoilage.",
       },
     ],
     recipeMatchIngredients: ["milk"],
@@ -1058,7 +1054,7 @@ const moreFoods: FoodPageData[] = [
       "Store yogurt on a fridge shelf, not in the door. Like milk, yogurt keeps longer at stable, cold temperatures away from the door's temperature swings.",
       "Keep yogurt in its original container. Decanting introduces air and bacteria. Seal tightly after each use.",
       "The watery liquid on top is whey, a natural part of yogurt. You can stir it in for more creaminess, or pour it off if you prefer a thicker texture. It is not a sign of spoilage.",
-      "Sell-by dates are for retailers. Sealed Greek yogurt typically stays fresh one to two weeks past the sell-by date. Trust your senses over the printed date.",
+      "Sell-by dates are primarily for retailers. Use the package guidance together with continuous refrigeration at 40°F or below; discard yogurt with mold, unusual color, bloating, or an off odor.",
       "To freeze, leave the container sealed (with a little room for expansion if it is full) and use within two months. Texture grains on thaw, so frozen-then-thawed yogurt is best for smoothies, baking, or marinades.",
     ],
     spoilageSigns: [
@@ -1075,7 +1071,7 @@ const moreFoods: FoodPageData[] = [
       },
       {
         q: "Can you eat Greek yogurt past the expiration date?",
-        a: "Often yes, especially if unopened. Sealed Greek yogurt typically stays fresh one to two weeks past sell-by. Open the container, check for mold or off smell, and trust the sniff test over the date.",
+        a: "A quality date is not a pathogen test. Keep yogurt continuously refrigerated, follow the package and storage guidance, and discard it for mold, unusual color, a bloated container, or an off odor. People at higher risk of foodborne illness should be especially conservative.",
       },
       {
         q: "Can you freeze Greek yogurt?",
@@ -1287,31 +1283,31 @@ const moreFoods: FoodPageData[] = [
     imageKey: "rice",
     imageAlt: "A bowl of steamed white rice",
     quickStats: {
-      counter: "Under 1 hour (food safety critical)",
-      fridge: "3-6 days",
-      freezer: "6 months",
+      counter: "Under 2 hours (1 hour above 90°F)",
+      fridge: "3-4 days",
+      freezer: "3-4 months (best quality)",
     },
     shelfLife: [
       {
         condition: "Counter, room temperature",
-        duration: "Under 1 hour",
-        note: "Bacillus cereus toxins form at room temperature. Refrigerate within an hour.",
+        duration: "Under 2 hours",
+        note: "Refrigerate promptly; use a one-hour limit when the temperature is above 90°F.",
       },
       {
         condition: "Fridge, airtight container",
-        duration: "3-6 days",
+        duration: "3-4 days",
         note: "Spread thinly to cool quickly before sealing.",
       },
       {
         condition: "Freezer, sealed portions",
-        duration: "6 months",
+        duration: "3-4 months for best quality",
         note: "Freeze flat in bags for quick reheating.",
       },
     ],
     storageTips: [
       "Cool cooked rice as quickly as possible after serving. Spread it in a thin layer on a baking sheet, or divide into shallow containers. The faster it cools, the less time Bacillus cereus has to grow.",
-      "Refrigerate within one hour of cooking, ideally within 30 minutes. Rice is one of the highest-risk foods for room-temperature bacterial growth.",
-      "Store in airtight containers in the fridge for three to six days. Beyond that, the quality drops sharply and food safety concerns rise.",
+      "Refrigerate within two hours of cooking (one hour above 90°F). Dividing rice into shallow containers helps it cool quickly.",
+      "Store in airtight containers in the fridge and use within three to four days, following USDA's general leftover guidance.",
       "Reheat rice thoroughly until steaming hot throughout, at least 165°F internal temperature. Reheating to lukewarm does not kill toxins.",
       "Only reheat rice once. Repeat heating-cooling cycles grow bacterial populations and the toxins they leave behind survive subsequent reheats.",
     ],
@@ -1320,7 +1316,7 @@ const moreFoods: FoodPageData[] = [
       "Sour, fermented, or off smell when you open the container.",
       "Watery liquid pooling at the bottom of the container.",
       "Fuzzy spots, slime, or discoloration on the surface.",
-      "Any unusual taste even if it looks fine (the toxins are tasteless, so dispose if anything seems off rather than risk it).",
+      "Do not taste rice to determine whether it is safe; harmful bacteria or toxins may not change its smell, taste, or appearance.",
     ],
     faqs: [
       {
@@ -1329,15 +1325,15 @@ const moreFoods: FoodPageData[] = [
       },
       {
         q: "Can you eat rice that has been in the fridge for a week?",
-        a: "Not safely. Cooked rice keeps three to six days in the fridge, with three to four days being the comfortable zone. Past that, the bacterial population grows beyond what most people should risk. Freeze it earlier instead.",
+        a: "No. USDA recommends using refrigerated leftovers within three to four days. Freeze rice earlier if you will not use it in that window.",
       },
       {
         q: "Can you reheat rice in the microwave?",
-        a: "Yes, but reheat until steaming hot throughout, not just warm. Stir halfway through to avoid cold spots. Reheat only once, and never reheat rice that has been sitting out at room temperature for more than an hour.",
+        a: "Yes. Reheat to 165°F throughout and stir to eliminate cold spots. Discard rice left at room temperature for more than two hours, or more than one hour above 90°F.",
       },
       {
         q: "How do you freeze cooked rice?",
-        a: "Cool quickly, then portion into freezer bags. Flatten the bags so the rice freezes thin and reheats fast. Use within six months. Reheat directly from frozen in the microwave with a splash of water, or thaw briefly in hot water for stir fry.",
+        a: "Cool promptly, then portion into freezer bags or shallow containers. Flattening bags helps them freeze and reheat evenly. Use within three to four months for best quality and reheat to 165°F.",
       },
     ],
     recipeMatchIngredients: ["rice"],
@@ -1348,8 +1344,8 @@ const moreFoods: FoodPageData[] = [
         url: "https://www.foodsafety.gov/keep-food-safe/foodkeeper-app",
       },
       {
-        label: "UK NHS guidance on Bacillus cereus and reheated rice",
-        url: "https://www.nhs.uk/conditions/food-poisoning/",
+        label: "USDA leftovers and food safety",
+        url: "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/leftovers-and-food-safety",
       },
     ],
   },

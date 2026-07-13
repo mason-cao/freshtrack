@@ -6,7 +6,7 @@ export interface FaqItem {
 export const faqs: FaqItem[] = [
   {
     q: "Is FreshTrack really free?",
-    a: "Yes, free forever. No Pro tier, no upsells, no ads. It is a personal project, and running costs stay low because it is a small tool. That is the way I want to keep it.",
+    a: "Yes. FreshTrack is currently free to use, with no Pro tier, upsells, or ads. It is a personal project, and there is no paid tier planned.",
   },
   {
     q: "Do I need to download anything from the App Store?",

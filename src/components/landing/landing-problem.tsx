@@ -18,22 +18,22 @@ const stats: Stat[] = [
     prefix: "30–",
     suffix: "%",
     formatted: "30–40%",
-    label: "of US household food gets thrown away",
-    note: "USDA · ReFED",
-  },
-  {
-    value: 1500,
-    prefix: "$",
-    formatted: "$1,500",
-    label: "average yearly waste per family",
-    note: "ReFED, 2023",
-  },
-  {
-    value: 119,
-    suffix: " billion",
-    formatted: "119 billion",
-    label: "pounds of food wasted every year",
+    label: "of the U.S. food supply goes uneaten",
     note: "USDA",
+  },
+  {
+    value: 2913,
+    prefix: "$",
+    formatted: "$2,913",
+    label: "estimated annual cost for a household of four",
+    note: "U.S. EPA, 2025",
+  },
+  {
+    value: 58,
+    suffix: "%",
+    formatted: "58%",
+    label: "of fugitive methane from U.S. landfills comes from food waste",
+    note: "U.S. EPA",
   },
 ];
 
@@ -46,11 +46,11 @@ export function LandingProblem() {
         </Reveal>
         <Reveal delay={0.05}>
           <h2 className="mt-3 max-w-3xl text-3xl font-bold leading-tight tracking-tight text-stone-900 sm:text-4xl lg:text-5xl">
-            The average family throws out{" "}
+            A household of four can lose about{" "}
             <span className="text-sage-600">
-              <CountUp value={1500} prefix="$" duration={1.8} />
+              <CountUp value={2913} prefix="$" duration={1.8} />
             </span>{" "}
-            of groceries a year.
+            in food each year.
           </h2>
         </Reveal>
         <Reveal delay={0.1}>

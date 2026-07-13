@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, ChefHat, Clock3, Sparkles } from "lucide-react";
-import confetti from "canvas-confetti";
 import { getFoodImage } from "@/lib/food-images";
 
 interface DemoItem {
@@ -90,18 +89,22 @@ export function PreviewDashboard() {
     const originX = (rect.left + rect.width / 2) / window.innerWidth;
     const originY = (rect.top + rect.height / 3) / window.innerHeight;
 
-    void confetti({
-      particleCount: 56,
-      spread: 64,
-      startVelocity: 32,
-      gravity: 0.9,
-      decay: 0.92,
-      ticks: 160,
-      scalar: 0.85,
-      origin: { x: originX, y: Math.max(originY, 0.18) },
-      colors: ["#527a52", "#8fb08f", "#d97706", "#fcd34d", "#fbf5e6"],
-      disableForReducedMotion: true,
-    });
+    void import("canvas-confetti")
+      .then(({ default: confetti }) =>
+        confetti({
+          particleCount: 56,
+          spread: 64,
+          startVelocity: 32,
+          gravity: 0.9,
+          decay: 0.92,
+          ticks: 160,
+          scalar: 0.85,
+          origin: { x: originX, y: Math.max(originY, 0.18) },
+          colors: ["#527a52", "#8fb08f", "#d97706", "#fcd34d", "#fbf5e6"],
+          disableForReducedMotion: true,
+        })
+      )
+      .catch(() => undefined);
   }
 
   return (

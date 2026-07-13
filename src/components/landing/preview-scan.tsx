@@ -83,7 +83,7 @@ export function PreviewScan() {
                   />
                 )}
               </div>
-              <p className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-white/90">
+              <p className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-white">
                 <ScanLine className="h-4 w-4" />
                 Hold steady — reading the barcode
               </p>
@@ -101,7 +101,7 @@ export function PreviewScan() {
                   <Check className="h-3.5 w-3.5" />
                   Scanned
                 </span>
-                <span className="num tabular-nums text-xs tracking-widest text-white/45">
+                <span className="num tabular-nums text-xs tracking-widest text-white">
                   {PREFILL.barcode}
                 </span>
               </div>

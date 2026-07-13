@@ -8,8 +8,8 @@ interface LandingCtaProps {
 
 const promises = [
   {
-    title: "Free forever",
-    body: "No paywall, no Pro tier, no upsell. FreshTrack is one person’s project and stays that way.",
+    title: "Free to use",
+    body: "There is currently no paywall, paid tier, or advertising in FreshTrack.",
   },
   {
     title: "No app store",
@@ -17,7 +17,7 @@ const promises = [
   },
   {
     title: "Your kitchen, your data",
-    body: "Items, recipes, and waste history are scoped to your Google account. Nothing sold, nothing shared.",
+    body: "Your pantry and waste history are scoped to your Google account and are not sold or used for advertising.",
   },
 ];
 
@@ -39,14 +39,14 @@ export function LandingCta({ isAuthenticated }: LandingCtaProps) {
       <div className="relative mx-auto max-w-5xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-28">
         <Reveal>
           <div className="max-w-3xl">
-            <p className="inline-flex items-center gap-2 rounded-full bg-warm-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sage-50 ring-1 ring-warm-white/20">
+            <p className="inline-flex items-center gap-2 rounded-full bg-warm-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-warm-white ring-1 ring-warm-white/20">
               <Leaf className="h-3.5 w-3.5" />
               The whole pitch
             </p>
             <h2 className="mt-5 text-3xl font-bold leading-tight tracking-tight text-warm-white sm:text-4xl lg:text-5xl">
-              Free forever. No paywall, no ads.
+              Free to use. No paywall, no ads.
             </h2>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-sage-50/90 sm:text-lg">
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-warm-white sm:text-lg">
               FreshTrack is one person&apos;s project, kept free on purpose. Sign in,
               start tracking, see what changes. That&apos;s the whole pitch.
             </p>
@@ -58,7 +58,7 @@ export function LandingCta({ isAuthenticated }: LandingCtaProps) {
             <Reveal key={promise.title} delay={0.1 + i * 0.08}>
               <div className="border-t border-warm-white/25 pt-5">
                 <dt className="text-base font-semibold text-warm-white">{promise.title}</dt>
-                <dd className="mt-2 text-sm leading-relaxed text-sage-50/85">
+                <dd className="mt-2 text-sm leading-relaxed text-warm-white">
                   {promise.body}
                 </dd>
               </div>
@@ -74,7 +74,7 @@ export function LandingCta({ isAuthenticated }: LandingCtaProps) {
             {ctaLabel}
             <ArrowRight className="h-4 w-4" />
           </Link>
-          <p className="text-xs text-sage-50/75">
+          <p className="text-xs text-warm-white">
             By continuing you agree to our{" "}
             <Link href="/terms" className="underline underline-offset-2 hover:text-warm-white">
               Terms
