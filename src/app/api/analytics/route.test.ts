@@ -1,4 +1,6 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const TEST_ORIGIN = "https://freshtrack.up.railway.app";
 
 const dbMock = vi.hoisted(() => ({
   insert: vi.fn(),
@@ -17,11 +19,11 @@ vi.mock("@/auth", () => ({
 import { POST } from "./route";
 
 function analyticsRequest(body: unknown, headers: Record<string, string> = {}) {
-  return new Request("https://freshtrack.up.railway.app/api/analytics", {
+  return new Request(`${TEST_ORIGIN}/api/analytics`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      origin: "https://freshtrack.up.railway.app",
+      origin: TEST_ORIGIN,
       "user-agent": "Vitest",
       ...headers,
     },
@@ -33,6 +35,12 @@ describe("POST /api/analytics", () => {
   beforeEach(() => {
     dbMock.insert.mockReset();
     authMock.mockReset();
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", TEST_ORIGIN);
+    vi.stubEnv("AUTH_URL", TEST_ORIGIN);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("stores a valid same-origin analytics event with the current user id", async () => {

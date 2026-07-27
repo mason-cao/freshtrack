@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildAnalyticsPayload,
   extractUtmAttribution,
+  isAnalyticsTrackingPath,
   mergeAttribution,
   stripUrlDetails,
   trackAnalyticsEvent,
@@ -70,6 +71,13 @@ describe("analytics client attribution", () => {
       stripUrlDetails("https://www.reddit.com/r/SideProject/?token=secret#reply")
     ).toBe("https://www.reddit.com/r/SideProject/");
     expect(stripUrlDetails("not a url")).toBeNull();
+  });
+
+  it("keeps private admin pages out of product analytics", () => {
+    expect(isAnalyticsTrackingPath("/admin/analytics")).toBe(false);
+    expect(isAnalyticsTrackingPath("/admin")).toBe(false);
+    expect(isAnalyticsTrackingPath("/app")).toBe(true);
+    expect(isAnalyticsTrackingPath("/administrator")).toBe(true);
   });
 
   it("does not throw when browser storage is unavailable", () => {

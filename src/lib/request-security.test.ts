@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { isSameOriginRequest } from "./request-security";
 
 function requestWithHeaders(headers: Record<string, string>) {
@@ -16,12 +16,13 @@ function proxiedRequestWithHeaders(headers: Record<string, string>) {
 }
 
 describe("isSameOriginRequest", () => {
-  const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  const originalAuthUrl = process.env.AUTH_URL;
+  beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
+    vi.stubEnv("AUTH_URL", "");
+  });
 
   afterEach(() => {
-    process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
-    process.env.AUTH_URL = originalAuthUrl;
+    vi.unstubAllEnvs();
   });
 
   it("allows requests with a matching origin", () => {
@@ -58,7 +59,7 @@ describe("isSameOriginRequest", () => {
   });
 
   it("allows the configured public site origin", () => {
-    process.env.NEXT_PUBLIC_SITE_URL = "https://freshtrack.up.railway.app";
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://freshtrack.up.railway.app");
 
     expect(
       isSameOriginRequest(
@@ -77,7 +78,7 @@ describe("isSameOriginRequest", () => {
   });
 
   it("does not let a matching request URL override configured origins", () => {
-    process.env.NEXT_PUBLIC_SITE_URL = "https://freshtrack.up.railway.app";
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://freshtrack.up.railway.app");
 
     expect(
       isSameOriginRequest(

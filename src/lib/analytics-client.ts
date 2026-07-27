@@ -3,6 +3,8 @@ import type { AnalyticsEventName } from "@/lib/analytics-events";
 const VISITOR_ID_KEY = "freshtrack:analytics:visitor-id";
 const ATTRIBUTION_KEY = "freshtrack:analytics:attribution";
 
+export const ANALYTICS_HEARTBEAT_INTERVAL_MS = 5 * 60 * 1_000;
+
 let fallbackVisitorId: string | null = null;
 
 export interface AnalyticsAttribution {
@@ -11,6 +13,10 @@ export interface AnalyticsAttribution {
   utmCampaign?: string | null;
   utmContent?: string | null;
   utmTerm?: string | null;
+}
+
+export function isAnalyticsTrackingPath(pathname: string): boolean {
+  return pathname !== "/admin" && !pathname.startsWith("/admin/");
 }
 
 interface AnalyticsPayloadOptions {

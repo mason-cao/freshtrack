@@ -1,5 +1,6 @@
 export const analyticsEventNames = [
   "page_view",
+  "active_ping",
   "sign_in_clicked",
   "signed_in",
   "item_added",
