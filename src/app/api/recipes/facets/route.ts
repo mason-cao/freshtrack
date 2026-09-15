@@ -1,3 +1,4 @@
+import type { RecipeFacets } from "@/lib/recipes";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { visibleRecipeWhere } from "@/db/recipe-visibility";
@@ -25,5 +26,5 @@ export async function GET() {
   return NextResponse.json({
     cuisines: facetValues(cuisineRows.map((row) => row.cuisine)),
     categories: facetValues(categoryRows.map((row) => row.category)),
-  });
+  } satisfies RecipeFacets);
 }

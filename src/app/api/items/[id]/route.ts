@@ -1,50 +1,21 @@
+import { categoryExists } from "@/db/items";
+import { parseItemId, validatePatchItemPayload } from "@/lib/item-validation";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { items } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
-import { getCurrentUserId } from "@/lib/session";
-import { isSameOriginRequest } from "@/lib/request-security";
 import {
-  categoryExists,
-  checkItemMutationRateLimit,
-  isRequestBodyTooLarge,
-  parseItemId,
+  authorizeItemMutation,
   readJsonRequestBody,
-  validatePatchItemPayload,
 } from "../_lib";
-
-function rateLimitResponse(retryAfterSeconds: number) {
-  return NextResponse.json(
-    {
-      error: `Too many item changes. Try again in ${retryAfterSeconds} seconds.`,
-    },
-    {
-      status: 429,
-      headers: { "Retry-After": String(retryAfterSeconds) },
-    }
-  );
-}
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isSameOriginRequest(request, { requireOriginHeader: true })) {
-    return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 });
-  }
-
-  const userId = await getCurrentUserId();
-  if (isRequestBodyTooLarge(request)) {
-    return NextResponse.json(
-      { error: "Request body is too large." },
-      { status: 413 }
-    );
-  }
-
-  const rateLimit = checkItemMutationRateLimit(userId);
-  if (!rateLimit.ok) {
-    return rateLimitResponse(rateLimit.retryAfterSeconds);
-  }
+  const access = await authorizeItemMutation(request, true);
+  if (!access.ok) return access.response;
+  const { userId } = access;
 
   const { id } = await params;
   const itemId = parseItemId(id);
@@ -90,15 +61,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isSameOriginRequest(request, { requireOriginHeader: true })) {
-    return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 });
-  }
-
-  const userId = await getCurrentUserId();
-  const rateLimit = checkItemMutationRateLimit(userId);
-  if (!rateLimit.ok) {
-    return rateLimitResponse(rateLimit.retryAfterSeconds);
-  }
+  const access = await authorizeItemMutation(request);
+  if (!access.ok) return access.response;
+  const { userId } = access;
 
   const { id } = await params;
   const itemId = parseItemId(id);

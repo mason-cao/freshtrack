@@ -11,14 +11,10 @@ import {
 } from "recharts";
 import { formatCurrency } from "@/lib/utils";
 
-interface MonthlyData {
-  monthLabel: string;
-  consumedCost: number;
-  wastedCost: number;
-}
+import type { MonthlyStats } from "@/lib/stats-summary";
 
 interface CategoryBreakdownProps {
-  data: MonthlyData[];
+  data: MonthlyStats[];
 }
 
 export function CategoryBreakdown({ data }: CategoryBreakdownProps) {

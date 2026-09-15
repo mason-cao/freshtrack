@@ -1,8 +1,4 @@
-// Shared ingredient-matching logic for recipe suggestions and Recipe Dive.
-// Pure and network-free so it can be unit-tested and reused by both the
-// suggestions route and the catalog query. It replaces the old naive
-// two-way substring check (which matched "egg" to "eggplant" and "ice" to
-// "rice") with normalized, token-based matching.
+// Ingredient identity uses normalized tokens to avoid matches such as egg/eggplant.
 
 // Measurement words that are never part of an ingredient's identity.
 const UNIT_WORDS = new Set([

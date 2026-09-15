@@ -1,30 +1,15 @@
+import type { PantryItem } from "@/lib/pantry";
+import { categoryExists, hasReachedItemLimit } from "@/db/items";
+import { isItemStatus, validateCreateItemPayload } from "@/lib/item-validation";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { items, categories } from "@/db/schema";
 import { and, asc, eq } from "drizzle-orm";
 import { getCurrentUserId } from "@/lib/session";
-import { isSameOriginRequest } from "@/lib/request-security";
 import {
-  categoryExists,
-  checkItemMutationRateLimit,
-  hasReachedItemLimit,
-  isRequestBodyTooLarge,
-  isItemStatus,
+  authorizeItemMutation,
   readJsonRequestBody,
-  validateCreateItemPayload,
 } from "./_lib";
-
-function rateLimitResponse(retryAfterSeconds: number) {
-  return NextResponse.json(
-    {
-      error: `Too many item changes. Try again in ${retryAfterSeconds} seconds.`,
-    },
-    {
-      status: 429,
-      headers: { "Retry-After": String(retryAfterSeconds) },
-    }
-  );
-}
 
 export async function GET(request: NextRequest) {
   const userId = await getCurrentUserId();
@@ -59,26 +44,13 @@ export async function GET(request: NextRequest) {
     .where(and(eq(items.status, status), eq(items.userId, userId)))
     .orderBy(asc(items.expirationDate));
 
-  return NextResponse.json(result);
+  return NextResponse.json(result satisfies PantryItem[]);
 }
 
 export async function POST(request: NextRequest) {
-  if (!isSameOriginRequest(request, { requireOriginHeader: true })) {
-    return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 });
-  }
-
-  const userId = await getCurrentUserId();
-  if (isRequestBodyTooLarge(request)) {
-    return NextResponse.json(
-      { error: "Request body is too large." },
-      { status: 413 }
-    );
-  }
-
-  const rateLimit = checkItemMutationRateLimit(userId);
-  if (!rateLimit.ok) {
-    return rateLimitResponse(rateLimit.retryAfterSeconds);
-  }
+  const access = await authorizeItemMutation(request, true);
+  if (!access.ok) return access.response;
+  const { userId } = access;
 
   const bodyResult = await readJsonRequestBody(request);
   if (!bodyResult.ok) {

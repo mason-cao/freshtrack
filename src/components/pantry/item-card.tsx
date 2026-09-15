@@ -7,14 +7,12 @@ import { getFreshnessStatus, freshnessColor, getExpiryLabel } from "@/lib/freshn
 import { getFoodImage } from "@/lib/food-images";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-import { fetchJson } from "@/lib/api-client";
+import { completePantryItem } from "@/lib/pantry-actions";
 import {
-  notifyPantryActionCompleted,
   type PantryActionOutcome,
   type PantryCompletionAction,
 } from "@/lib/pantry-events";
 import { FreshnessMeter } from "./freshness-meter";
-import { trackAnalyticsEvent } from "@/lib/analytics-client";
 import { EditItemDialog } from "./edit-item-dialog";
 import type { PantryItem } from "@/lib/pantry";
 
@@ -45,10 +43,8 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
     setSaving(action);
     setError(null);
     try {
-      await fetchJson(`/api/items/${item.id}/${action}`, { method: "POST" });
-      trackAnalyticsEvent(action === "consume" ? "item_consumed" : "item_wasted");
+      const outcome = await completePantryItem({ itemId: item.id, itemName: item.name, action });
       setDismissed(true);
-      const outcome = { itemId: item.id, itemName: item.name, action };
       if (action === "consume" && !reduceMotion) {
         void import("canvas-confetti")
           .then(({ default: confetti }) =>
@@ -62,7 +58,6 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
           )
           .catch(() => undefined);
       }
-      notifyPantryActionCompleted(outcome);
       onAction(outcome);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to update item.");
@@ -90,7 +85,7 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
           exit={{ opacity: 0, x: 200, transition: { duration: 0.3 } }}
           className="relative overflow-hidden rounded-xl"
         >
-          {/* Swipe backgrounds */}
+
           <div className="absolute inset-0 flex items-center justify-between px-6">
             <motion.div
               style={{ opacity: wastedOpacity, scale: wastedScale }}
@@ -108,7 +103,6 @@ export function ItemCard({ item, onAction }: ItemCardProps) {
             </motion.div>
           </div>
 
-          {/* Card content */}
           <motion.div
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}

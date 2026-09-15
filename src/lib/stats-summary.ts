@@ -77,3 +77,6 @@ export function buildStatsSummary(rows: StatsAggregateRow[]) {
     },
   };
 }
+
+export type StatsSummary = ReturnType<typeof buildStatsSummary>;
+export type MonthlyStats = StatsSummary["monthly"][number];

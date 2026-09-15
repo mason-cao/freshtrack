@@ -2,19 +2,11 @@ import { NextResponse } from "next/server";
 import { getCurrentUserId } from "@/lib/session";
 import { normalizeOpenFoodFactsProduct, sanitizeBarcode } from "@/lib/barcode";
 import { mapCategoryTagsToCategoryId } from "@/lib/barcode-category";
-import { checkProductLookupRateLimit, parseUpcItemDbName } from "./_lib";
+import { parseUpcItemDbName } from "./_lib";
+import { checkProductLookupRateLimit } from "@/lib/rate-limits";
 import { readLimitedJsonBody } from "@/lib/request-body";
 
-/** Shape returned to the add-item form; `found: false` is always recoverable. */
-export interface ProductLookupResult {
-  found: boolean;
-  name: string | null;
-  brand: string | null;
-  categoryId: number | null;
-  quantity: number | null;
-  unit: string | null;
-  imageUrl: string | null;
-}
+import type { ProductLookupResult } from "@/lib/barcode";
 
 const NOT_FOUND: ProductLookupResult = {
   found: false,

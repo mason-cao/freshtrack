@@ -1,10 +1,9 @@
+import { checkItemMutationRateLimit } from "@/lib/rate-limits";
+import { validateCreateItemPayload, validatePatchItemPayload } from "@/lib/item-validation";
 import { describe, expect, it } from "vitest";
 import {
-  checkItemMutationRateLimit,
   isRequestBodyTooLarge,
   readJsonRequestBody,
-  validateCreateItemPayload,
-  validatePatchItemPayload,
 } from "./_lib";
 
 describe("item API security limits", () => {

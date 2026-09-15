@@ -1,496 +1,55 @@
-import { db } from "@/db";
-import { categories, items, wasteLog } from "@/db/schema";
-import { isDateInputValue, toDateInputValue } from "@/lib/dates";
-import {
-  isRequestBodyOverLimit,
-  readLimitedJsonBody,
-  type LimitedJsonBodyResult,
-} from "@/lib/request-body";
-import { and, count, desc, eq } from "drizzle-orm";
+import { NextResponse } from "next/server";
+import { getCurrentUserId } from "@/lib/session";
+import { isSameOriginRequest } from "@/lib/request-security";
+import { isRequestBodyOverLimit, readLimitedJsonBody } from "@/lib/request-body";
+import { parseItemId } from "@/lib/item-validation";
+import { checkItemMutationRateLimit } from "@/lib/rate-limits";
 
-export const itemStatuses = ["active", "consumed", "wasted"] as const;
-export const MAX_ITEM_NAME_LENGTH = 80;
-export const MAX_ITEM_UNIT_LENGTH = 24;
-export const MAX_ITEM_NOTES_LENGTH = 500;
 export const MAX_ITEM_REQUEST_BODY_BYTES = 8 * 1024;
-export const MAX_ITEMS_PER_USER = 500;
-export const MAX_ITEM_QUANTITY = 1_000_000;
-export const MAX_ITEM_COST_ESTIMATE = 1_000_000;
-export const ITEM_MUTATION_RATE_LIMIT = 60;
-export const ITEM_MUTATION_RATE_LIMIT_WINDOW_MS = 60_000;
-export const MAX_ITEM_MUTATION_RATE_LIMIT_BUCKETS = 10_000;
-
-export type ItemStatus = (typeof itemStatuses)[number];
-export type ItemAction = Extract<ItemStatus, "consumed" | "wasted">;
-
-interface ItemInput {
-  name: string;
-  categoryId: number | null;
-  quantity: number;
-  unit: string;
-  purchaseDate: string;
-  expirationDate: string;
-  costEstimate: number | null;
-  notes: string | null;
-}
-
-type ItemPatch = Partial<ItemInput>;
-
-type ValidationResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: string };
-
-type RateLimitResult =
-  | { ok: true }
-  | { ok: false; retryAfterSeconds: number };
-
-const globalForItemSecurity = globalThis as unknown as {
-  freshtrackItemMutationBuckets?: Map<string, number[]>;
-};
-
-const itemMutationBuckets =
-  globalForItemSecurity.freshtrackItemMutationBuckets ?? new Map<string, number[]>();
-
-globalForItemSecurity.freshtrackItemMutationBuckets = itemMutationBuckets;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isPresent(record: Record<string, unknown>, key: string) {
-  return Object.prototype.hasOwnProperty.call(record, key);
-}
-
-function isEmptyInput(value: unknown) {
-  return value === null || value === undefined || value === "";
-}
-
-function positiveNumber(value: unknown, maximum = Number.POSITIVE_INFINITY) {
-  const numberValue = Number(value);
-  return Number.isFinite(numberValue) && numberValue > 0 && numberValue <= maximum
-    ? numberValue
-    : null;
-}
-
-function nonNegativeNumber(value: unknown, maximum = Number.POSITIVE_INFINITY) {
-  const numberValue = Number(value);
-  return Number.isFinite(numberValue) &&
-    numberValue >= 0 &&
-    numberValue <= maximum
-    ? numberValue
-    : null;
-}
-
-function positiveInteger(value: unknown) {
-  const numberValue = Number(value);
-  return Number.isInteger(numberValue) && numberValue > 0 ? numberValue : null;
-}
-
-function normalizedText(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function validateMaxLength(value: string, label: string, maxLength: number) {
-  if (value.length > maxLength) {
-    return `${label} must be ${maxLength} characters or fewer.`;
-  }
-  return null;
-}
-
-export function parseItemId(id: string): number | null {
-  return positiveInteger(id);
-}
-
-export function isItemStatus(value: string): value is ItemStatus {
-  return itemStatuses.includes(value as ItemStatus);
-}
-
-export async function categoryExists(categoryId: number): Promise<boolean> {
-  const [row] = await db
-    .select({ id: categories.id })
-    .from(categories)
-    .where(eq(categories.id, categoryId))
-    .limit(1);
-  return Boolean(row);
-}
 
 export function isRequestBodyTooLarge(request: Request): boolean {
   return isRequestBodyOverLimit(request, MAX_ITEM_REQUEST_BODY_BYTES);
 }
 
-export async function readJsonRequestBody(
-  request: Request
-): Promise<LimitedJsonBodyResult> {
+export function readJsonRequestBody(request: Request) {
   return readLimitedJsonBody(request, MAX_ITEM_REQUEST_BODY_BYTES, {
     requireJsonContentType: true,
   });
 }
 
-function evictStaleItemMutationBuckets(windowStart: number) {
-  for (const [key, timestamps] of itemMutationBuckets) {
-    const newest = timestamps[timestamps.length - 1];
-    if (newest === undefined || newest <= windowStart) {
-      itemMutationBuckets.delete(key);
-    }
+export async function authorizeItemMutation(request: Request, hasBody = false) {
+  if (!isSameOriginRequest(request, { requireOriginHeader: true })) {
+    return { ok: false as const, response: NextResponse.json(
+      { error: "Cross-origin request blocked." }, { status: 403 }
+    ) };
   }
-
-  if (itemMutationBuckets.size >= MAX_ITEM_MUTATION_RATE_LIMIT_BUCKETS) {
-    const excess =
-      itemMutationBuckets.size - MAX_ITEM_MUTATION_RATE_LIMIT_BUCKETS + 1;
-    let removed = 0;
-    for (const key of itemMutationBuckets.keys()) {
-      itemMutationBuckets.delete(key);
-      removed += 1;
-      if (removed >= excess) break;
-    }
+  const userId = await getCurrentUserId();
+  if (hasBody && isRequestBodyTooLarge(request)) {
+    return { ok: false as const, response: NextResponse.json(
+      { error: "Request body is too large." }, { status: 413 }
+    ) };
   }
+  const limit = checkItemMutationRateLimit(userId);
+  if (!limit.ok) {
+    return { ok: false as const, response: NextResponse.json(
+      { error: `Too many item changes. Try again in ${limit.retryAfterSeconds} seconds.` },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } }
+    ) };
+  }
+  return { ok: true as const, userId };
 }
 
-export function checkItemMutationRateLimit(
-  userId: string,
-  now = Date.now()
-): RateLimitResult {
-  const windowStart = now - ITEM_MUTATION_RATE_LIMIT_WINDOW_MS;
-  if (
-    !itemMutationBuckets.has(userId) &&
-    itemMutationBuckets.size >= MAX_ITEM_MUTATION_RATE_LIMIT_BUCKETS
-  ) {
-    evictStaleItemMutationBuckets(windowStart);
-  }
-  const timestamps = (itemMutationBuckets.get(userId) ?? []).filter(
-    (timestamp) => timestamp > windowStart
-  );
-
-  if (timestamps.length >= ITEM_MUTATION_RATE_LIMIT) {
-    const oldest = timestamps[0] ?? now;
-    const retryAfterSeconds = Math.max(
-      1,
-      Math.ceil((ITEM_MUTATION_RATE_LIMIT_WINDOW_MS - (now - oldest)) / 1000)
-    );
-    itemMutationBuckets.set(userId, timestamps);
-    return { ok: false, retryAfterSeconds };
-  }
-
-  timestamps.push(now);
-  itemMutationBuckets.set(userId, timestamps);
-  return { ok: true };
-}
-
-export async function hasReachedItemLimit(userId: string): Promise<boolean> {
-  const [row] = await db
-    .select({ value: count() })
-    .from(items)
-    .where(and(eq(items.userId, userId), eq(items.status, "active")));
-  return Number(row?.value ?? 0) >= MAX_ITEMS_PER_USER;
-}
-
-export function validateCreateItemPayload(
-  payload: unknown
-): ValidationResult<ItemInput> {
-  if (!isRecord(payload)) {
-    return { ok: false, error: "Expected a JSON object." };
-  }
-
-  const name = normalizedText(payload.name);
-  if (!name) {
-    return { ok: false, error: "Item name is required." };
-  }
-  const nameLengthError = validateMaxLength(
-    name,
-    "Item name",
-    MAX_ITEM_NAME_LENGTH
-  );
-  if (nameLengthError) return { ok: false, error: nameLengthError };
-
-  const expirationDate = normalizedText(payload.expirationDate);
-  if (!isDateInputValue(expirationDate)) {
-    return {
-      ok: false,
-      error: "Expiration date must be a valid YYYY-MM-DD date.",
-    };
-  }
-
-  const categoryId = isEmptyInput(payload.categoryId)
-    ? null
-    : positiveInteger(payload.categoryId);
-  if (categoryId === null && !isEmptyInput(payload.categoryId)) {
-    return { ok: false, error: "Category must be a valid category id." };
-  }
-
-  const quantity =
-    payload.quantity === undefined || payload.quantity === ""
-      ? 1
-      : positiveNumber(payload.quantity, MAX_ITEM_QUANTITY);
-  if (quantity === null) {
-    return {
-      ok: false,
-      error: `Quantity must be greater than zero and no more than ${MAX_ITEM_QUANTITY.toLocaleString("en-US")}.`,
-    };
-  }
-
-  const unit = normalizedText(payload.unit) || "count";
-  const unitLengthError = validateMaxLength(unit, "Unit", MAX_ITEM_UNIT_LENGTH);
-  if (unitLengthError) return { ok: false, error: unitLengthError };
-
-  const purchaseDate = normalizedText(payload.purchaseDate) || toDateInputValue();
-  if (!isDateInputValue(purchaseDate)) {
-    return {
-      ok: false,
-      error: "Purchase date must be a valid YYYY-MM-DD date.",
-    };
-  }
-
-  const costEstimate = isEmptyInput(payload.costEstimate)
-    ? null
-    : nonNegativeNumber(payload.costEstimate, MAX_ITEM_COST_ESTIMATE);
-  if (costEstimate === null && !isEmptyInput(payload.costEstimate)) {
-    return {
-      ok: false,
-      error: `Cost estimate must be between zero and ${MAX_ITEM_COST_ESTIMATE.toLocaleString("en-US")}.`,
-    };
-  }
-
-  const notes = normalizedText(payload.notes) || null;
-  if (notes) {
-    const notesLengthError = validateMaxLength(
-      notes,
-      "Notes",
-      MAX_ITEM_NOTES_LENGTH
-    );
-    if (notesLengthError) return { ok: false, error: notesLengthError };
-  }
-
-  return {
-    ok: true,
-    data: {
-      name,
-      categoryId,
-      quantity,
-      unit,
-      purchaseDate,
-      expirationDate,
-      costEstimate,
-      notes,
-    },
-  };
-}
-
-export function validatePatchItemPayload(
-  payload: unknown
-): ValidationResult<ItemPatch> {
-  if (!isRecord(payload)) {
-    return { ok: false, error: "Expected a JSON object." };
-  }
-
-  const data: ItemPatch = {};
-
-  if (isPresent(payload, "name")) {
-    const name = normalizedText(payload.name);
-    if (!name) return { ok: false, error: "Item name cannot be empty." };
-    const nameLengthError = validateMaxLength(
-      name,
-      "Item name",
-      MAX_ITEM_NAME_LENGTH
-    );
-    if (nameLengthError) return { ok: false, error: nameLengthError };
-    data.name = name;
-  }
-
-  if (isPresent(payload, "categoryId")) {
-    if (payload.categoryId === null || payload.categoryId === "") {
-      data.categoryId = null;
-    } else {
-      const categoryId = positiveInteger(payload.categoryId);
-      if (categoryId === null) {
-        return { ok: false, error: "Category must be a valid category id." };
-      }
-      data.categoryId = categoryId;
-    }
-  }
-
-  if (isPresent(payload, "quantity")) {
-    const quantity = positiveNumber(payload.quantity, MAX_ITEM_QUANTITY);
-    if (quantity === null) {
-      return {
-        ok: false,
-        error: `Quantity must be greater than zero and no more than ${MAX_ITEM_QUANTITY.toLocaleString("en-US")}.`,
-      };
-    }
-    data.quantity = quantity;
-  }
-
-  if (isPresent(payload, "unit")) {
-    const unit = normalizedText(payload.unit);
-    if (!unit) return { ok: false, error: "Unit cannot be empty." };
-    const unitLengthError = validateMaxLength(unit, "Unit", MAX_ITEM_UNIT_LENGTH);
-    if (unitLengthError) return { ok: false, error: unitLengthError };
-    data.unit = unit;
-  }
-
-  if (isPresent(payload, "purchaseDate")) {
-    const purchaseDate = normalizedText(payload.purchaseDate);
-    if (!isDateInputValue(purchaseDate)) {
-      return {
-        ok: false,
-        error: "Purchase date must be a valid YYYY-MM-DD date.",
-      };
-    }
-    data.purchaseDate = purchaseDate;
-  }
-
-  if (isPresent(payload, "expirationDate")) {
-    const expirationDate = normalizedText(payload.expirationDate);
-    if (!isDateInputValue(expirationDate)) {
-      return {
-        ok: false,
-        error: "Expiration date must be a valid YYYY-MM-DD date.",
-      };
-    }
-    data.expirationDate = expirationDate;
-  }
-
-  if (isPresent(payload, "costEstimate")) {
-    if (payload.costEstimate === null || payload.costEstimate === "") {
-      data.costEstimate = null;
-    } else {
-      const costEstimate = nonNegativeNumber(
-        payload.costEstimate,
-        MAX_ITEM_COST_ESTIMATE
-      );
-      if (costEstimate === null) {
-        return {
-          ok: false,
-          error: `Cost estimate must be between zero and ${MAX_ITEM_COST_ESTIMATE.toLocaleString("en-US")}.`,
-        };
-      }
-      data.costEstimate = costEstimate;
-    }
-  }
-
-  if (isPresent(payload, "notes")) {
-    const notes = normalizedText(payload.notes) || null;
-    if (notes) {
-      const notesLengthError = validateMaxLength(
-        notes,
-        "Notes",
-        MAX_ITEM_NOTES_LENGTH
-      );
-      if (notesLengthError) return { ok: false, error: notesLengthError };
-    }
-    data.notes = notes;
-  }
-
-  if (isPresent(payload, "status")) {
-    return {
-      ok: false,
-      error: "Use the consume, waste, or restore endpoints to change item status.",
-    };
-  }
-
-  if (Object.keys(data).length === 0) {
-    return { ok: false, error: "No valid item fields were provided." };
-  }
-
-  return { ok: true, data };
-}
-
-export async function completeItem(
-  itemId: number,
-  userId: string,
-  action: ItemAction
+export function itemActionHandler(
+  action: (itemId: number, userId: string) => Promise<{ status: number; body: object }>
 ) {
-  return db.transaction(async (tx) => {
-    const [item] = await tx
-      .update(items)
-      .set({ status: action, updatedAt: new Date().toISOString() })
-      .where(
-        and(
-          eq(items.id, itemId),
-          eq(items.userId, userId),
-          eq(items.status, "active")
-        )
-      )
-      .returning({
-        id: items.id,
-        name: items.name,
-        quantity: items.quantity,
-        unit: items.unit,
-        costEstimate: items.costEstimate,
-      });
-
-    if (!item) {
-      const [existing] = await tx
-        .select({ status: items.status })
-        .from(items)
-        .where(and(eq(items.id, itemId), eq(items.userId, userId)))
-        .limit(1);
-
-      if (!existing) {
-        return { status: 404, body: { error: "Item not found." } };
-      }
-
-      return {
-        status: 409,
-        body: { error: `Item is already marked as ${existing.status}.` },
-      };
+  return async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
+    const access = await authorizeItemMutation(request);
+    if (!access.ok) return access.response;
+    const itemId = parseItemId((await params).id);
+    if (itemId === null) {
+      return NextResponse.json({ error: "Invalid item id." }, { status: 400 });
     }
-
-    await tx
-      .insert(wasteLog)
-      .values({
-        userId,
-        itemId: item.id,
-        itemName: item.name,
-        action,
-        quantity: item.quantity,
-        unit: item.unit,
-        costEstimate: item.costEstimate,
-      });
-
-    return { status: 200, body: { success: true } };
-  });
-}
-
-export async function restoreItem(itemId: number, userId: string) {
-  return db.transaction(async (tx) => {
-    const [item] = await tx
-      .select()
-      .from(items)
-      .where(and(eq(items.id, itemId), eq(items.userId, userId)))
-      .limit(1);
-
-    if (!item) {
-      return { status: 404, body: { error: "Item not found." } };
-    }
-
-    if (item.status === "active") {
-      return { status: 200, body: { success: true, restored: false } };
-    }
-
-    await tx
-      .update(items)
-      .set({ status: "active", updatedAt: new Date().toISOString() })
-      .where(and(eq(items.id, itemId), eq(items.userId, userId)));
-
-    const [latestLog] = await tx
-      .select({ id: wasteLog.id })
-      .from(wasteLog)
-      .where(
-        and(
-          eq(wasteLog.userId, userId),
-          eq(wasteLog.itemId, itemId),
-          eq(wasteLog.action, item.status)
-        )
-      )
-      .orderBy(desc(wasteLog.loggedAt), desc(wasteLog.id))
-      .limit(1);
-
-    if (latestLog) {
-      await tx
-        .delete(wasteLog)
-        .where(and(eq(wasteLog.id, latestLog.id), eq(wasteLog.userId, userId)));
-    }
-
-    return { status: 200, body: { success: true, restored: true } };
-  });
+    const result = await action(itemId, access.userId);
+    return NextResponse.json(result.body, { status: result.status });
+  };
 }

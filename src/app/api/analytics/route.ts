@@ -1,8 +1,8 @@
+import { checkAnalyticsEventRateLimit } from "@/lib/rate-limits";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { analyticsEvents } from "@/db/schema";
 import {
-  checkAnalyticsEventRateLimit,
   validateAnalyticsEventPayload,
 } from "@/lib/analytics-events";
 import { isSameOriginRequest } from "@/lib/request-security";

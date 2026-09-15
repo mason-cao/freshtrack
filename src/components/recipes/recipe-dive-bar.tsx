@@ -86,7 +86,7 @@ export function RecipeDiveBar({
 
   return (
     <div className="space-y-3">
-      {/* Search */}
+
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
         <input
@@ -117,7 +117,6 @@ export function RecipeDiveBar({
         </div>
       </div>
 
-      {/* Filters + Sort */}
       <div className="flex flex-wrap items-center gap-2">
         {cuisineOptions.length > 0 && (
           <Select

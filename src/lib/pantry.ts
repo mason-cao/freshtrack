@@ -1,5 +1,3 @@
-// Shared client-side shape for rows returned by GET /api/items, so pages and
-// components stay in sync with the API instead of re-declaring drifting copies.
 export interface PantryItem {
   id: number;
   name: string;
@@ -16,7 +14,6 @@ export interface PantryItem {
   createdAt: string;
 }
 
-// Unit options offered by the add/edit item forms.
 export const PANTRY_UNITS = [
   "count",
   "lbs",
@@ -30,3 +27,10 @@ export const PANTRY_UNITS = [
   "loaf",
   "cans",
 ] as const;
+
+export interface PantryCategory {
+  id: number;
+  name: string;
+  icon: string;
+  defaultShelfLifeDays: number;
+}

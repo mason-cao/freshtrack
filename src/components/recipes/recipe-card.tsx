@@ -5,29 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Users } from "lucide-react";
 import { getRecipeImage } from "@/lib/food-images";
 
-interface RecipeIngredient {
-  id: number;
-  ingredientName: string;
-  quantity: number | null;
-  unit: string | null;
-}
-
-interface Recipe {
-  id: number;
-  name: string;
-  description: string | null;
-  instructions: string | null;
-  prepTimeMinutes: number | null;
-  cookTimeMinutes: number | null;
-  servings: number | null;
-  imageUrl?: string | null;
-  cuisine?: string | null;
-  category?: string | null;
-  sourceUrl?: string | null;
-  ingredients: RecipeIngredient[];
-  matchingIngredients?: string[];
-  matchCount?: number;
-}
+import type { Recipe } from "@/lib/recipes";
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -48,7 +26,7 @@ export function RecipeCard({ recipe, onSelect, isUseItUp }: RecipeCardProps) {
       }`}
       onClick={() => onSelect(recipe)}
     >
-      {/* Image header */}
+
       <div className="relative h-36 xl:h-40 overflow-hidden bg-warm-50">
         <Image
           src={imageUrl}
@@ -81,7 +59,6 @@ export function RecipeCard({ recipe, onSelect, isUseItUp }: RecipeCardProps) {
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-4">
         <span className="block font-semibold text-stone-900 text-sm xl:text-base line-clamp-1">
           {recipe.name}

@@ -79,7 +79,7 @@ export default function FoodsIndexPage() {
       <LandingNav isAuthenticated={false} />
 
       <main id="main-content">
-        {/* HERO */}
+
         <section className="relative isolate overflow-hidden bg-cream pt-24 sm:pt-28 lg:pt-32">
           <div
             className="pointer-events-none absolute inset-0 opacity-50"
@@ -144,7 +144,6 @@ export default function FoodsIndexPage() {
               </dl>
             </div>
 
-            {/* CATEGORY CHIP NAV */}
             <nav
               aria-label="Jump to category"
               className="mt-10 flex flex-wrap gap-2"
@@ -163,7 +162,6 @@ export default function FoodsIndexPage() {
           </div>
         </section>
 
-        {/* CATEGORY SECTIONS */}
         <div className="bg-warm-white">
           {activeCategories.map((cat, sectionIndex) => {
             const items = groups.get(cat) ?? [];
@@ -236,7 +234,6 @@ export default function FoodsIndexPage() {
           })}
         </div>
 
-        {/* CTA */}
         <section className="relative isolate overflow-hidden bg-sage-500 text-warm-white">
           <div
             className="pointer-events-none absolute inset-0 opacity-70"

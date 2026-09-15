@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { AnimatePresence, MotionConfig, motion } from "framer-motion";
+import { MotionConfig, motion } from "framer-motion";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -12,9 +12,7 @@ import {
   BarChart3,
   Leaf,
   LogOut,
-  RotateCcw,
   Eraser,
-  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -24,11 +22,9 @@ import { InstallPrompt } from "./install-prompt";
 import { AnalyticsTracker } from "./analytics-tracker";
 import {
   notifyPantryUpdated,
-  subscribeToPantryActions,
-  type PantryActionOutcome,
 } from "@/lib/pantry-events";
 import { fetchJson } from "@/lib/api-client";
-import { trackAnalyticsEvent } from "@/lib/analytics-client";
+import { PantryUndoToast } from "@/components/pantry/pantry-undo-toast";
 
 const navItems = [
   { href: "/app", label: "Home", icon: LayoutDashboard },
@@ -66,7 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         Skip to main content
       </a>
-      {/* Desktop Side Rail */}
+
       <aside
         className="fixed left-0 top-0 z-40 hidden h-full w-[72px] xl:w-[220px] flex-col items-center xl:items-stretch border-r border-warm-100 bg-warm-white py-6 md:flex transition-[width] duration-300 ease-out"
         aria-label="Primary"
@@ -168,7 +164,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         </button>
       </aside>
 
-      {/* Mobile Bottom Tab Bar */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-40 border-t border-warm-100 bg-warm-white pb-[env(safe-area-inset-bottom)] md:hidden"
         aria-label="Primary"
@@ -231,7 +226,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         }}
       />
 
-      {/* FAB */}
       <InstallPrompt />
 
       <Fab
@@ -241,7 +235,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         }}
       />
 
-      {/* Main Content */}
       <main
         id="main-content"
         className="md:ml-[72px] xl:ml-[220px] transition-[margin-left] duration-300 ease-out"
@@ -291,96 +284,5 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
     </div>
     </MotionConfig>
-  );
-}
-
-function PantryUndoToast({ onRestored }: { onRestored: () => void }) {
-  const [outcome, setOutcome] = useState<PantryActionOutcome | null>(null);
-  const [restoring, setRestoring] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    return subscribeToPantryActions((nextOutcome) => {
-      setOutcome(nextOutcome);
-      setRestoring(false);
-      setError(null);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!outcome) return;
-    const timeout = window.setTimeout(() => {
-      setOutcome(null);
-      setError(null);
-    }, 8000);
-    return () => window.clearTimeout(timeout);
-  }, [outcome]);
-
-  async function handleUndo() {
-    if (!outcome || restoring) return;
-
-    setRestoring(true);
-    setError(null);
-    try {
-      await fetchJson(`/api/items/${outcome.itemId}/restore`, { method: "POST" });
-      trackAnalyticsEvent("item_restored");
-      setOutcome(null);
-      onRestored();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to restore item.");
-    } finally {
-      setRestoring(false);
-    }
-  }
-
-  const actionLabel = outcome?.action === "consume" ? "used" : "wasted";
-
-  return (
-    <AnimatePresence>
-      {outcome && (
-        <motion.div
-          role="status"
-          aria-live="polite"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 16 }}
-          transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="fixed bottom-20 left-4 right-4 z-50 rounded-xl border border-warm-100 bg-warm-white p-3 shadow-warm-lg md:bottom-6 md:left-auto md:right-6 md:w-[360px]"
-        >
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 rounded-lg bg-sage-50 p-2 text-sage-600">
-              <RotateCcw className="h-4 w-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-stone-900">
-                Marked {outcome.itemName} {actionLabel}
-              </p>
-              <p className="mt-0.5 text-xs text-stone-500">
-                Undo will restore it to your active pantry.
-              </p>
-              {error && <p role="alert" className="mt-1 text-xs text-terracotta-600">{error}</p>}
-            </div>
-            <div className="flex shrink-0 items-center gap-1">
-              <button
-                type="button"
-                onClick={handleUndo}
-                disabled={restoring}
-                className="inline-flex h-8 items-center justify-center rounded-lg border border-sage-200 bg-sage-50 px-3 text-xs font-semibold text-sage-700 transition-colors duration-200 hover:bg-sage-100 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
-              >
-                {restoring ? "Restoring" : "Undo"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setOutcome(null)}
-                aria-label="Dismiss pantry update"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition-colors duration-200 hover:bg-warm-50 hover:text-stone-700 cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
   );
 }

@@ -1,8 +1,14 @@
-// Pure, network-free helpers for the barcode → product lookup flow.
-// The route handler (src/app/api/products/[barcode]) does the fetching; this
-// module only sanitizes input and normalizes an Open Food Facts response into
-// the shape the add-item form consumes. Keeping it side-effect free makes the
-// fallback chains and parsing fully unit-testable.
+/** Shape returned to the add-item form; `found: false` is always recoverable. */
+export interface ProductLookupResult {
+  found: boolean;
+  name: string | null;
+  brand: string | null;
+  categoryId: number | null;
+  quantity: number | null;
+  unit: string | null;
+  imageUrl: string | null;
+}
+
 
 /** Product fields extracted from an Open Food Facts lookup. */
 export interface NormalizedProduct {
@@ -14,7 +20,7 @@ export interface NormalizedProduct {
   quantity: number | null;
   unit: string | null;
   imageUrl: string | null;
-  /** Normalized English category labels; commit 4 maps these to a category id. */
+  /** Normalized English category labels for FreshTrack category matching. */
   categoryTags: string[];
 }
 

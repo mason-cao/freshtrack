@@ -1,53 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Flashlight, FlashlightOff, Keyboard, Loader2, ScanLine, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-// Controls handle returned by ZXing's continuous decode; typed structurally so
-// we don't depend on the interface's export name.
-type ZxingControls = { stop: () => void };
-
-// The torch (flashlight) capability isn't in the standard DOM types yet.
-interface TorchCapabilities extends MediaTrackCapabilities {
-  torch?: boolean;
-}
-interface TorchConstraintSet extends MediaTrackConstraintSet {
-  torch?: boolean;
-}
-
-// Restrict the native detector to the 1D formats grocery products actually use.
-// Fewer formats means faster, more reliable reads. The ZXing fallback uses the
-// 1D-only reader, which is the equivalent restriction for browsers without the
-// native API (iOS Safari, Firefox).
-const NATIVE_FORMATS: BarcodeFormat[] = ["ean_13", "upc_a", "ean_8", "upc_e", "code_128"];
-
-function supportsNativeDetector(): boolean {
-  return typeof window !== "undefined" && "BarcodeDetector" in window;
-}
-
-function isPlausibleBarcode(digits: string): boolean {
-  return digits.length >= 8 && digits.length <= 14;
-}
-
-function describeCameraError(error: unknown): string {
-  const name = error instanceof Error ? error.name : "";
-  switch (name) {
-    case "NotAllowedError":
-    case "SecurityError":
-      return "Camera access was blocked. Allow the camera in your browser settings, or enter the barcode by hand.";
-    case "NotFoundError":
-    case "DevicesNotFoundError":
-      return "No camera was found on this device.";
-    case "NotReadableError":
-      return "The camera is already in use by another app.";
-    default:
-      return "We couldn't start the camera on this device.";
-  }
-}
-
-type Status = "starting" | "scanning" | "error" | "manual";
+import { useBarcodeCamera } from "@/hooks/use-barcode-camera";
+import { sanitizeBarcode } from "@/lib/barcode";
 
 interface BarcodeScannerProps {
   onDetected: (barcode: string) => void;
@@ -56,206 +14,27 @@ interface BarcodeScannerProps {
 
 export function BarcodeScanner({ onDetected, onCancel }: BarcodeScannerProps) {
   const reduceMotion = useReducedMotion();
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const zxingControlsRef = useRef<ZxingControls | null>(null);
-  const nativeActiveRef = useRef(false);
-  const nativeTimeoutRef = useRef<number | null>(null);
-  const detectedRef = useRef(false);
-  // Last plausible read awaiting a confirming second read (cuts misreads).
-  const pendingCodeRef = useRef<string | null>(null);
-
-  // Keep the latest onDetected without re-running the camera effect when the
-  // parent re-renders with a new callback identity.
-  const onDetectedRef = useRef(onDetected);
-  useEffect(() => {
-    onDetectedRef.current = onDetected;
-  }, [onDetected]);
-
-  const [status, setStatus] = useState<Status>("starting");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [torchSupported, setTorchSupported] = useState(false);
-  const [torchOn, setTorchOn] = useState(false);
   const [manualValue, setManualValue] = useState("");
   const [manualError, setManualError] = useState<string | null>(null);
-  const [restartKey, setRestartKey] = useState(0);
-
-  const stop = useCallback(() => {
-    nativeActiveRef.current = false;
-    if (nativeTimeoutRef.current !== null) {
-      window.clearTimeout(nativeTimeoutRef.current);
-      nativeTimeoutRef.current = null;
+  const { videoRef, status, errorMessage, torchSupported, torchOn, toggleTorch, openManual, restartScanning } = useBarcodeCamera((code) => {
+    if (!reduceMotion) {
+      navigator.vibrate?.(60);
+      void import("canvas-confetti").then(({ default: confetti }) => confetti({
+        particleCount: 36, spread: 55, origin: { x: 0.5, y: 0.45 },
+        colors: ["#527a52", "#b8cdb8", "#d97706"], disableForReducedMotion: true,
+      })).catch(() => undefined);
     }
-    zxingControlsRef.current?.stop();
-    zxingControlsRef.current = null;
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-    if (videoRef.current) videoRef.current.srcObject = null;
-  }, []);
-
-  const handleDetected = useCallback(
-    (rawValue: string) => {
-      if (detectedRef.current) return;
-      const digits = rawValue.replace(/\D/g, "");
-      if (!isPlausibleBarcode(digits)) return;
-
-      // Require two matching reads before accepting, so a single misread frame
-      // can't send the user to the wrong product.
-      if (pendingCodeRef.current !== digits) {
-        pendingCodeRef.current = digits;
-        return;
-      }
-
-      detectedRef.current = true;
-      stop();
-      if (!reduceMotion) {
-        navigator.vibrate?.(60);
-        void import("canvas-confetti")
-          .then(({ default: confetti }) =>
-            confetti({
-              particleCount: 36,
-              spread: 55,
-              origin: { x: 0.5, y: 0.45 },
-              colors: ["#527a52", "#b8cdb8", "#d97706"],
-              disableForReducedMotion: true,
-            })
-          )
-          .catch(() => undefined);
-      }
-      onDetectedRef.current(digits);
-    },
-    [reduceMotion, stop]
-  );
-
-  const startNativeLoop = useCallback(
-    (video: HTMLVideoElement) => {
-      const detector = new BarcodeDetector({ formats: NATIVE_FORMATS });
-      nativeActiveRef.current = true;
-
-      const tick = async () => {
-        if (!nativeActiveRef.current) return;
-        if (video.readyState >= 2) {
-          try {
-            const codes = await detector.detect(video);
-            const raw = codes.find((code) => code.rawValue)?.rawValue;
-            if (raw) handleDetected(raw);
-          } catch {
-            // transient per-frame decode errors are expected; keep scanning
-          }
-        }
-        if (nativeActiveRef.current) {
-          nativeTimeoutRef.current = window.setTimeout(tick, 250);
-        }
-      };
-
-      void tick();
-    },
-    [handleDetected]
-  );
-
-  const startZxing = useCallback(
-    async (stream: MediaStream, video: HTMLVideoElement) => {
-      // Most Chromium browsers use the native detector. Load ZXing only for
-      // browsers that actually need the fallback (notably Safari/Firefox).
-      const { BrowserMultiFormatOneDReader } = await import("@zxing/browser");
-      const reader = new BrowserMultiFormatOneDReader();
-      zxingControlsRef.current = await reader.decodeFromStream(stream, video, (result) => {
-        if (result) handleDetected(result.getText());
-      });
-    },
-    [handleDetected]
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function start() {
-      detectedRef.current = false;
-      pendingCodeRef.current = null;
-      setStatus("starting");
-      setErrorMessage(null);
-      setTorchOn(false);
-      setTorchSupported(false);
-
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setStatus("error");
-        setErrorMessage("This browser can't open the camera. Enter the barcode by hand instead.");
-        return;
-      }
-
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
-          audio: false,
-        });
-        if (cancelled) {
-          stream.getTracks().forEach((track) => track.stop());
-          return;
-        }
-        streamRef.current = stream;
-
-        const track = stream.getVideoTracks()[0];
-        const capabilities = track?.getCapabilities?.() as TorchCapabilities | undefined;
-        if (!cancelled) setTorchSupported(Boolean(capabilities?.torch));
-
-        const video = videoRef.current;
-        if (!video) return;
-
-        if (supportsNativeDetector()) {
-          video.srcObject = stream;
-          await video.play().catch(() => undefined);
-          startNativeLoop(video);
-        } else {
-          await startZxing(stream, video);
-        }
-
-        if (!cancelled) setStatus("scanning");
-      } catch (error) {
-        if (cancelled) return;
-        setStatus("error");
-        setErrorMessage(describeCameraError(error));
-      }
-    }
-
-    void start();
-
-    return () => {
-      cancelled = true;
-      stop();
-    };
-  }, [restartKey, startNativeLoop, startZxing, stop]);
-
-  const toggleTorch = useCallback(async () => {
-    const track = streamRef.current?.getVideoTracks()[0];
-    if (!track) return;
-    const next = !torchOn;
-    try {
-      await track.applyConstraints({ advanced: [{ torch: next } as TorchConstraintSet] });
-      setTorchOn(next);
-    } catch {
-      // some devices report torch support but reject the constraint; ignore
-    }
-  }, [torchOn]);
-
-  const openManual = useCallback(() => {
-    stop();
-    setManualError(null);
-    setStatus("manual");
-  }, [stop]);
-
-  const restartScanning = useCallback(() => {
-    setStatus("starting");
-    setRestartKey((key) => key + 1);
-  }, []);
+    onDetected(code);
+  });
 
   function handleManualSubmit(event: React.FormEvent) {
     event.preventDefault();
     const digits = manualValue.replace(/\D/g, "");
-    if (!isPlausibleBarcode(digits)) {
+    if (!sanitizeBarcode(digits)) {
       setManualError("Enter the 8–14 digit number printed beneath the barcode.");
       return;
     }
-    onDetectedRef.current(digits);
+    onDetected(digits);
   }
 
   return (
@@ -315,7 +94,7 @@ export function BarcodeScanner({ onDetected, onCancel }: BarcodeScannerProps) {
 
           {status === "scanning" && (
             <>
-              {/* Framing reticle */}
+
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                 <div className="relative h-40 w-[80%] max-w-xs rounded-xl border-2 border-white/70 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]">
                   <motion.div
@@ -343,7 +122,7 @@ export function BarcodeScanner({ onDetected, onCancel }: BarcodeScannerProps) {
                       {torchOn ? "Light off" : "Light on"}
                     </Button>
                   )}
-                  <Button type="button" variant="secondary" size="sm" onClick={openManual}>
+                  <Button type="button" variant="secondary" size="sm" onClick={() => { setManualError(null); openManual(); }}>
                     <Keyboard className="h-4 w-4" />
                     Enter number
                   </Button>
@@ -363,7 +142,7 @@ export function BarcodeScanner({ onDetected, onCancel }: BarcodeScannerProps) {
             <div role="alert" className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-stone-900 px-6 text-center text-white/90">
               <p className="text-sm leading-relaxed">{errorMessage}</p>
               <div className="flex flex-wrap items-center justify-center gap-2">
-                <Button size="sm" onClick={openManual}>
+                <Button size="sm" onClick={() => { setManualError(null); openManual(); }}>
                   <Keyboard className="h-4 w-4" />
                   Enter number
                 </Button>

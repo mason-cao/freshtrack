@@ -12,28 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, ExternalLink, Users } from "lucide-react";
 import { getRecipeImage } from "@/lib/food-images";
 
-interface RecipeIngredient {
-  id: number;
-  ingredientName: string;
-  quantity: number | null;
-  unit: string | null;
-}
-
-interface Recipe {
-  id: number;
-  name: string;
-  description: string | null;
-  instructions: string | null;
-  prepTimeMinutes: number | null;
-  cookTimeMinutes: number | null;
-  servings: number | null;
-  imageUrl?: string | null;
-  cuisine?: string | null;
-  category?: string | null;
-  sourceUrl?: string | null;
-  ingredients: RecipeIngredient[];
-  matchingIngredients?: string[];
-}
+import type { Recipe } from "@/lib/recipes";
 
 interface RecipeDetailProps {
   recipe: Recipe | null;
@@ -47,7 +26,7 @@ export function RecipeDetail({ recipe, open, onClose }: RecipeDetailProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg xl:max-w-2xl 2xl:max-w-3xl max-h-[80vh] overflow-y-auto p-0">
-        {/* Hero image */}
+
         <div className="relative h-48 xl:h-56 w-full overflow-hidden bg-warm-50">
           <Image
             src={recipe.imageUrl || getRecipeImage(recipe.name)}

@@ -3,13 +3,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Pencil, Trash2, X } from "lucide-react";
-import { fetchJson } from "@/lib/api-client";
+import { completePantryItem } from "@/lib/pantry-actions";
 import {
-  notifyPantryActionCompleted,
   type PantryActionOutcome,
   type PantryCompletionAction,
 } from "@/lib/pantry-events";
-import { trackAnalyticsEvent } from "@/lib/analytics-client";
 import { EditItemDialog } from "./edit-item-dialog";
 import type { PantryItem } from "@/lib/pantry";
 
@@ -32,10 +30,7 @@ export function ItemActions({ itemId, itemName, onAction, item }: ItemActionsPro
     setError(null);
 
     try {
-      await fetchJson(`/api/items/${itemId}/${action}`, { method: "POST" });
-      trackAnalyticsEvent(action === "consume" ? "item_consumed" : "item_wasted");
-      const outcome = { itemId, itemName, action };
-      notifyPantryActionCompleted(outcome);
+      const outcome = await completePantryItem({ itemId, itemName, action });
       setConfirming(null);
       onAction(outcome);
     } catch (err) {

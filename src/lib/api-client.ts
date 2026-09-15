@@ -2,7 +2,8 @@ export async function fetchJson<T>(
   input: RequestInfo | URL,
   init?: RequestInit
 ): Promise<T> {
-  const signal = init?.signal ?? AbortSignal.timeout(15_000);
+  const timeout = AbortSignal.timeout(15_000);
+  const signal = init?.signal ? AbortSignal.any([init.signal, timeout]) : timeout;
   let response: Response;
 
   try {
@@ -12,7 +13,8 @@ export async function fetchJson<T>(
       signal,
     });
   } catch (error) {
-    if (signal.aborted) {
+    if (init?.signal?.aborted) throw error;
+    if (timeout.aborted) {
       throw new Error("The request took too long. Check your connection and try again.");
     }
     if (typeof navigator !== "undefined" && navigator.onLine === false) {
@@ -24,6 +26,8 @@ export async function fetchJson<T>(
         : "A network error interrupted the request."
     );
   }
+
+  signal.throwIfAborted();
 
   if (!response.ok) {
     // An expired session means every subsequent call fails; send the user

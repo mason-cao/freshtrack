@@ -71,7 +71,7 @@ export function MetricCards({ items, useRate, expiringCount, hasHistory }: Metri
       className="relative overflow-hidden rounded-2xl border border-warm-100 bg-warm-white shadow-warm"
     >
       <div className="grid grid-cols-1 divide-y divide-warm-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-        {/* In rotation */}
+
         <motion.div variants={enterCell} className="p-5 xl:p-7">
           <p className="eyebrow text-stone-500">In rotation</p>
           <p className="num mt-4 text-[44px] font-bold leading-[0.9] tracking-[-0.02em] text-stone-900 xl:text-[56px]">
@@ -97,7 +97,6 @@ export function MetricCards({ items, useRate, expiringCount, hasHistory }: Metri
           )}
         </motion.div>
 
-        {/* Use rate */}
         <motion.div variants={enterCell} className="p-5 xl:p-7">
           <p className="eyebrow text-stone-500">Use rate</p>
           <div className="mt-4 flex items-baseline gap-1">
@@ -126,7 +125,6 @@ export function MetricCards({ items, useRate, expiringCount, hasHistory }: Metri
           </div>
         </motion.div>
 
-        {/* Expiring soon */}
         <motion.div variants={enterCell} className="p-5 xl:p-7">
           <p className="eyebrow text-stone-500">Expiring soon</p>
           <p

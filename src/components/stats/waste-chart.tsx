@@ -11,17 +11,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-interface MonthlyData {
-  month: string;
-  monthLabel: string;
-  consumed: number;
-  wasted: number;
-  consumedCost: number;
-  wastedCost: number;
-}
+import type { MonthlyStats } from "@/lib/stats-summary";
 
 interface WasteChartProps {
-  data: MonthlyData[];
+  data: MonthlyStats[];
 }
 
 export function WasteChart({ data }: WasteChartProps) {

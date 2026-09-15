@@ -8,7 +8,7 @@ vi.mock("@/db", () => ({
   db: dbMock,
 }));
 
-import { completeItem } from "./_lib";
+import { completeItem } from "@/db/items";
 
 function directQueryChunks(value: unknown): unknown[] | null {
   if (typeof value !== "object" || value === null) return null;

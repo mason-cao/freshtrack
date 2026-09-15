@@ -1,6 +1,4 @@
-// Pure parsing for the one-time TheMealDB catalog import. Kept free of network
-// and database access so the quality gate and measure parsing can be unit
-// tested. The runner (import-mealdb.ts) handles fetching and upserting.
+// Parsing and quality checks for TheMealDB imports.
 
 export interface RawMeal {
   idMeal?: string;

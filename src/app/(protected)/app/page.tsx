@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getDaysUntilExpiry } from "@/lib/freshness";
 import { fetchJson } from "@/lib/api-client";
-import { subscribeToPantryUpdates } from "@/lib/pantry-events";
+import { notifyPantryUpdated, subscribeToPantryUpdates } from "@/lib/pantry-events";
 import { WeeklyHero } from "@/components/dashboard/weekly-hero";
 import { StreakBadge } from "@/components/dashboard/streak-badge";
 import { MetricCards } from "@/components/dashboard/metric-cards";
@@ -18,68 +17,31 @@ import { toDateInputValue } from "@/lib/dates";
 import type { PantryItem } from "@/lib/pantry";
 import { ErrorState } from "@/components/ui/async-state";
 
-interface Stats {
-  monthly: Array<{
-    month: string;
-    monthLabel: string;
-    consumed: number;
-    wasted: number;
-    consumedCost: number;
-  }>;
-  totals: {
-    consumed: number;
-    wasted: number;
-    wasteRate: number;
-    moneySaved: number;
-    wastedCost: number;
-  };
-}
+import { useResource } from "@/hooks/use-resource";
+import type { Recipe } from "@/lib/recipes";
+import type { StatsSummary } from "@/lib/stats-summary";
 
-interface RecipeSuggestion {
-  id: number;
-  name: string;
-  description: string;
-  prepTimeMinutes: number;
-  cookTimeMinutes: number;
-  imageUrl: string | null;
-  matchingIngredients: string[];
+async function loadDashboard(signal: AbortSignal) {
+  const [items, stats, recipes] = await Promise.all([
+    fetchJson<PantryItem[]>("/api/items", { signal }),
+    fetchJson<StatsSummary>("/api/stats", { signal }),
+    fetchJson<Recipe[]>("/api/recipes/suggestions", { signal }),
+  ]);
+  return { items, stats, recipe: recipes[0] ?? null };
 }
 
 export default function DashboardPage() {
-  const [items, setItems] = useState<PantryItem[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [recipe, setRecipe] = useState<RecipeSuggestion | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, loading, error, refresh } = useResource(loadDashboard, {
+    subscribe: subscribeToPantryUpdates,
+  });
+  const { items = [], stats, recipe } = data ?? {};
 
-  const loadData = useCallback(() => {
-    setError(null);
-    Promise.all([
-      fetchJson<PantryItem[]>("/api/items"),
-      fetchJson<Stats>("/api/stats"),
-      fetchJson<RecipeSuggestion[]>("/api/recipes/suggestions"),
-    ]).then(([itemsData, statsData, recipesData]) => {
-      setItems(itemsData);
-      setStats(statsData);
-      setRecipe(recipesData?.[0] ?? null);
-      setLoading(false);
-    }).catch((err) => {
-      setError(err instanceof Error ? err.message : "Unable to load dashboard.");
-      setLoading(false);
-    });
-  }, []);
-
-  useEffect(() => {
-    loadData();
-    return subscribeToPantryUpdates(loadData);
-  }, [loadData]);
-
-  if (loading) {
+  if (loading && !data) {
     return <DashboardSkeleton />;
   }
 
   if (error) {
-    return <ErrorState message={error} onRetry={loadData} />;
+    return <ErrorState message={error} onRetry={refresh} />;
   }
 
   const expiringSoon = items.filter((i) => {
@@ -114,7 +76,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 xl:space-y-0 xl:grid xl:grid-cols-12 xl:gap-6">
-      {/* Greeting + saved-item count */}
+
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -134,7 +96,6 @@ export default function DashboardPage() {
         <StreakBadge usedCount={stats?.totals.consumed ?? 0} />
       </motion.div>
 
-      {/* Ledger Hero */}
       {stats && (
         <div className="xl:col-span-12">
           <WeeklyHero
@@ -147,9 +108,8 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Left Column: Metrics + Attention */}
       <div className="xl:col-span-7 space-y-6">
-        {/* Metric Ledger */}
+
         <MetricCards
           items={items}
           useRate={stats ? 100 - stats.totals.wasteRate : 0}
@@ -159,11 +119,9 @@ export default function DashboardPage() {
           )}
         />
 
-        {/* Needs Attention */}
-        <NeedsAttention items={expiringSoon} onAction={loadData} />
+        <NeedsAttention items={expiringSoon} onAction={notifyPantryUpdated} />
       </div>
 
-      {/* Right Column: Recipe Suggestion */}
       {recipe && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -190,7 +148,7 @@ export default function DashboardPage() {
                   </span>
                 </div>
               </div>
-              {/* Content */}
+
               <div className="p-5 xl:p-5">
                 <div className="flex items-start gap-3">
                   <div className="rounded-lg bg-sage-50 p-2 shrink-0 xl:hidden">
@@ -204,9 +162,9 @@ export default function DashboardPage() {
                     <p className="text-sm text-stone-500 mt-1 line-clamp-1 xl:line-clamp-3">
                       {recipe.description}
                     </p>
-                    {recipe.matchingIngredients.length > 0 && (
+                    {(recipe.matchingIngredients?.length ?? 0) > 0 && (
                       <div className="hidden xl:flex flex-wrap gap-1.5 mt-3">
-                        {recipe.matchingIngredients.slice(0, 4).map((ing) => (
+                        {recipe.matchingIngredients?.slice(0, 4).map((ing) => (
                           <span key={ing} className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
                             {ing}
                           </span>

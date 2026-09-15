@@ -1,59 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { RecipeCard } from "@/components/recipes/recipe-card";
 import { RecipeDetail } from "@/components/recipes/recipe-detail";
 import { RecipeDiveBar } from "@/components/recipes/recipe-dive-bar";
 import { BookOpen, Compass, Sparkles } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { fetchJson } from "@/lib/api-client";
-import { subscribeToPantryUpdates } from "@/lib/pantry-events";
+import { useRecipeCatalog } from "@/hooks/use-recipe-catalog";
 import { ErrorState, LoadingState } from "@/components/ui/async-state";
 
-interface RecipeIngredient {
-  id: number;
-  ingredientName: string;
-  quantity: number | null;
-  unit: string | null;
-}
-
-interface Recipe {
-  id: number;
-  name: string;
-  description: string | null;
-  instructions: string | null;
-  prepTimeMinutes: number | null;
-  cookTimeMinutes: number | null;
-  servings: number | null;
-  imageUrl?: string | null;
-  cuisine?: string | null;
-  category?: string | null;
-  sourceUrl?: string | null;
-  ingredients: RecipeIngredient[];
-  matchingIngredients?: string[];
-  matchCount?: number;
-}
-
-interface DiveQuery {
-  search: string;
-  cuisine: string | null;
-  category: string | null;
-  maxMinutes: number | null;
-  sort: "relevance" | "name";
-}
-
-interface RecipeFacets {
-  cuisines: string[];
-  categories: string[];
-}
-
-interface RecipeResultsResponse {
-  recipes: Recipe[];
-  total: number;
-  limit: number;
-  offset: number;
-}
+import type { Recipe } from "@/lib/recipes";
 
 const container = {
   hidden: { opacity: 0 },
@@ -73,122 +30,11 @@ const item = {
 };
 
 export default function RecipesPage() {
-  const [suggestions, setSuggestions] = useState<Recipe[]>([]);
-  const [diveRecipes, setDiveRecipes] = useState<Recipe[]>([]);
-  const [cuisineOptions, setCuisineOptions] = useState<string[]>([]);
-  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [searching, setSearching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [diveOffset, setDiveOffset] = useState(0);
-  const [diveTotal, setDiveTotal] = useState(0);
-
-  const [query, setQuery] = useState<DiveQuery>({
-    search: "",
-    cuisine: null,
-    category: null,
-    maxMinutes: null,
-    sort: "relevance",
-  });
-
-  const updateQuery = useCallback((patch: Partial<DiveQuery>) => {
-    setQuery((current) => ({ ...current, ...patch }));
-    setDiveOffset(0);
-  }, []);
-
-  const clearFilters = useCallback(() => {
-    setQuery((current) => ({
-      search: "",
-      cuisine: null,
-      category: null,
-      maxMinutes: null,
-      sort: current.sort,
-    }));
-    setDiveOffset(0);
-  }, []);
-
-  const loadSuggestions = useCallback(() => {
-    fetchJson<Recipe[]>("/api/recipes/suggestions")
-      .then(setSuggestions)
-      .catch(() => setSuggestions([]));
-  }, []);
-
-  useEffect(() => {
-    loadSuggestions();
-    // Expiring items affect both suggestions and Dive relevance — refresh both.
-    // Reset paging too: refetching with a stale offset would append rows the
-    // list already shows.
-    return subscribeToPantryUpdates(() => {
-      loadSuggestions();
-      setDiveOffset(0);
-      setRefreshKey((key) => key + 1);
-    });
-  }, [loadSuggestions]);
-
-  useEffect(() => {
-    fetchJson<RecipeFacets>("/api/recipes/facets")
-      .then((facets) => {
-        setCuisineOptions(facets.cuisines);
-        setCategoryOptions(facets.categories);
-      })
-      .catch(() => {
-        setCuisineOptions([]);
-        setCategoryOptions([]);
-      });
-  }, []);
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (query.search) params.set("search", query.search);
-    if (query.cuisine) params.set("cuisine", query.cuisine);
-    if (query.category) params.set("category", query.category);
-    if (query.maxMinutes) params.set("maxMinutes", String(query.maxMinutes));
-    params.set("sort", query.sort);
-    if (diveOffset > 0) params.set("offset", String(diveOffset));
-
-    setError(null);
-    if (diveOffset > 0) {
-      setLoadingMore(true);
-    } else {
-      setSearching(true);
-    }
-
-    let cancelled = false;
-
-    fetchJson<RecipeResultsResponse>(`/api/recipes?${params.toString()}`)
-      .then((data) => {
-        if (cancelled) return;
-        setDiveRecipes((current) =>
-          data.offset === 0 ? data.recipes : [...current, ...data.recipes]
-        );
-        setDiveTotal(data.total);
-        setLoading(false);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : "Unable to load recipes.");
-        setLoading(false);
-      })
-      .finally(() => {
-        if (cancelled) return;
-        setLoadingMore(false);
-        setSearching(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [query, refreshKey, diveOffset]);
-
-  const hasActiveFilters =
-    query.search !== "" ||
-    query.cuisine !== null ||
-    query.category !== null ||
-    query.maxMinutes !== null;
-  const canShowMore = diveRecipes.length < diveTotal;
+  const {
+    suggestions, diveRecipes, cuisineOptions, categoryOptions, query, updateQuery, clearFilters,
+    loading, loadingMore, searching, error, diveTotal, hasActiveFilters, canShowMore, refresh, showMore,
+  } = useRecipeCatalog();
 
   if (loading) {
     return <LoadingState label="Loading recipes" />;
@@ -198,10 +44,7 @@ export default function RecipesPage() {
     return (
       <ErrorState
         message={error}
-        onRetry={() => {
-          setDiveOffset(0);
-          setRefreshKey((key) => key + 1);
-        }}
+        onRetry={refresh}
       />
     );
   }
@@ -295,8 +138,8 @@ export default function RecipesPage() {
               <div className="flex justify-center">
                 <button
                   type="button"
-                  onClick={() => setDiveOffset(diveRecipes.length)}
-                  disabled={loadingMore}
+                  onClick={showMore}
+                  disabled={loadingMore || searching}
                   className="rounded-full border border-sage-200 bg-warm-white px-4 py-2 text-sm font-medium text-sage-700 shadow-warm-sm transition-colors duration-200 hover:bg-sage-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loadingMore ? "Loading..." : "Show more"}

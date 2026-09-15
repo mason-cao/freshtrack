@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { motion, useMotionValue, useReducedMotion, useTransform, animate } from "framer-motion";
+import { motion } from "framer-motion";
+import { AnimatedNumber, WasteRateRing } from "@/components/stats/waste-rate-ring";
 import {
   Card,
   CardContent,
@@ -22,26 +22,10 @@ import { fetchJson } from "@/lib/api-client";
 import { subscribeToPantryUpdates } from "@/lib/pantry-events";
 import { ErrorState, LoadingState } from "@/components/ui/async-state";
 
-interface MonthlyData {
-  month: string;
-  monthLabel: string;
-  consumed: number;
-  wasted: number;
-  consumedCost: number;
-  wastedCost: number;
-}
+import type { StatsSummary } from "@/lib/stats-summary";
+import { useResource } from "@/hooks/use-resource";
 
-interface StatsData {
-  monthly: MonthlyData[];
-  totals: {
-    consumed: number;
-    wasted: number;
-    consumedCost: number;
-    wastedCost: number;
-    wasteRate: number;
-    moneySaved: number;
-  };
-}
+const loadStats = (signal: AbortSignal) => fetchJson<StatsSummary>("/api/stats", { signal });
 
 const container = {
   hidden: { opacity: 0 },
@@ -60,120 +44,22 @@ const cell = {
   },
 };
 
-function AnimatedNumber({
-  value,
-  prefix = "",
-  suffix = "",
-}: {
-  value: number;
-  prefix?: string;
-  suffix?: string;
-}) {
-  const reduceMotion = useReducedMotion();
-  const count = useMotionValue(0);
-  const rounded = useTransform(
-    count,
-    (v) => `${prefix}${Math.round(v)}${suffix}`,
-  );
-
-  useEffect(() => {
-    if (reduceMotion) {
-      count.set(value);
-      return;
-    }
-    const controls = animate(count, value, {
-      duration: 1.4,
-      ease: [0.16, 1, 0.3, 1],
-    });
-    return controls.stop;
-  }, [count, reduceMotion, value]);
-
-  return <motion.span>{rounded}</motion.span>;
-}
-
-function WasteRateRing({ rate }: { rate: number }) {
-  const circumference = 2 * Math.PI * 42;
-  const fillPercent = Math.min(rate, 100);
-  const offset = circumference - (fillPercent / 100) * circumference;
-  // Two-tier semantic color, intuitive direction:
-  // low waste = sage (calm), high waste = terracotta (alert).
-  const isHigh = rate > 25;
-  const ringColor = isHigh ? "#c2410c" : "#527a52";
-  const centerColor = isHigh ? "text-terracotta-600" : "text-sage-600";
-
-  return (
-    <div className="relative h-40 w-40 shrink-0 sm:h-44 sm:w-44 xl:h-48 xl:w-48">
-      <svg aria-hidden="true" focusable="false" className="h-full w-full -rotate-90" viewBox="0 0 100 100">
-        <circle
-          cx="50"
-          cy="50"
-          r="42"
-          fill="none"
-          stroke="#f3ead8"
-          strokeWidth="6"
-        />
-        <motion.circle
-          cx="50"
-          cy="50"
-          r="42"
-          fill="none"
-          stroke={ringColor}
-          strokeWidth="6"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.35 }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span
-          className={`num text-[42px] font-bold leading-none tracking-[-0.02em] xl:text-5xl ${centerColor}`}
-        >
-          <AnimatedNumber value={rate} suffix="%" />
-        </span>
-        <span className="eyebrow mt-1.5 text-stone-500">Waste rate</span>
-      </div>
-    </div>
-  );
-}
-
 function getUseRate(consumed: number, wasted: number) {
   const total = consumed + wasted;
   return total > 0 ? Math.round((consumed / total) * 100) : 0;
 }
 
 export default function StatsPage() {
-  const [stats, setStats] = useState<StatsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: stats, loading, error, refresh } = useResource(loadStats, {
+    subscribe: subscribeToPantryUpdates,
+  });
 
-  const loadStats = useCallback(() => {
-    setError(null);
-    fetchJson<StatsData>("/api/stats")
-      .then((data) => {
-        setStats(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(
-          err instanceof Error ? err.message : "Unable to load statistics.",
-        );
-        setLoading(false);
-      });
-  }, []);
-
-  useEffect(() => {
-    loadStats();
-    return subscribeToPantryUpdates(loadStats);
-  }, [loadStats]);
-
-  if (loading) {
+  if (loading && !stats) {
     return <LoadingState label="Loading statistics" />;
   }
 
   if (error) {
-    return <ErrorState message={error} onRetry={loadStats} />;
+    return <ErrorState message={error} onRetry={refresh} />;
   }
 
   if (!stats) {

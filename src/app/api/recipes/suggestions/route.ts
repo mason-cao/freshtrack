@@ -1,3 +1,4 @@
+import type { Recipe } from "@/lib/recipes";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { visibleRecipeWhere } from "@/db/recipe-visibility";
@@ -49,5 +50,5 @@ export async function GET() {
     .sort((a, b) => b.matchCount - a.matchCount)
     .slice(0, RECIPE_SUGGESTION_LIMIT);
 
-  return NextResponse.json(suggestions);
+  return NextResponse.json(suggestions satisfies Recipe[]);
 }

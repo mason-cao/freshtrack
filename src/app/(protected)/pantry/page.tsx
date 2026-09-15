@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { getFreshnessStatus, getDaysUntilExpiry } from "@/lib/freshness";
 import { SearchFilterBar } from "@/components/pantry/search-filter-bar";
@@ -16,36 +16,21 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PackageSearch, SearchX, Trash2 } from "lucide-react";
 import type { PantryItem } from "@/lib/pantry";
+import { useResource } from "@/hooks/use-resource";
 import { ErrorState } from "@/components/ui/async-state";
 
 const FIRST_FIVE_ITEMS_EVENT_KEY = "freshtrack:analytics:first-5-items-sent";
 
+const loadPantry = (signal: AbortSignal) => fetchJson<PantryItem[]>("/api/items", { signal });
+
 export default function PantryPage() {
-  const [items, setItems] = useState<PantryItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, error, refresh } = useResource(loadPantry, {
+    subscribe: subscribeToPantryUpdates,
+  });
+  const items = useMemo(() => data ?? [], [data]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("expiry");
-  const [error, setError] = useState<string | null>(null);
-
-  const loadItems = useCallback(() => {
-    setError(null);
-    fetchJson<PantryItem[]>("/api/items")
-      .then((data) => {
-        setItems(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : "Unable to load pantry.");
-        setLoading(false);
-      });
-  }, []);
-
-  useEffect(() => {
-    loadItems();
-    return subscribeToPantryUpdates(loadItems);
-  }, [loadItems]);
-
   useEffect(() => {
     if (items.length < 5) return;
 
@@ -62,7 +47,6 @@ export default function PantryPage() {
   const filteredItems = useMemo(() => {
     let result = items;
 
-    // Search
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -72,12 +56,10 @@ export default function PantryPage() {
       );
     }
 
-    // Filter
     if (filter !== "all") {
       result = result.filter((i) => getFreshnessStatus(i.expirationDate) === filter);
     }
 
-    // Sort
     result = [...result].sort((a, b) => {
       switch (sort) {
         case "expiry":
@@ -119,20 +101,19 @@ export default function PantryPage() {
   async function handleClearPantry() {
     await fetchJson("/api/account/pantry", { method: "DELETE" });
     notifyPantryUpdated();
-    loadItems();
   }
 
-  if (loading) {
+  if (loading && !data) {
     return <PantrySkeleton />;
   }
 
   if (error) {
-    return <ErrorState message={error} onRetry={loadItems} />;
+    return <ErrorState message={error} onRetry={refresh} />;
   }
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -166,7 +147,7 @@ export default function PantryPage() {
             />
           )}
           <div className="hidden md:block">
-            <AddItemDialog onItemAdded={loadItems} />
+            <AddItemDialog onItemAdded={notifyPantryUpdated} />
           </div>
         </div>
       </motion.div>
@@ -198,7 +179,6 @@ export default function PantryPage() {
         ))}
       </div>
 
-      {/* Search + Filter */}
       <SearchFilterBar
         search={search}
         onSearchChange={setSearch}
@@ -231,16 +211,15 @@ export default function PantryPage() {
         </div>
       ) : (
         <>
-          {/* Mobile: Card List */}
+
           <div className="space-y-2 md:hidden">
             {filteredItems.map((item) => (
-              <ItemCard key={item.id} item={item} onAction={loadItems} />
+              <ItemCard key={item.id} item={item} onAction={notifyPantryUpdated} />
             ))}
           </div>
 
-          {/* Desktop: Table */}
           <div className="hidden md:block">
-            <ItemTable items={filteredItems} onAction={loadItems} filter="all" />
+            <ItemTable items={filteredItems} onAction={notifyPantryUpdated} filter="all" />
           </div>
         </>
       )}

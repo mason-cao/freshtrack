@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { items } from "@/db/schema";
 import { getCurrentUserId } from "@/lib/session";
 import { isSameOriginRequest } from "@/lib/request-security";
-import { checkItemMutationRateLimit } from "@/app/api/items/_lib";
+import { checkItemMutationRateLimit } from "@/lib/rate-limits";
 
 // Clear pantry: delete every item the user has added, across all statuses. The
 // waste_log is intentionally left intact so the savings/waste history (Stats)

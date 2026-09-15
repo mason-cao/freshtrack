@@ -138,7 +138,6 @@ export function WeeklyHero({ used, wasted, saved, periodLabel, periodPhrase }: W
         style={{ backgroundImage: grainTile, backgroundSize: "220px 220px" }}
       />
 
-      {/* Content */}
       <div className="relative flex min-h-[330px] flex-col justify-between gap-8 p-7 sm:min-h-[360px] sm:p-9 xl:min-h-[420px] xl:p-11">
         <div className="max-w-lg">
           <p className="eyebrow text-warm-white/80">{periodLabel}</p>

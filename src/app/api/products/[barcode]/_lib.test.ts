@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { checkProductLookupRateLimit, parseUpcItemDbName } from "./_lib";
+import { parseUpcItemDbName } from "./_lib";
+import { checkProductLookupRateLimit } from "@/lib/rate-limits";
 
 describe("checkProductLookupRateLimit", () => {
   it("limits product lookups per user within a fixed window", () => {

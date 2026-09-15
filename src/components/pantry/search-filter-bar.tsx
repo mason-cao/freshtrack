@@ -82,7 +82,7 @@ export function SearchFilterBar({
 
   return (
     <div className="space-y-3">
-      {/* Search */}
+
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
         <input
@@ -110,7 +110,6 @@ export function SearchFilterBar({
         </div>
       </div>
 
-      {/* Filters + Sort */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         <div className="flex gap-1.5 shrink-0">
           {filters.map((f) => (

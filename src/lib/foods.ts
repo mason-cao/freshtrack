@@ -224,11 +224,7 @@ export const foods: FoodPageData[] = [
       },
     ],
   },
-];
 
-// More foods appended below the existing array.
-
-const moreFoods: FoodPageData[] = [
   {
     slug: "banana",
     displayName: "Banana",
@@ -1351,7 +1347,6 @@ const moreFoods: FoodPageData[] = [
   },
 ];
 
-foods.push(...moreFoods);
 
 export function getFoodBySlug(slug: string): FoodPageData | undefined {
   return foods.find((f) => f.slug === slug);

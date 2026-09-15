@@ -1,6 +1,4 @@
-// Pure query parsing and ranking for the Recipe Dive catalog. The route does
-// the SQL text/cuisine/category filtering; the time filter and ordering live
-// here so they can be unit tested without a database.
+// Query parsing and in-memory catalog ranking.
 
 export interface RecipeQuery {
   search: string | null;

@@ -1,3 +1,4 @@
+import type { RecipeResultsResponse } from "@/lib/recipes";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { visibleRecipeWhere } from "@/db/recipe-visibility";
@@ -146,5 +147,5 @@ export async function GET(request: NextRequest) {
     total,
     limit: RECIPE_RESULT_LIMIT,
     offset: query.offset,
-  });
+  } satisfies RecipeResultsResponse);
 }

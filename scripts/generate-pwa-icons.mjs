@@ -1,62 +1,11 @@
-import { mkdirSync, writeFileSync } from "node:fs";
-import { deflateSync } from "node:zlib";
+import { mkdirSync } from "node:fs";
+import sharp from "sharp";
 
 const COLORS = {
   sage: [82, 122, 82, 255],
   cream: [250, 248, 245, 255],
   sageLight: [220, 230, 220, 255],
 };
-
-const crcTable = Array.from({ length: 256 }, (_, n) => {
-  let c = n;
-  for (let k = 0; k < 8; k++) {
-    c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-  }
-  return c >>> 0;
-});
-
-function crc32(buffer) {
-  let c = 0xffffffff;
-  for (const byte of buffer) {
-    c = crcTable[(c ^ byte) & 0xff] ^ (c >>> 8);
-  }
-  return (c ^ 0xffffffff) >>> 0;
-}
-
-function chunk(type, data = Buffer.alloc(0)) {
-  const typeBuffer = Buffer.from(type);
-  const out = Buffer.alloc(12 + data.length);
-  out.writeUInt32BE(data.length, 0);
-  typeBuffer.copy(out, 4);
-  data.copy(out, 8);
-  out.writeUInt32BE(crc32(Buffer.concat([typeBuffer, data])), 8 + data.length);
-  return out;
-}
-
-function writePng(path, width, height, pixels) {
-  const raw = Buffer.alloc(height * (1 + width * 4));
-  for (let y = 0; y < height; y++) {
-    const rowStart = y * (1 + width * 4);
-    raw[rowStart] = 0;
-    pixels.copy(raw, rowStart + 1, y * width * 4, (y + 1) * width * 4);
-  }
-
-  const header = Buffer.alloc(13);
-  header.writeUInt32BE(width, 0);
-  header.writeUInt32BE(height, 4);
-  header[8] = 8;
-  header[9] = 6;
-
-  writeFileSync(
-    path,
-    Buffer.concat([
-      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-      chunk("IHDR", header),
-      chunk("IDAT", deflateSync(raw, { level: 9 })),
-      chunk("IEND"),
-    ])
-  );
-}
 
 function iconPixels(size) {
   const pixels = Buffer.alloc(size * size * 4);
@@ -153,5 +102,7 @@ for (const [file, size] of [
   ["public/icon-512-maskable.png", 512],
   ["public/apple-touch-icon.png", 180],
 ]) {
-  writePng(file, size, size, iconPixels(size));
+  await sharp(iconPixels(size), { raw: { width: size, height: size, channels: 4 } })
+    .png({ compressionLevel: 9 })
+    .toFile(file);
 }
