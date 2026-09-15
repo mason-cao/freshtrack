@@ -115,7 +115,7 @@ The app will be available at **http://localhost:3000** and will redirect unauthe
 | `npm run dev` | Start dev server with Turbopack |
 | `npm run build` | Production build |
 | `npm run start` | Start production server |
-| `npm run lint` | Type-check the project |
+| `npm run lint` | Run ESLint |
 | `npm run typecheck` | Type-check the project |
 | `npm run test` | Run Vitest tests |
 | `npm run icons:generate` | Regenerate PWA icon PNGs |
