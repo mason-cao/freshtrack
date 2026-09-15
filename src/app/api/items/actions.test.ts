@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ user: vi.fn(), limit: vi.fn(), complete: vi.fn(), restore: vi.fn() }));
 vi.mock("@/lib/session", () => ({ getCurrentUserId: mocks.user }));
@@ -15,10 +15,16 @@ const request = (requestOrigin = origin) => new Request(`${origin}/api/items/7/c
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.stubEnv("NEXT_PUBLIC_SITE_URL", origin);
+  vi.stubEnv("AUTH_URL", origin);
   mocks.user.mockResolvedValue("owner");
   mocks.limit.mockReturnValue({ ok: true });
   mocks.complete.mockResolvedValue({ status: 200, body: { success: true } });
   mocks.restore.mockResolvedValue({ status: 200, body: { success: true } });
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe.each([consume, waste, restore])("item action guards", (post) => {
