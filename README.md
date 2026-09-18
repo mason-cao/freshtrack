@@ -4,7 +4,7 @@
 
 FreshTrack is a pantry management dashboard that helps you track food freshness, get alerts before items expire, discover recipes to use expiring ingredients, and visualize waste patterns over time.
 
-**Live app:** https://freshtrack.up.railway.app
+**Live app:** https://myfreshtrack.app
 
 ## The Problem
 
