@@ -50,7 +50,7 @@ export function RecipeCard({ recipe, onSelect, isUseItUp }: RecipeCardProps) {
               {totalTime}m
             </span>
           )}
-          {recipe.servings && (
+          {(recipe.servings ?? 0) > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full bg-warm-white/95 px-2 py-0.5 text-[10px] font-medium text-stone-700 shadow-sm">
               <Users className="h-2.5 w-2.5" />
               {recipe.servings}

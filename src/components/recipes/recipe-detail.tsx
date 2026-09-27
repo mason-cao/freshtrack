@@ -53,19 +53,19 @@ export function RecipeDetail({ recipe, open, onClose }: RecipeDetailProps) {
         )}
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-stone-500">
-          {recipe.prepTimeMinutes && recipe.prepTimeMinutes > 0 && (
+          {(recipe.prepTimeMinutes ?? 0) > 0 && (
             <span className="flex items-center gap-1">
               <Clock className="h-4 w-4" />
               Prep: {recipe.prepTimeMinutes}m
             </span>
           )}
-          {recipe.cookTimeMinutes && recipe.cookTimeMinutes > 0 && (
+          {(recipe.cookTimeMinutes ?? 0) > 0 && (
             <span className="flex items-center gap-1">
               <Clock className="h-4 w-4" />
               Cook: {recipe.cookTimeMinutes}m
             </span>
           )}
-          {recipe.servings && (
+          {(recipe.servings ?? 0) > 0 && (
             <span className="flex items-center gap-1">
               <Users className="h-4 w-4" />
               {recipe.servings} servings

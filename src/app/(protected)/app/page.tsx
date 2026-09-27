@@ -14,6 +14,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getRecipeHeroImage } from "@/lib/food-images";
 import { toDateInputValue } from "@/lib/dates";
+import { totalTimeMinutes } from "@/lib/recipe-query";
 import type { PantryItem } from "@/lib/pantry";
 import { ErrorState } from "@/components/ui/async-state";
 
@@ -35,6 +36,8 @@ export default function DashboardPage() {
     subscribe: subscribeToPantryUpdates,
   });
   const { items = [], stats, recipe } = data ?? {};
+  // Imported catalog recipes carry no times; hide the clock rather than show "0 min".
+  const recipeMinutes = recipe ? totalTimeMinutes(recipe) : null;
 
   if (loading && !data) {
     return <DashboardSkeleton />;
@@ -172,8 +175,12 @@ export default function DashboardPage() {
                       </div>
                     )}
                     <div className="flex items-center gap-3 mt-3 text-xs text-stone-400">
-                      <Clock className="h-3 w-3" />
-                      <span>{(recipe.prepTimeMinutes || 0) + (recipe.cookTimeMinutes || 0)} min</span>
+                      {recipeMinutes ? (
+                        <>
+                          <Clock className="h-3 w-3" />
+                          <span>{recipeMinutes} min</span>
+                        </>
+                      ) : null}
                       <ArrowRight className="h-3 w-3 ml-auto group-hover:text-sage-600 transition-colors" />
                     </div>
                   </div>
