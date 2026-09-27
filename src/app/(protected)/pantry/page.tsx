@@ -31,6 +31,7 @@ export default function PantryPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("expiry");
+  const [addOpen, setAddOpen] = useState(false);
   useEffect(() => {
     if (items.length < 5) return;
 
@@ -146,8 +147,14 @@ export default function PantryPage() {
               onConfirm={handleClearPantry}
             />
           )}
+          {/* The trigger is desktop-only, but the dialog portals to <body>, so the
+              empty-state button below can open it on mobile too. */}
           <div className="hidden md:block">
-            <AddItemDialog onItemAdded={notifyPantryUpdated} />
+            <AddItemDialog
+              open={addOpen}
+              onOpenChange={setAddOpen}
+              onItemAdded={notifyPantryUpdated}
+            />
           </div>
         </div>
       </motion.div>
@@ -205,8 +212,8 @@ export default function PantryPage() {
                 ? "Try a different search, clear the filters, or add the item if it is missing."
                 : "Add items as you unpack groceries so FreshTrack can surface what needs attention first."
             }
-            actionLabel={hasActiveFilters ? "Clear filters" : undefined}
-            onAction={hasActiveFilters ? clearFilters : undefined}
+            actionLabel={hasActiveFilters ? "Clear filters" : "Add your first item"}
+            onAction={hasActiveFilters ? clearFilters : () => setAddOpen(true)}
           />
         </div>
       ) : (

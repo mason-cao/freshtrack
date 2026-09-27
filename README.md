@@ -130,7 +130,7 @@ The app will be available at **http://localhost:3000** and will redirect unauthe
 
 FreshTrack deploys as an installable PWA on Railway with Railway Postgres as the managed database.
 
-Production URL: https://freshtrack.up.railway.app
+Production URL: https://myfreshtrack.app (custom domain on the Railway app service)
 
 ### Environment Variables
 
@@ -138,7 +138,7 @@ See `.env.example` for the full template. Required in production:
 
 - `DATABASE_URL` - Railway Postgres connection string
 - `AUTH_SECRET` - generate with `openssl rand -base64 32`
-- `AUTH_URL` - deployed origin, for example `https://freshtrack.up.railway.app`
+- `AUTH_URL` - deployed origin, for example `https://myfreshtrack.app`
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google Cloud OAuth credentials
 - `NEXT_PUBLIC_SITE_URL` - canonical public origin used for metadata and same-origin checks
 - `DATABASE_POOL_MAX` - optional per-process Postgres pool cap; defaults to `5` and is capped at `20`
@@ -154,10 +154,10 @@ See `.env.example` for the full template. Required in production:
 7. Import the recipe catalog: `DATABASE_URL=... npm run db:import:recipes`
 8. Deploy the app service from Railway and verify `/`, `/login`, authentication, pantry mutations, recipe search, stats, and the security headers before directing traffic to it.
 9. Configure Google OAuth with:
-   - Authorized origin: your Railway public app URL
-   - Redirect URI: `<your Railway public app URL>/api/auth/callback/google`
-   - Privacy policy: `<your Railway public app URL>/privacy`
-   - Terms: `<your Railway public app URL>/terms`
+   - Authorized origin: your public app URL (for example `https://myfreshtrack.app`)
+   - Redirect URI: `<your public app URL>/api/auth/callback/google`
+   - Privacy policy: `<your public app URL>/privacy`
+   - Terms: `<your public app URL>/terms`
 
 Do not run `npm run db:seed` against production. That command creates a local dev user and demo pantry data. It is guarded and only runs outside production with:
 
@@ -176,12 +176,12 @@ ALLOW_DESTRUCTIVE_SEED=1 npm run db:seed
 - Installable PWA manifest and icons
 - Public privacy policy and terms pages
 - Railway deployment with Railway Postgres
+- Custom domain (myfreshtrack.app)
 
 ### Planned
 
 - Email and password auth
 - Push notifications for expiring items
-- Custom domain
 - Household or shared pantry support
 - Offline mode with a service worker
 - Per-user custom categories
