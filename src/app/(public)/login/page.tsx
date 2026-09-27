@@ -91,8 +91,10 @@ export default async function LoginPage() {
               <Leaf className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-stone-900">Welcome back</h2>
-              <p className="text-sm text-stone-500">Your pantry stays synced to your account.</p>
+              <h2 className="text-xl font-bold text-stone-900">Sign in to FreshTrack</h2>
+              <p className="text-sm text-stone-500">
+                New here? Continuing with Google creates your free account.
+              </p>
             </div>
           </div>
 

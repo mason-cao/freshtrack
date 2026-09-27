@@ -1,10 +1,6 @@
 import type { MetadataRoute } from "next";
 import { foods } from "@/lib/foods";
-
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  process.env.AUTH_URL ??
-  "https://freshtrack.up.railway.app";
+import { siteUrl } from "@/lib/site-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const foodEntries: MetadataRoute.Sitemap = foods.map((food) => ({

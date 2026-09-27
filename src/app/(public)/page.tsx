@@ -8,11 +8,7 @@ import { LandingGuides } from "@/components/landing/landing-guides";
 import { LandingCta } from "@/components/landing/landing-cta";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { serializeJsonLd } from "@/lib/structured-data";
-
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  process.env.AUTH_URL ??
-  "https://freshtrack.up.railway.app";
+import { siteUrl } from "@/lib/site-url";
 
 const structuredData = [
   {
@@ -60,7 +56,10 @@ const structuredData = [
 ];
 
 export const metadata: Metadata = {
-  title: "FreshTrack. Stop throwing out groceries. Save money. Waste less food.",
+  // Absolute: the title already leads with the brand, so skip the root template.
+  title: {
+    absolute: "FreshTrack. Stop throwing out groceries. Save money. Waste less food.",
+  },
   description:
     "A free pantry tracker that shows what’s about to expire, suggests recipes to use it up, and tells you how much you’ve saved. Built for busy households.",
   alternates: { canonical: "/" },

@@ -7,11 +7,7 @@ import { getFoodImage } from "@/lib/food-images";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Reveal } from "@/components/landing/reveal";
-
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  process.env.AUTH_URL ??
-  "https://freshtrack.up.railway.app";
+import { siteUrl } from "@/lib/site-url";
 
 const categoryOrder: FoodCategory[] = [
   "produce",
@@ -53,17 +49,26 @@ function groupByCategory(items: FoodPageData[]) {
   return groups;
 }
 
+const foodsIndexTitle = "Food shelf life and storage guides";
+const foodsIndexSocialTitle = `${foodsIndexTitle} · FreshTrack`;
+const foodsIndexDescription =
+  "How long common foods last, how to store them, and how to tell when they have gone bad. Free guides for busy households, sourced from USDA FoodKeeper.";
+
 export const metadata: Metadata = {
-  title: "Food shelf life and storage guides · FreshTrack",
-  description:
-    "How long common foods last, how to store them, and how to tell when they have gone bad. Free guides for busy households, sourced from USDA FoodKeeper.",
+  // The root layout's title template appends "· FreshTrack".
+  title: foodsIndexTitle,
+  description: foodsIndexDescription,
   alternates: { canonical: "/foods" },
   openGraph: {
     type: "website",
-    title: "Food shelf life and storage guides · FreshTrack",
-    description:
-      "How long common foods last, how to store them, and how to tell when they have gone bad. Free guides for busy households, sourced from USDA FoodKeeper.",
+    title: foodsIndexSocialTitle,
+    description: foodsIndexDescription,
     url: `${siteUrl}/foods`,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: foodsIndexSocialTitle,
+    description: foodsIndexDescription,
   },
 };
 

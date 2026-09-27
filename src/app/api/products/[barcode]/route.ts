@@ -5,6 +5,7 @@ import { mapCategoryTagsToCategoryId } from "@/lib/barcode-category";
 import { parseUpcItemDbName } from "./_lib";
 import { checkProductLookupRateLimit } from "@/lib/rate-limits";
 import { readLimitedJsonBody } from "@/lib/request-body";
+import { PRODUCTION_SITE_URL } from "@/lib/site-url";
 
 import type { ProductLookupResult } from "@/lib/barcode";
 
@@ -20,7 +21,7 @@ const NOT_FOUND: ProductLookupResult = {
 
 // Open Food Facts asks every caller to identify itself with a descriptive
 // User-Agent that includes a contact URL.
-const OFF_USER_AGENT = "FreshTrack/1.0 (https://freshtrack.up.railway.app)";
+const OFF_USER_AGENT = `FreshTrack/1.0 (${PRODUCTION_SITE_URL})`;
 
 // Only the fields the normalizer reads — keeps the OFF payload small.
 const OFF_FIELDS = [

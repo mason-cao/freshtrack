@@ -11,9 +11,10 @@ import { closeDb, db } from "./index";
 import * as schema from "./schema";
 import { parseMeal, type ParsedRecipe, type RawMeal } from "./mealdb-parse";
 import { readLimitedJsonBody } from "../lib/request-body";
+import { PRODUCTION_SITE_URL } from "../lib/site-url";
 
 const SEARCH_URL = "https://www.themealdb.com/api/json/v1/1/search.php?f=";
-const USER_AGENT = "FreshTrack/1.0 (https://freshtrack.up.railway.app)";
+const USER_AGENT = `FreshTrack/1.0 (${PRODUCTION_SITE_URL})`;
 const LETTERS = "abcdefghijklmnopqrstuvwxyz".split("");
 const MAX_MEALDB_RESPONSE_BYTES = 2 * 1024 * 1024;
 
