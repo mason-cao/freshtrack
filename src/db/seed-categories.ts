@@ -1,3 +1,4 @@
+import "./local-env";
 import { sql } from "drizzle-orm";
 import { categorySeedData } from "./categories";
 import { closeDb, db } from "./index";

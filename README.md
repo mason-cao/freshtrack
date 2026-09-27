@@ -93,14 +93,27 @@ Authorized JavaScript origin: http://localhost:3000
 Authorized redirect URI: http://localhost:3000/api/auth/callback/google
 ```
 
-Then prepare the local database and start the app:
+If you do not already have Postgres running, start one in Docker. If port 5432 is taken, map another host port (for example `127.0.0.1:5433:5432`) and use that port in `DATABASE_URL`:
+
+```bash
+docker run -d --name freshtrack-db --restart unless-stopped \
+  -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=freshtrack \
+  -p 127.0.0.1:5432:5432 -v freshtrack-pgdata:/var/lib/postgresql/data \
+  postgres:17-alpine
+```
+
+Then prepare the local database and start the app. The `db:*` scripts read `DATABASE_URL` from `.env.local` outside production; a `DATABASE_URL` set in the shell takes precedence.
 
 ```bash
 # Run database migrations
 npm run db:migrate
 
 # Seed the database with sample categories, items, recipes, and waste logs
-npm run db:seed
+# (destructive: clears the target database first)
+ALLOW_DESTRUCTIVE_SEED=1 npm run db:seed
+
+# Optional: import the full recipe catalog from TheMealDB
+npm run db:import:recipes
 
 # Start the development server
 npm run dev

@@ -1,3 +1,4 @@
+import "./local-env";
 import { eq, sql } from "drizzle-orm";
 import { closeDb, db } from "./index";
 import { starterRecipeSeedData } from "./starter-recipes";

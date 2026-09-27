@@ -6,6 +6,7 @@
 //
 //   npm run db:import:recipes
 
+import "./local-env";
 import { eq } from "drizzle-orm";
 import { closeDb, db } from "./index";
 import * as schema from "./schema";

@@ -1,4 +1,7 @@
 import { defineConfig } from "drizzle-kit";
+import { loadLocalEnv } from "./src/db/load-local-env";
+
+loadLocalEnv();
 
 function databaseUrl() {
   const url = process.env.DATABASE_URL?.trim();

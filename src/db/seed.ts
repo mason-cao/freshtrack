@@ -1,3 +1,4 @@
+import "./local-env";
 import { sql } from "drizzle-orm";
 import { closeDb, db } from "./index";
 import * as schema from "./schema";
