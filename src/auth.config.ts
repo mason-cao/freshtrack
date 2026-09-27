@@ -8,7 +8,9 @@ export const authConfig = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
-  session: { strategy: "jwt", maxAge: 7 * 24 * 60 * 60 },
+  // 30 days: people who shop weekly should not be signed out between trips.
+  // The token is refreshed on activity (Auth.js updateAge, default 24h).
+  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
