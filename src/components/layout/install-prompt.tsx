@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Download, Share, Smartphone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trackAnalyticsEvent } from "@/lib/analytics-client";
+import { hasEnoughPantryActions } from "@/lib/install-prompt-eligibility";
 
 const DISMISS_KEY = "freshtrack:install-prompt-dismissed";
 
@@ -40,29 +42,38 @@ function rememberInstallPromptDismissal() {
 }
 
 export function InstallPrompt() {
-  const [ready, setReady] = useState(false);
+  const pathname = usePathname();
+  // Not installed and not dismissed on this device.
+  const [available, setAvailable] = useState(false);
+  const [hasPantryHistory, setHasPantryHistory] = useState(false);
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOSDevice, setIsIOSDevice] = useState(false);
   const [installError, setInstallError] = useState<string | null>(null);
+  const ready = available && hasPantryHistory && (installEvent !== null || isIOSDevice);
 
   useEffect(() => {
     if (hasDismissedInstallPrompt() || isStandalone()) {
       return;
     }
 
-    const ios = isIOS();
-    setIsIOSDevice(ios);
-    setReady(ios);
+    setAvailable(true);
+    setIsIOSDevice(isIOS());
 
     function handleBeforeInstallPrompt(event: Event) {
+      // Hold the browser's own install UI until the prompt is eligible.
       event.preventDefault();
       setInstallEvent(event as BeforeInstallPromptEvent);
-      setReady(true);
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
   }, []);
+
+  // Re-check on navigation rather than right after an action, so the prompt
+  // never lands on top of the undo toast that follows a pantry action.
+  useEffect(() => {
+    setHasPantryHistory(hasEnoughPantryActions());
+  }, [pathname]);
 
   async function handleInstall() {
     if (!installEvent) return;
@@ -85,7 +96,7 @@ export function InstallPrompt() {
       trackAnalyticsEvent("pwa_install_prompt_dismissed");
     }
     rememberInstallPromptDismissal();
-    setReady(false);
+    setAvailable(false);
   }
 
   useEffect(() => {

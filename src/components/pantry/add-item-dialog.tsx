@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Loader2, Plus, ScanBarcode } from "lucide-react";
 import { trackAnalyticsEvent } from "@/lib/analytics-client";
+import { recordPantryAction } from "@/lib/install-prompt-eligibility";
 import { fetchJson } from "@/lib/api-client";
 import { itemFormValues, productFormPatch, serializeItemForm, suggestExpiration } from "@/lib/item-form";
 import { useCategories, useItemForm } from "@/hooks/use-item-form";
@@ -80,6 +81,7 @@ export function AddItemDialog({
         body: JSON.stringify(serializeItemForm(values)),
       });
       trackAnalyticsEvent("item_added");
+      recordPantryAction();
       setValues(itemFormValues());
       setDetailsOpen(false);
       productLookup.cancel();
