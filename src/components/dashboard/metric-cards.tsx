@@ -101,16 +101,20 @@ export function MetricCards({ items, useRate, expiringCount, hasHistory }: Metri
           <p className="eyebrow text-stone-500">Use rate</p>
           <div className="mt-4 flex items-baseline gap-1">
             <p className="num text-[44px] font-bold leading-[0.9] tracking-[-0.02em] text-stone-900 xl:text-[56px]">
-              {useRate}
+              {hasHistory ? useRate : "—"}
             </p>
-            <span className="text-2xl font-semibold text-stone-400">%</span>
+            {hasHistory && (
+              <span className="text-2xl font-semibold text-stone-400">%</span>
+            )}
           </div>
           <p className="mt-1 text-xs text-stone-500">tracked history</p>
           <div className="mt-4 border-t border-warm-100 pt-3">
             <div className="h-1.5 overflow-hidden rounded-full bg-warm-50">
               <motion.div
                 initial={{ scaleX: 0 }}
-                animate={{ scaleX: Math.min(100, Math.max(0, useRate)) / 100 }}
+                animate={{
+                  scaleX: hasHistory ? Math.min(100, Math.max(0, useRate)) / 100 : 0,
+                }}
                 transition={{
                   duration: 1.1,
                   ease: [0.16, 1, 0.3, 1],

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildStatsSummary } from "./stats-summary";
+import { buildStatsSummary, getUseRate } from "./stats-summary";
 
 describe("buildStatsSummary", () => {
   it("builds totals and ordered monthly data from grouped rows", () => {
@@ -51,5 +51,22 @@ describe("buildStatsSummary", () => {
         moneySaved: 0,
       },
     });
+  });
+});
+
+describe("getUseRate", () => {
+  it("has no rate before anything is logged", () => {
+    expect(getUseRate(0, 0)).toBeNull();
+  });
+
+  it("reports the share of logged items that were used", () => {
+    expect(getUseRate(3, 1)).toBe(75);
+    expect(getUseRate(0, 2)).toBe(0);
+    expect(getUseRate(4, 0)).toBe(100);
+  });
+
+  it("complements the rounded waste rate so the two always sum to 100", () => {
+    // 7 of 8 wasted is 87.5%, which rounds to 88; use rate must be 12, not 13.
+    expect(getUseRate(1, 7)).toBe(12);
   });
 });

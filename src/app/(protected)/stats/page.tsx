@@ -22,7 +22,7 @@ import { fetchJson } from "@/lib/api-client";
 import { subscribeToPantryUpdates } from "@/lib/pantry-events";
 import { ErrorState, LoadingState } from "@/components/ui/async-state";
 
-import type { StatsSummary } from "@/lib/stats-summary";
+import { getUseRate, type StatsSummary } from "@/lib/stats-summary";
 import { useResource } from "@/hooks/use-resource";
 
 const loadStats = (signal: AbortSignal) => fetchJson<StatsSummary>("/api/stats", { signal });
@@ -44,11 +44,6 @@ const cell = {
   },
 };
 
-function getUseRate(consumed: number, wasted: number) {
-  const total = consumed + wasted;
-  return total > 0 ? Math.round((consumed / total) * 100) : 0;
-}
-
 export default function StatsPage() {
   const { data: stats, loading, error, refresh } = useResource(loadStats, {
     subscribe: subscribeToPantryUpdates,
@@ -66,29 +61,28 @@ export default function StatsPage() {
     return null;
   }
 
-  const useRate = 100 - stats.totals.wasteRate;
+  const useRate = getUseRate(stats.totals.consumed, stats.totals.wasted);
   const latestMonth = stats.monthly.at(-1);
   const previousMonth = stats.monthly.at(-2);
-  const latestUseRate = latestMonth
-    ? getUseRate(latestMonth.consumed, latestMonth.wasted)
-    : useRate;
-  const previousUseRate = previousMonth
-    ? getUseRate(previousMonth.consumed, previousMonth.wasted)
-    : latestUseRate;
-  const useRateDelta = latestUseRate - previousUseRate;
+  // Listed months always have logged actions, so their rates are never null.
+  const useRateDelta =
+    latestMonth && previousMonth
+      ? (getUseRate(latestMonth.consumed, latestMonth.wasted) ?? 0) -
+        (getUseRate(previousMonth.consumed, previousMonth.wasted) ?? 0)
+      : null;
   const latestActions = latestMonth
     ? latestMonth.consumed + latestMonth.wasted
     : stats.totals.consumed + stats.totals.wasted;
   const latestWasteCost = latestMonth?.wastedCost ?? stats.totals.wastedCost;
 
   const headlineQualifier =
-    useRate >= 85
-      ? "Most of what you logged became meals, not waste."
-      : useRate >= 65
-        ? "More than half of your logged food found a meal."
-        : useRate > 0
-          ? "There's room to use more of what you log."
-          : "Mark items used or wasted to start your ledger.";
+    useRate === null
+      ? "Mark items used or wasted to start your ledger."
+      : useRate >= 85
+        ? "Most of what you logged became meals, not waste."
+        : useRate >= 65
+          ? "More than half of your logged food found a meal."
+          : "There's room to use more of what you log.";
 
   return (
     <div className="space-y-6 xl:space-y-8">
@@ -119,14 +113,16 @@ export default function StatsPage() {
                 }}
                 className="num font-bold leading-[0.85] tracking-[-0.03em] text-stone-900 text-[clamp(3.5rem,9vw,6rem)]"
               >
-                <AnimatedNumber value={useRate} />
+                {useRate === null ? "—" : <AnimatedNumber value={useRate} />}
               </motion.span>
-              <span className="pb-3 text-3xl font-semibold text-stone-400">
-                %
-              </span>
+              {useRate !== null && (
+                <span className="pb-3 text-3xl font-semibold text-stone-400">
+                  %
+                </span>
+              )}
             </div>
 
-            {latestMonth && previousMonth && (
+            {previousMonth && useRateDelta !== null && (
               <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium">
                 {useRateDelta >= 0 ? (
                   <ArrowUpRight className="h-4 w-4 text-sage-600" />
@@ -154,7 +150,9 @@ export default function StatsPage() {
           </div>
 
           <div className="flex justify-center lg:justify-end lg:pt-2">
-            <WasteRateRing rate={stats.totals.wasteRate} />
+            <WasteRateRing
+              rate={useRate === null ? null : stats.totals.wasteRate}
+            />
           </div>
         </div>
 

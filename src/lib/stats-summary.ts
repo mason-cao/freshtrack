@@ -14,6 +14,17 @@ export interface StatsAggregateRow {
   costTotal: number | string | null;
 }
 
+/**
+ * Percent of logged items that were used rather than wasted, or null before
+ * anything is logged (an empty ledger is not a perfect one). Derived from the
+ * rounded waste rate so the use and waste figures always sum to 100.
+ */
+export function getUseRate(consumed: number, wasted: number): number | null {
+  const total = consumed + wasted;
+  if (total <= 0) return null;
+  return 100 - Math.round((wasted / total) * 100);
+}
+
 function numberValue(value: number | string | null): number {
   const number = Number(value ?? 0);
   return Number.isFinite(number) ? number : 0;

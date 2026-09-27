@@ -34,11 +34,12 @@ export function AnimatedNumber({
   return <motion.span>{rounded}</motion.span>;
 }
 
-export function WasteRateRing({ rate }: { rate: number }) {
+/** `rate` is null before anything is logged; the ring then stays empty. */
+export function WasteRateRing({ rate }: { rate: number | null }) {
   const circumference = 2 * Math.PI * 42;
-  const fillPercent = Math.min(rate, 100);
+  const fillPercent = Math.min(rate ?? 0, 100);
   const offset = circumference - (fillPercent / 100) * circumference;
-  const isHigh = rate > 25;
+  const isHigh = rate !== null && rate > 25;
   const ringColor = isHigh ? "#c2410c" : "#527a52";
   const centerColor = isHigh ? "text-terracotta-600" : "text-sage-600";
 
@@ -71,7 +72,7 @@ export function WasteRateRing({ rate }: { rate: number }) {
         <span
           className={`num text-[42px] font-bold leading-none tracking-[-0.02em] xl:text-5xl ${centerColor}`}
         >
-          <AnimatedNumber value={rate} suffix="%" />
+          {rate === null ? "—" : <AnimatedNumber value={rate} suffix="%" />}
         </span>
         <span className="eyebrow mt-1.5 text-stone-500">Waste rate</span>
       </div>

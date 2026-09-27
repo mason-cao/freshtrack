@@ -4,6 +4,7 @@ import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect } from "react";
 import Image from "next/image";
 import { getDashboardHeroImage } from "@/lib/food-images";
+import { getUseRate } from "@/lib/stats-summary";
 
 function AnimatedNumber({ value, prefix = "" }: { value: number; prefix?: string }) {
   const count = useMotionValue(0);
@@ -61,8 +62,7 @@ function Stat({
 }
 
 export function WeeklyHero({ used, wasted, saved, periodLabel, periodPhrase }: WeeklyHeroProps) {
-  const total = used + wasted;
-  const useRate = total > 0 ? Math.round((used / total) * 100) : 0;
+  const useRate = getUseRate(used, wasted);
   const heroImage = getDashboardHeroImage();
 
   return (
@@ -149,13 +149,15 @@ export function WeeklyHero({ used, wasted, saved, periodLabel, periodPhrase }: W
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
               className="num font-bold leading-[0.82] tracking-[-0.035em] text-warm-white text-[clamp(4.25rem,12vw,7.5rem)] [text-shadow:0_2px_24px_rgba(16,28,16,0.45)]"
             >
-              <AnimatedNumber value={useRate} />
+              {useRate === null ? "—" : <AnimatedNumber value={useRate} />}
             </motion.span>
-            <span className="pb-3 text-3xl font-semibold text-warm-white/55">%</span>
+            {useRate !== null && (
+              <span className="pb-3 text-3xl font-semibold text-warm-white/55">%</span>
+            )}
           </div>
 
           <p className="mt-3 max-w-md text-base leading-7 text-warm-white/90 xl:text-lg xl:leading-8 [text-shadow:0_1px_12px_rgba(16,28,16,0.5)]">
-            {total > 0
+            {useRate !== null
               ? `of what you logged ${periodPhrase} became meals, not waste.`
               : "Mark items used or wasted to start your ledger."}
           </p>
