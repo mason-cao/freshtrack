@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const authMock = vi.hoisted(() => vi.fn());
 const snapshotMock = vi.hoisted(() => vi.fn());
+const growthMock = vi.hoisted(() => vi.fn());
 const notFoundMock = vi.hoisted(() =>
   vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
@@ -11,6 +12,9 @@ const notFoundMock = vi.hoisted(() =>
 vi.mock("@/auth", () => ({ auth: authMock }));
 vi.mock("@/db/admin-analytics", () => ({
   getAdminAnalyticsSnapshot: snapshotMock,
+}));
+vi.mock("@/db/growth-analytics", () => ({
+  getGrowthSnapshot: growthMock,
 }));
 vi.mock("next/navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/navigation")>()),
@@ -43,10 +47,27 @@ const emptySnapshot = {
   accountListLimit: 100,
 };
 
+const emptyGrowth = {
+  cohortDays: 30,
+  funnel: {
+    signedUp: 0,
+    addedItem: 0,
+    addedFiveItems: 0,
+    loggedOutcome: 0,
+    week1Eligible: 0,
+    returnedWeek1: 0,
+  },
+  weeklyActive: [],
+  retention: [],
+  signupSources: [],
+  signupLandingPages: [],
+};
+
 describe("admin analytics page access", () => {
   afterEach(() => {
     authMock.mockReset();
     snapshotMock.mockReset();
+    growthMock.mockReset();
     notFoundMock.mockClear();
     vi.unstubAllEnvs();
   });
@@ -58,16 +79,19 @@ describe("admin analytics page access", () => {
     await expect(AdminAnalyticsPage()).rejects.toThrow("NEXT_NOT_FOUND");
     expect(notFoundMock).toHaveBeenCalledOnce();
     expect(snapshotMock).not.toHaveBeenCalled();
+    expect(growthMock).not.toHaveBeenCalled();
   });
 
   it("loads analytics for a configured admin email", async () => {
     vi.stubEnv("ANALYTICS_ADMIN_EMAILS", "owner@example.com");
     authMock.mockResolvedValue({ user: { email: "OWNER@example.com" } });
     snapshotMock.mockResolvedValue(emptySnapshot);
+    growthMock.mockResolvedValue(emptyGrowth);
 
     const page = await AdminAnalyticsPage();
 
     expect(snapshotMock).toHaveBeenCalledOnce();
+    expect(growthMock).toHaveBeenCalledOnce();
     expect(page.type).toBe("div");
   });
 
@@ -76,6 +100,7 @@ describe("admin analytics page access", () => {
     vi.stubEnv("AUTH_DEV_BYPASS", "1");
     vi.stubEnv("ANALYTICS_ADMIN_DEV_BYPASS", "1");
     snapshotMock.mockResolvedValue(emptySnapshot);
+    growthMock.mockResolvedValue(emptyGrowth);
 
     await AdminAnalyticsPage();
 

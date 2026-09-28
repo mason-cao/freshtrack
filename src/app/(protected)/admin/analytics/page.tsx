@@ -10,8 +10,10 @@ import {
 } from "lucide-react";
 import { auth } from "@/auth";
 import { AnalyticsRefreshButton } from "@/components/admin/analytics-refresh-button";
+import { GrowthSections } from "@/components/admin/growth-sections";
 import { Badge } from "@/components/ui/badge";
 import { getAdminAnalyticsSnapshot } from "@/db/admin-analytics";
+import { getGrowthSnapshot } from "@/db/growth-analytics";
 import {
   isAnalyticsAdminDevBypassEnabled,
   isAnalyticsAdminEmail,
@@ -121,7 +123,11 @@ export default async function AdminAnalyticsPage() {
     notFound();
   }
 
-  const snapshot = await getAdminAnalyticsSnapshot();
+  const now = new Date();
+  const [snapshot, growth] = await Promise.all([
+    getAdminAnalyticsSnapshot(now),
+    getGrowthSnapshot(now),
+  ]);
   const historyNewestFirst = [...snapshot.history].reverse();
   const listedAccountCount = snapshot.accounts.length;
 
@@ -137,8 +143,8 @@ export default async function AdminAnalyticsPage() {
             Site analytics
           </h1>
           <p className="mt-2 max-w-[65ch] text-sm leading-6 text-stone-500">
-            A compact read on who is here, how visits are trending, and who has
-            registered.
+            Who is here, whether new people stick around, and where they come
+            from.
           </p>
         </div>
         <div className="flex items-center justify-between gap-3 sm:justify-end">
@@ -175,6 +181,8 @@ export default async function AdminAnalyticsPage() {
           icon={Eye}
         />
       </dl>
+
+      <GrowthSections growth={growth} />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.75fr)]">
         <section
