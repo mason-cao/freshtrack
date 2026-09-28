@@ -27,3 +27,26 @@ describe("next security config", () => {
     );
   });
 });
+
+describe("legacy domain redirect", () => {
+  it("permanently redirects every path on the old Railway domain to myfreshtrack.app", async () => {
+    expect(nextConfig.redirects).toBeTypeOf("function");
+    const redirects = await nextConfig.redirects!();
+
+    expect(redirects).toContainEqual({
+      source: "/:path*",
+      has: [{ type: "host", value: "freshtrack.up.railway.app" }],
+      destination: "https://myfreshtrack.app/:path*",
+      permanent: true,
+    });
+  });
+
+  it("only redirects requests for the old host", async () => {
+    const redirects = await nextConfig.redirects!();
+    for (const redirect of redirects) {
+      expect(redirect.has).toEqual(
+        expect.arrayContaining([expect.objectContaining({ type: "host" })])
+      );
+    }
+  });
+});

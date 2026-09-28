@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { connection } from "next/server";
+import { auth } from "@/auth";
 import { AppShell } from "@/components/layout/app-shell";
 
 export const metadata: Metadata = {
@@ -18,5 +19,6 @@ export default async function ProtectedLayout({
 }) {
   // Authenticated pages must never be emitted as shared static output.
   await connection();
-  return <AppShell>{children}</AppShell>;
+  const session = await auth();
+  return <AppShell userName={session?.user?.name ?? null}>{children}</AppShell>;
 }

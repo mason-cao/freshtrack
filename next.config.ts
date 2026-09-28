@@ -1,4 +1,8 @@
 import type { NextConfig } from "next";
+import { PRODUCTION_SITE_URL } from "./src/lib/site-url";
+
+// The Railway-assigned domain still answers requests; send it to the custom domain.
+const LEGACY_HOST = "freshtrack.up.railway.app";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -21,6 +25,16 @@ const nextConfig: NextConfig = {
         hostname: "www.themealdb.com",
       },
     ],
+  },
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: LEGACY_HOST }],
+        destination: `${PRODUCTION_SITE_URL}/:path*`,
+        permanent: true,
+      },
+    ];
   },
   async headers() {
     return [

@@ -17,6 +17,8 @@ import { toDateInputValue } from "@/lib/dates";
 import { totalTimeMinutes } from "@/lib/recipe-query";
 import type { PantryItem } from "@/lib/pantry";
 import { ErrorState } from "@/components/ui/async-state";
+import { useCurrentUserName } from "@/components/layout/current-user";
+import { greetingName } from "@/lib/greeting";
 
 import { useResource } from "@/hooks/use-resource";
 import type { Recipe } from "@/lib/recipes";
@@ -36,6 +38,7 @@ export default function DashboardPage() {
     subscribe: subscribeToPantryUpdates,
   });
   const { items = [], stats, recipe } = data ?? {};
+  const userName = useCurrentUserName();
   // Imported catalog recipes carry no times; hide the clock rather than show "0 min".
   const recipeMinutes = recipe ? totalTimeMinutes(recipe) : null;
 
@@ -88,7 +91,7 @@ export default function DashboardPage() {
       >
         <div>
           <h1 className="text-2xl xl:text-3xl font-bold tracking-tight text-stone-900">
-            Good {getGreeting()}, Chef!
+            Good {getGreeting()}, {greetingName(userName)}!
           </h1>
           <p className="mt-1 text-sm xl:text-base text-stone-500">
             {items.length === 0

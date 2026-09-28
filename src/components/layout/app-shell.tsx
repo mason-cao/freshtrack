@@ -20,6 +20,7 @@ import { Fab } from "./fab";
 import { FooterLegal } from "./footer-legal";
 import { InstallPrompt } from "./install-prompt";
 import { AnalyticsTracker } from "./analytics-tracker";
+import { CurrentUserNameProvider } from "./current-user";
 import {
   notifyPantryUpdated,
 } from "@/lib/pantry-events";
@@ -33,7 +34,13 @@ const navItems = [
   { href: "/stats", label: "Stats", icon: BarChart3 },
 ];
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({
+  children,
+  userName = null,
+}: {
+  children: ReactNode;
+  userName?: string | null;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
@@ -240,7 +247,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="md:ml-[72px] xl:ml-[220px] transition-[margin-left] duration-300 ease-out"
       >
         <div className="mx-auto max-w-5xl xl:max-w-none px-4 py-6 pb-24 sm:px-6 md:px-8 xl:px-12 2xl:px-20 md:pb-8">
-          {children}
+          <CurrentUserNameProvider name={userName}>{children}</CurrentUserNameProvider>
           <section
             className="mt-10 rounded-xl border border-warm-100 bg-warm-white p-4 shadow-warm-sm md:hidden"
             aria-labelledby="mobile-account-actions"
