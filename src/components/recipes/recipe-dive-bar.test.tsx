@@ -15,8 +15,6 @@ function renderDiveBar(resultCount: number, resultTotal = resultCount) {
       category={null}
       onCategoryChange={noop}
       categoryOptions={[]}
-      maxMinutes={null}
-      onMaxMinutesChange={noop}
       sort="relevance"
       onSortChange={noop}
       resultCount={resultCount}
@@ -32,6 +30,12 @@ describe("RecipeDiveBar", () => {
 
   it("keeps the compact count when all matching recipes are loaded", () => {
     expect(renderDiveBar(42)).toContain("42 recipes");
+  });
+
+  it("does not offer a time filter, since most catalog recipes have no times", () => {
+    const html = renderDiveBar(42);
+    expect(html).not.toContain("Filter by total time");
+    expect(html).not.toContain("min</span>");
   });
 
   it("does not schedule a parent search update when the search text is unchanged", () => {

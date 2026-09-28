@@ -107,8 +107,6 @@ export default function RecipesPage() {
             category={query.category}
             onCategoryChange={(value) => updateQuery({ category: value })}
             categoryOptions={categoryOptions}
-            maxMinutes={query.maxMinutes}
-            onMaxMinutesChange={(value) => updateQuery({ maxMinutes: value })}
             sort={query.sort}
             onSortChange={(value) => updateQuery({ sort: value })}
             resultCount={diveRecipes.length}

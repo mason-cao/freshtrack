@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -11,13 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const TIME_OPTIONS: { value: number | null; label: string }[] = [
-  { value: null, label: "Any time" },
-  { value: 15, label: "≤15 min" },
-  { value: 30, label: "≤30 min" },
-  { value: 60, label: "≤60 min" },
-];
 
 const SORT_OPTIONS: { value: "relevance" | "name"; label: string }[] = [
   { value: "relevance", label: "Best match" },
@@ -43,8 +34,6 @@ interface RecipeDiveBarProps {
   category: string | null;
   onCategoryChange: (value: string | null) => void;
   categoryOptions: string[];
-  maxMinutes: number | null;
-  onMaxMinutesChange: (value: number | null) => void;
   sort: "relevance" | "name";
   onSortChange: (value: "relevance" | "name") => void;
   resultCount: number;
@@ -60,8 +49,6 @@ export function RecipeDiveBar({
   category,
   onCategoryChange,
   categoryOptions,
-  maxMinutes,
-  onMaxMinutesChange,
   sort,
   onSortChange,
   resultCount,
@@ -155,34 +142,6 @@ export function RecipeDiveBar({
             </SelectContent>
           </Select>
         )}
-
-        {/* Max-time pills */}
-        <div className="flex gap-1.5" role="group" aria-label="Filter by total time">
-          {TIME_OPTIONS.map((option) => {
-            const active = maxMinutes === option.value;
-            return (
-              <button
-                key={String(option.value)}
-                type="button"
-                onClick={() => onMaxMinutesChange(option.value)}
-                aria-pressed={active}
-                className={cn(
-                  "relative rounded-full px-3 py-1.5 text-xs font-medium transition-colors duration-200 cursor-pointer whitespace-nowrap",
-                  active ? "text-white" : "text-stone-600 hover:bg-warm-50"
-                )}
-              >
-                {active && (
-                  <motion.div
-                    layoutId="dive-time-chip"
-                    className="absolute inset-0 rounded-full bg-sage-500"
-                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10">{option.label}</span>
-              </button>
-            );
-          })}
-        </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
           <SlidersHorizontal className="h-3.5 w-3.5 text-stone-400" />
