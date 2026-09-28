@@ -27,11 +27,10 @@ export function Fab({ onItemAdded }: FabProps) {
         <Plus className="h-6 w-6" />
       </motion.button>
 
+      {/* The dialog closes itself (via onOpenChange) unless the user chose
+          "Save & add another", so adding an item must not force it shut. */}
       <AddItemDialog
-        onItemAdded={() => {
-          onItemAdded();
-          setOpen(false);
-        }}
+        onItemAdded={onItemAdded}
         open={open}
         onOpenChange={setOpen}
         showTrigger={false}

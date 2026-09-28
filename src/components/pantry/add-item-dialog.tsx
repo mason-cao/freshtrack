@@ -22,6 +22,8 @@ interface AddItemDialogProps {
 }
 
 const EMPTY_CATEGORIES: PantryCategory[] = [];
+// Submit-button value for "Save & add another", read from the submit event.
+const ADD_ANOTHER = "add-another";
 
 export function AddItemDialog({
   onItemAdded, open: controlledOpen, onOpenChange, showTrigger = true,
@@ -37,7 +39,9 @@ export function AddItemDialog({
   const categoryResource = useCategories(open);
   const categories = categoryResource.data ?? EMPTY_CATEGORIES;
   const productLookup = useProductLookup(open);
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState<"close" | "another" | null>(null);
+  // Name of the item just saved with "Save & add another", shown as feedback.
+  const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -65,14 +69,18 @@ export function AddItemDialog({
     if (!next) {
       productLookup.cancel();
       setScannerOpen(false);
+      setLastAdded(null);
     }
     setOpen(next);
   }
 
-  async function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!values.name.trim() || !values.expirationDate || saving || productLookup.pending) return;
-    setSaving(true);
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    const addAnother = submitter instanceof HTMLButtonElement && submitter.value === ADD_ANOTHER;
+    const addedName = values.name.trim();
+    setSaving(addAnother ? "another" : "close");
     setError(null);
     try {
       await fetchJson("/api/items", {
@@ -85,12 +93,19 @@ export function AddItemDialog({
       setValues(itemFormValues());
       setDetailsOpen(false);
       productLookup.cancel();
-      setOpen(false);
+      if (addAnother) {
+        // Stay open for the next item, e.g. while unpacking groceries.
+        setLastAdded(addedName);
+        document.getElementById(`${formId}-name`)?.focus();
+      } else {
+        setLastAdded(null);
+        setOpen(false);
+      }
       onItemAdded();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Unable to add item.");
     } finally {
-      setSaving(false);
+      setSaving(null);
     }
   }
 
@@ -147,6 +162,12 @@ export function AddItemDialog({
             </p>
           )}
 
+          {lastAdded && (
+            <p role="status" className="rounded-lg bg-sage-50 px-3 py-2 text-xs text-sage-700">
+              Added “{lastAdded}”. Add the next item.
+            </p>
+          )}
+
           <ItemBasicsFields
             idPrefix={formId} values={values} onChange={setField}
             categories={categories} loading={categoryResource.loading}
@@ -191,9 +212,20 @@ export function AddItemDialog({
             </p>
           )}
 
-          <Button type="submit" className="w-full" disabled={saving || productLookup.pending}>
-            {saving ? "Adding..." : "Add to Pantry"}
-          </Button>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button type="submit" className="w-full" disabled={!!saving || productLookup.pending}>
+              {saving === "close" ? "Adding..." : "Add to Pantry"}
+            </Button>
+            <Button
+              type="submit"
+              value={ADD_ANOTHER}
+              variant="outline"
+              className="w-full"
+              disabled={!!saving || productLookup.pending}
+            >
+              {saving === "another" ? "Adding..." : "Save & add another"}
+            </Button>
+          </div>
         </form>
         )}
       </DialogContent>
