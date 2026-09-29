@@ -18,6 +18,7 @@ Sources: [USDA food-waste FAQ](https://www.usda.gov/node/27287), [EPA consumer c
 
 - **Freshness Dashboard** - Overview of active pantry items, urgency metrics, and the next recipe to try
 - **Expiration Alerts** - Prominent warnings for items expiring within 2 days
+- **Reminder Emails** - A morning email (at most one a day) when items expire within 2 days, with a recipe that uses them; on by default, with one-click unsubscribe and a Settings toggle
 - **Pantry Management** - Add, search, filter, sort, and track inventory by quantity, unit, purchase date, expiration date, and estimated cost
 - **Barcode Scanning** - Scan a product barcode to look up supported product details through Open Food Facts (with a UPCitemdb name fallback), then review the category-based freshness suggestion; manual entry remains available
 - **Recipe Suggestions** - "Use It Up" recipes that match ingredients expiring within 5 days
@@ -155,6 +156,9 @@ See `.env.example` for the full template. Required in production:
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google Cloud OAuth credentials
 - `NEXT_PUBLIC_SITE_URL` - canonical public origin used for metadata and same-origin checks
 - `DATABASE_POOL_MAX` - optional per-process Postgres pool cap; defaults to `5` and is capped at `20`
+- `RESEND_API_KEY` - Resend API key for reminder emails
+- `EMAIL_FROM` - optional sender, defaults to `FreshTrack <reminders@myfreshtrack.app>`; must be on a domain verified in Resend
+- `REMINDER_SCHEDULER` - optional; `off` stops the in-process reminder scheduler
 
 ### Deploy Steps
 
@@ -177,6 +181,12 @@ Do not run `npm run db:seed` against production. That command creates a local de
 ```bash
 ALLOW_DESTRUCTIVE_SEED=1 npm run db:seed
 ```
+
+### Reminder emails
+
+The production server runs an in-process scheduler (`src/instrumentation.ts`) every 15 minutes. Each run emails users whose local time is between 8am and 9pm, who have not had a reminder that local day, and who have active items expiring today through 2 days out. Each send is claimed in the database first (`users.last_reminder_on`), so restarts and multiple instances cannot double-send; retryable Resend failures release the claim for the next run. Time zones come from the browser; until one is reported, `America/New_York` is used.
+
+Emails include `List-Unsubscribe` one-click headers pointing at `/api/reminders/unsubscribe`, signed with `AUTH_SECRET`, plus a link to the `/unsubscribe` confirmation page. Users can also toggle reminders at `/settings`.
 
 ## Scope
 
@@ -248,3 +258,5 @@ Most application routes are protected by middleware and require an authenticated
 | GET | `/api/recipes` | List recipes with ingredients; supports `search`, `cuisine`, `category`, `maxMinutes`, and `sort`, and annotates each with expiring-ingredient matches |
 | GET | `/api/recipes/suggestions` | Recipes using active items expiring within 5 days |
 | GET | `/api/stats` | Waste and consumption statistics |
+| PATCH | `/api/account/settings` | Update reminder emails on/off and the browser time zone |
+| POST | `/api/reminders/unsubscribe?token=` | One-click unsubscribe from reminder emails (public; signed token) |

@@ -11,6 +11,7 @@
 - [ ] Review the generated SQL migration, then run `npm run db:migrate` against the intended database.
 - [ ] Seed global categories/recipes only when required. Never run the destructive development seed in production.
 - [ ] Confirm the Privacy Policy, Terms, support email, and third-party processor list are still accurate.
+- [ ] Confirm `RESEND_API_KEY` is set, the `EMAIL_FROM` domain is verified in Resend, and daily reminder volume fits the Resend plan.
 
 ## Smoke test after deployment
 

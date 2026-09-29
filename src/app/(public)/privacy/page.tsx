@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/privacy" },
 };
 
-const updatedAt = "July 12, 2026";
+const updatedAt = "September 28, 2026";
 
 const sections = [
   {
@@ -18,6 +18,7 @@ const sections = [
       "When you sign in with Google, FreshTrack receives your name, email address, and profile image URL from Google.",
       "FreshTrack also stores the pantry items and used or wasted item history that you add while using the app. The recipe catalog itself is shared product content, not a record you create.",
       "FreshTrack records basic product analytics, including the page path without its query string, the referring site and path without its query string, campaign parameters, browser user agent, a local visitor identifier, and your account id when you are signed in.",
+      "For reminder emails, FreshTrack stores your time zone as reported by your browser, whether reminders are on, and the date of your most recent reminder.",
     ],
   },
   {
@@ -28,6 +29,7 @@ const sections = [
       "FreshTrack uses Google only for authentication. It does not request access to Gmail, Drive, Calendar, or other Google data.",
       "FreshTrack uses Google Fonts for typefaces and may load product or recipe images sourced from Unsplash, Open Food Facts, or TheMealDB. Those providers receive ordinary web-request information when their resources are requested.",
       "When you scan or enter a barcode, FreshTrack sends that barcode to Open Food Facts and, if needed, UPCitemdb to look for product details.",
+      "FreshTrack sends reminder emails through Resend. Resend receives your email address and each email's contents, which include the names of pantry items that are about to expire.",
     ],
   },
   {
@@ -36,6 +38,7 @@ const sections = [
     body: [
       "FreshTrack does not sell your data. It does not share your pantry data with advertisers or data brokers.",
       "FreshTrack does not provide product analytics to advertisers or data brokers and does not use those analytics for advertising.",
+      "Reminder emails are on by default and are sent at most once a day, only when something in your pantry is about to expire. Turn them off in Settings or with the unsubscribe link in any reminder.",
       "Product analytics are removed through a rolling cleanup after approximately 12 months. Account and pantry records remain while your account is in use or until you request deletion.",
       "To request account or pantry data deletion, email masoncao7@gmail.com from the Google account you used to sign in.",
     ],
