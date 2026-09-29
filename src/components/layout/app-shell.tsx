@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -13,6 +13,7 @@ import {
   Leaf,
   LogOut,
   Eraser,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -25,6 +26,7 @@ import {
   notifyPantryUpdated,
 } from "@/lib/pantry-events";
 import { fetchJson } from "@/lib/api-client";
+import { syncBrowserTimeZone } from "@/lib/time-zone-sync";
 import { PantryUndoToast } from "@/components/pantry/pantry-undo-toast";
 
 const navItems = [
@@ -44,6 +46,10 @@ export function AppShell({
   const pathname = usePathname();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
+
+  useEffect(() => {
+    void syncBrowserTimeZone();
+  }, []);
 
   function handleSignOut() {
     setSigningOut(true);
@@ -139,12 +145,25 @@ export function AppShell({
           })}
         </nav>
 
+        <Link
+          href="/settings"
+          aria-label="Settings"
+          aria-current={pathname.startsWith("/settings") ? "page" : undefined}
+          className={cn(
+            "mx-2 mt-4 flex items-center justify-center gap-1 rounded-xl px-2 py-2 transition-colors duration-200 hover:bg-warm-50 hover:text-stone-700 xl:mx-3 xl:justify-start xl:gap-3 xl:px-3 xl:py-2.5",
+            pathname.startsWith("/settings") ? "bg-sage-50 text-sage-700" : "text-stone-400"
+          )}
+        >
+          <Settings className="h-5 w-5" />
+          <span className="hidden text-sm font-medium xl:inline">Settings</span>
+        </Link>
+
         <ConfirmDialog
           trigger={
             <button
               type="button"
               aria-label="Erase history"
-              className="mx-2 mt-4 flex items-center justify-center gap-1 rounded-xl px-2 py-2 text-stone-400 transition-colors duration-200 hover:bg-terracotta-50 hover:text-terracotta-600 xl:mx-3 xl:justify-start xl:gap-3 xl:px-3 xl:py-2.5 cursor-pointer"
+              className="mx-2 mt-1 flex items-center justify-center gap-1 rounded-xl px-2 py-2 text-stone-400 transition-colors duration-200 hover:bg-terracotta-50 hover:text-terracotta-600 xl:mx-3 xl:justify-start xl:gap-3 xl:px-3 xl:py-2.5 cursor-pointer"
             >
               <Eraser className="h-5 w-5" />
               <span className="hidden text-sm font-medium xl:inline">Erase history</span>
@@ -259,6 +278,13 @@ export function AppShell({
               Account actions
             </h2>
             <div className="mt-3 grid grid-cols-2 gap-2">
+              <Link
+                href="/settings"
+                className="col-span-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-warm-200 px-3 text-sm font-medium text-stone-700 hover:bg-warm-50"
+              >
+                <Settings className="h-4 w-4" aria-hidden="true" />
+                Settings
+              </Link>
               <ConfirmDialog
                 trigger={
                   <button
