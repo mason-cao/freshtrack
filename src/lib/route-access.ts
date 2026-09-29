@@ -3,6 +3,7 @@ const PUBLIC_PATHS = [
   "/privacy",
   "/terms",
   "/foods",
+  "/unsubscribe",
   "/opengraph-image",
   "/twitter-image",
 ];
@@ -10,6 +11,8 @@ const PUBLIC_PATHS = [
 export function isPublicPath(pathname: string): boolean {
   if (pathname === "/") return true;
   if (pathname === "/api/analytics") return true;
+  // Signed one-click unsubscribe links from reminder emails; the token is the credential.
+  if (pathname === "/api/reminders/unsubscribe") return true;
   return (
     PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`)) ||
     pathname.startsWith("/api/auth/")

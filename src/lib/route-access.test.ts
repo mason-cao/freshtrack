@@ -13,6 +13,8 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/twitter-image")).toBe(true);
     expect(isPublicPath("/foods")).toBe(true);
     expect(isPublicPath("/foods/avocado")).toBe(true);
+    expect(isPublicPath("/unsubscribe")).toBe(true);
+    expect(isPublicPath("/api/reminders/unsubscribe")).toBe(true);
   });
 
   it("keeps app and data routes protected", () => {
@@ -20,6 +22,9 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/pantry")).toBe(false);
     expect(isPublicPath("/api/items")).toBe(false);
     expect(isPublicPath("/api/analytics/export")).toBe(false);
+    expect(isPublicPath("/settings")).toBe(false);
+    expect(isPublicPath("/api/account/settings")).toBe(false);
+    expect(isPublicPath("/api/reminders")).toBe(false);
   });
 });
 
@@ -34,5 +39,6 @@ describe("isStaticPublicPath", () => {
     expect(isStaticPublicPath("/login")).toBe(false);
     expect(isStaticPublicPath("/app")).toBe(false);
     expect(isStaticPublicPath("/api/analytics")).toBe(false);
+    expect(isStaticPublicPath("/unsubscribe")).toBe(false);
   });
 });
