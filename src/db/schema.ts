@@ -1,4 +1,5 @@
 import {
+  boolean,
   date,
   doublePrecision,
   index,
@@ -24,6 +25,11 @@ export const users = pgTable("users", {
   emailVerified: timestamp("email_verified", { mode: "date" }),
   image: text("image"),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+  reminderEmailsEnabled: boolean("reminder_emails_enabled").notNull().default(true),
+  // IANA zone reported by the user's browser; reminders go out in their morning.
+  timeZone: text("time_zone"),
+  // The user's local date of the last reminder email, so at most one goes out a day.
+  lastReminderOn: date("last_reminder_on", { mode: "string" }),
 });
 
 export const items = pgTable(
