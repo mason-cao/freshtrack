@@ -1,7 +1,9 @@
 import { db } from "@/db";
-import { items, recipeIngredients } from "@/db/schema";
+import { visibleRecipeWhere } from "@/db/recipe-visibility";
+import { items, recipeIngredients, recipes } from "@/db/schema";
 import { addDaysToDateInput, toDateInputValue } from "@/lib/dates";
 import { countExpiringMatches, ingredientSearchTokens } from "@/lib/recipe-matching";
+import { RECIPE_SUGGESTION_CANDIDATE_LIMIT } from "@/lib/recipe-results";
 import { and, eq, gte, ilike, inArray, lte, or, type SQL } from "drizzle-orm";
 
 const INGREDIENT_PREFILTER_TOKEN_LIMIT = 48;
@@ -94,4 +96,33 @@ export function annotateRecipeMatches<T extends { id: number }>(
 
     return { ...recipe, ingredients, matchCount, matchingIngredients };
   });
+}
+
+/**
+ * Recipes the user can see that use the most of the given ingredient names,
+ * best match first. Shared by the Use It Up suggestions and reminder emails.
+ */
+export async function suggestRecipes(userId: string, ingredientNames: string[], limit: number) {
+  if (ingredientNames.length === 0) return [];
+
+  const recipeIds = await findIngredientCandidateRecipeIds(
+    ingredientNames,
+    RECIPE_SUGGESTION_CANDIDATE_LIMIT
+  );
+  if (recipeIds.length === 0) return [];
+
+  const candidateRecipes = await db
+    .select()
+    .from(recipes)
+    .where(and(visibleRecipeWhere(userId), inArray(recipes.id, recipeIds)))
+    .limit(RECIPE_SUGGESTION_CANDIDATE_LIMIT);
+
+  const ingredientsByRecipe = await getIngredientsByRecipe(
+    candidateRecipes.map((recipe) => recipe.id)
+  );
+
+  return annotateRecipeMatches(candidateRecipes, ingredientsByRecipe, ingredientNames)
+    .filter((recipe) => recipe.matchCount > 0)
+    .sort((a, b) => b.matchCount - a.matchCount)
+    .slice(0, limit);
 }
