@@ -63,9 +63,12 @@ jobs:
 
       - name: Verify the backup decrypts to a readable archive
         run: |
-          tables=$(gpg --batch --quiet --pinentry-mode loopback --decrypt \
-              --passphrase-file <(printf '%s' "$BACKUP_PASSPHRASE") "$BACKUP_FILE" \
-            | "$PG_BIN/pg_restore" --list | grep -c " TABLE DATA ")
+          # Decrypt fully (so gpg checks integrity) to a file: pg_restore --list
+          # stops reading early, which breaks a pipe. Only the .gpg is uploaded.
+          gpg --batch --quiet --yes --pinentry-mode loopback --decrypt \
+            --passphrase-file <(printf '%s' "$BACKUP_PASSPHRASE") --output check.dump "$BACKUP_FILE"
+          tables=$("$PG_BIN/pg_restore" --list check.dump | grep -c " TABLE DATA ")
+          rm -f check.dump
           echo "Backup $BACKUP_FILE ($(du -h "$BACKUP_FILE" | cut -f1)) holds data for $tables tables."
           [ "$tables" -gt 0 ]
 
