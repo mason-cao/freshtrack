@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/privacy" },
 };
 
-const updatedAt = "September 28, 2026";
+const updatedAt = "September 30, 2026";
 
 const sections = [
   {
@@ -30,6 +30,7 @@ const sections = [
       "FreshTrack uses Google Fonts for typefaces and may load product or recipe images sourced from Unsplash, Open Food Facts, or TheMealDB. Those providers receive ordinary web-request information when their resources are requested.",
       "When you scan or enter a barcode, FreshTrack sends that barcode to Open Food Facts and, if needed, UPCitemdb to look for product details.",
       "FreshTrack sends reminder emails through Resend. Resend receives your email address and each email's contents, which include the names of pantry items that are about to expire.",
+      "FreshTrack reports app errors to Sentry so they can be fixed. An error report includes the error details, the page or request involved, and your browser and device type, and may include your account id or details of the action that failed. It does not include your name or email address.",
     ],
   },
   {

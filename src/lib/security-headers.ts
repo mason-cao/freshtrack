@@ -1,3 +1,5 @@
+import { SENTRY_INGEST_ORIGIN } from "./sentry";
+
 interface ContentSecurityPolicyOptions {
   nonce?: string;
   allowInlineScripts?: boolean;
@@ -56,7 +58,7 @@ export function buildContentSecurityPolicy({
       "https://images.openfoodfacts.org",
       "https://www.themealdb.com",
     ]),
-    directive("connect-src", ["'self'", "https://accounts.google.com"]),
+    directive("connect-src", ["'self'", "https://accounts.google.com", SENTRY_INGEST_ORIGIN]),
     directive("frame-ancestors", ["'none'"]),
     directive("base-uri", ["'self'"]),
     directive("form-action", ["'self'"]),

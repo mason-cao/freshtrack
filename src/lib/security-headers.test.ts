@@ -59,4 +59,12 @@ describe("buildContentSecurityPolicy", () => {
     expect(scriptSrc).toContain("'unsafe-inline'");
     expect(policy).not.toContain("upgrade-insecure-requests");
   });
+
+  it("lets the browser report errors to Sentry and nowhere else new", () => {
+    const policy = buildContentSecurityPolicy({ nonce: "test-nonce", isProduction: true });
+
+    expect(getDirective(policy, "connect-src")).toBe(
+      "connect-src 'self' https://accounts.google.com https://o4512174269136896.ingest.us.sentry.io"
+    );
+  });
 });

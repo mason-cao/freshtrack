@@ -51,6 +51,7 @@ Sources: [USDA food-waste FAQ](https://www.usda.gov/node/27287), [EPA consumer c
 | Charts | Recharts |
 | Motion | Framer Motion |
 | Icons | Lucide React |
+| Error reporting | Sentry (`@sentry/nextjs`), production only |
 
 ## Getting Started
 
@@ -187,6 +188,10 @@ ALLOW_DESTRUCTIVE_SEED=1 npm run db:seed
 The production server runs an in-process scheduler (`src/instrumentation.ts`) every 15 minutes. Each run emails users whose local time is between 8am and 9pm, who have not had a reminder that local day, and who have active items expiring today through 2 days out. Each send is claimed in the database first (`users.last_reminder_on`), so restarts and multiple instances cannot double-send; retryable Resend failures release the claim for the next run. Time zones come from the browser; until one is reported, `America/New_York` is used.
 
 Emails include `List-Unsubscribe` one-click headers pointing at `/api/reminders/unsubscribe`, signed with `AUTH_SECRET`, plus a link to the `/unsubscribe` confirmation page. Users can also toggle reminders at `/settings`.
+
+### Error reporting
+
+Production errors go to Sentry: server render and route handler errors through `onRequestError` in `src/instrumentation.ts`, browser errors through `src/instrumentation-client.ts`, and failed reminder runs or sends from the scheduler. The DSN lives in `src/lib/sentry.ts`, and its ingest origin is allowed in the CSP's `connect-src`. Reporting is disabled outside production. Stack traces are minified until source map upload is set up with a `SENTRY_AUTH_TOKEN`.
 
 ## Scope
 

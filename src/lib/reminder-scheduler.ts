@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { sendDueReminders, type ReminderRunSummary } from "@/db/reminders";
 
 // Runs inside the production server (see src/instrumentation.ts). Each run is
@@ -26,8 +27,12 @@ export function startReminderScheduler(
             (summary.stoppedEarly ? ", paused by rate limit" : "")
         );
       }
+      if (summary.failed > 0) {
+        Sentry.captureMessage(`[reminders] ${summary.failed} reminder emails failed to send`, "error");
+      }
     } catch (error) {
       console.error("[reminders] run failed", error);
+      Sentry.captureException(error);
     } finally {
       running = false;
     }

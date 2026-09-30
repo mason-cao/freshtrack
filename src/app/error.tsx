@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
 export default function AppError({
@@ -13,6 +14,8 @@ export default function AppError({
 }) {
   useEffect(() => {
     console.error("FreshTrack render error", error);
+    // Server errors carry a digest and were already reported by onRequestError.
+    if (!error.digest) Sentry.captureException(error);
   }, [error]);
 
   return (
