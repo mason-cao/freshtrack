@@ -193,6 +193,26 @@ Emails include `List-Unsubscribe` one-click headers pointing at `/api/reminders/
 
 Production errors go to Sentry: server render and route handler errors through `onRequestError` in `src/instrumentation.ts`, browser errors through `src/instrumentation-client.ts`, and failed reminder runs or sends from the scheduler. The DSN lives in `src/lib/sentry.ts`, and its ingest origin is allowed in the CSP's `connect-src`. Reporting is disabled outside production. Stack traces are minified until source map upload is set up with a `SENTRY_AUTH_TOKEN`.
 
+### Database backups
+
+`.github/workflows/db-backup.yml` dumps the production database nightly (or on demand from the Actions tab), encrypts the dump with AES-256 using `BACKUP_PASSPHRASE`, checks that it decrypts to a readable archive, and keeps it as a workflow artifact for 30 days. This repository is public, so anyone signed in to GitHub can download the artifacts; only the passphrase protects them.
+
+Repository secrets:
+
+- `BACKUP_DATABASE_URL` - the Railway Postgres public connection string (`DATABASE_PUBLIC_URL` on the Postgres service)
+- `BACKUP_PASSPHRASE` - at least 32 characters, for example from `openssl rand -base64 32`. Keep it in a password manager: without it the backups cannot be restored.
+
+To restore, test into a new database before touching production:
+
+```bash
+gh run list --workflow db-backup.yml                  # find a successful run
+gh run download <run-id>                              # downloads <name>.dump.gpg
+gpg --decrypt <name>.dump.gpg > freshtrack.dump       # prompts for BACKUP_PASSPHRASE
+pg_restore --no-owner --no-privileges --dbname "$TARGET_DATABASE_URL" freshtrack.dump
+```
+
+Use a `pg_restore` at least as new as the server version the backup run logs. GitHub pauses scheduled workflows after 60 days without repository activity; re-enable it from the Actions tab if that happens.
+
 ## Scope
 
 ### v1

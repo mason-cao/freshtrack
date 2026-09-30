@@ -1,0 +1,78 @@
+name: Database backup
+
+# Nightly encrypted dump of the production database, kept as a workflow
+# artifact. This repository is public, so artifacts are downloadable by anyone
+# signed in to GitHub: the dump never leaves the runner unencrypted.
+# Restore steps are in the README under "Database backups".
+
+on:
+  schedule:
+    - cron: "17 7 * * *" # daily, around 3am US Eastern
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - name: Check secrets
+        run: |
+          if [ -z "$BACKUP_DATABASE_URL" ]; then
+            echo "::error::Set the BACKUP_DATABASE_URL repository secret."
+            exit 1
+          fi
+          if [ "${#BACKUP_PASSPHRASE}" -lt 32 ]; then
+            echo "::error::BACKUP_PASSPHRASE must be at least 32 characters."
+            exit 1
+          fi
+
+      - name: Install pg_dump matching the server version
+        run: |
+          # pg_dump refuses to dump a server newer than itself, and a matching
+          # version keeps restores simple.
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common > /dev/null
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y > /dev/null
+          sudo apt-get install -y -qq postgresql-client > /dev/null
+          major=$(psql "$BACKUP_DATABASE_URL" -tAc "show server_version_num" | cut -c1-2)
+          sudo apt-get install -y -qq "postgresql-client-$major" > /dev/null
+          echo "PG_BIN=/usr/lib/postgresql/$major/bin" >> "$GITHUB_ENV"
+          echo "Server is PostgreSQL $major."
+
+      - name: Dump and encrypt
+        run: |
+          file="freshtrack-$(date -u +%Y-%m-%dT%H%MZ).dump.gpg"
+          "$PG_BIN/pg_dump" --format=custom --no-owner --no-privileges "$BACKUP_DATABASE_URL" \
+            | gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 \
+                --passphrase-file <(printf '%s' "$BACKUP_PASSPHRASE") --output "$file"
+          echo "BACKUP_FILE=$file" >> "$GITHUB_ENV"
+
+      - name: Verify the backup decrypts to a readable archive
+        run: |
+          tables=$(gpg --batch --quiet --pinentry-mode loopback --decrypt \
+              --passphrase-file <(printf '%s' "$BACKUP_PASSPHRASE") "$BACKUP_FILE" \
+            | "$PG_BIN/pg_restore" --list | grep -c " TABLE DATA ")
+          echo "Backup $BACKUP_FILE ($(du -h "$BACKUP_FILE" | cut -f1)) holds data for $tables tables."
+          [ "$tables" -gt 0 ]
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BACKUP_FILE }}
+          path: ${{ env.BACKUP_FILE }}
+          retention-days: 30
+          compression-level: 0
+          if-no-files-found: error

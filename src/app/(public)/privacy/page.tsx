@@ -26,6 +26,7 @@ const sections = [
     title: "Where Data Is Stored",
     body: [
       "FreshTrack stores account and pantry data in Railway Postgres. The app runs on Railway.",
+      "A nightly GitHub Actions job backs up the database, encrypts the backup, and stores it with GitHub for 30 days.",
       "FreshTrack uses Google only for authentication. It does not request access to Gmail, Drive, Calendar, or other Google data.",
       "FreshTrack uses Google Fonts for typefaces and may load product or recipe images sourced from Unsplash, Open Food Facts, or TheMealDB. Those providers receive ordinary web-request information when their resources are requested.",
       "When you scan or enter a barcode, FreshTrack sends that barcode to Open Food Facts and, if needed, UPCitemdb to look for product details.",
@@ -41,6 +42,7 @@ const sections = [
       "FreshTrack does not provide product analytics to advertisers or data brokers and does not use those analytics for advertising.",
       "Reminder emails are on by default and are sent at most once a day, only when something in your pantry is about to expire. Turn them off in Settings or with the unsubscribe link in any reminder.",
       "Product analytics are removed through a rolling cleanup after approximately 12 months. Account and pantry records remain while your account is in use or until you request deletion.",
+      "Deleted data can remain in encrypted backups for up to 30 days, until those backups expire.",
       "To request account or pantry data deletion, email masoncao7@gmail.com from the Google account you used to sign in.",
     ],
   },
